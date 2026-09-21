@@ -39,6 +39,28 @@ Use project-qualified commands (`docker compose -p under-review ...`) and the co
 
 Back up the dedicated Under Review database and artifact volume together with encrypted private configuration and the release's image digests. Database dumps should use PostgreSQL's supported dump tool; copy source snapshots and model artifacts without rewriting their bytes. Retain their manifests and checksums. Keep backup copies outside the active database volume and confirm that a project-only restore works in an isolated environment.
 
+The executable [scripts/backup.ps1](scripts/backup.ps1) requires PowerShell 7 and Docker Compose. It verifies the selected database/worker container labels and the project's `artifacts` volume, then writes a custom-format PostgreSQL dump, a gzip artifact archive, and a SHA-256 manifest into a unique directory under ignored `deploy/private/backups/`. Binary data is streamed without PowerShell text redirection. It never exports environment values, removes existing backups, stops other services, or operates on other projects.
+
+Run from the repository root against the local verification stack:
+
+```powershell
+pwsh -NoProfile -File scripts/backup.ps1 `
+  -ProjectName under-review-staging-check `
+  -ComposeFile deploy/private/local-staging.yaml `
+  -EnvFile deploy/private/staging.env `
+  -PauseWorker -VerifyRestore
+```
+
+For the ordinary local stack, the defaults are `-ProjectName under-review -ComposeFile compose.yaml -EnvFile .env`. Relative file arguments resolve against the repository root; absolute paths also work. `-PauseWorker` gives the worker its SIGTERM grace period, stops only that worker, and restarts it in `finally`; a worker already stopped remains stopped. `-WorkerStopTimeoutSeconds` defaults to 300 (allowed 30–900). The script confirms the worker stopped and waits for any live lease to expire before capture. Interrupted jobs remain in the dump for ordinary durable recovery and their count is recorded in the manifest; no job rows are deleted or falsely marked successful. If a live lease does not expire within the additional wait, the backup aborts and the worker resumes. Avoid administrative mutations during the brief backup window; the website and database stay running.
+
+`-VerifyRestore` creates a randomly named `ur_restore_test_<32 hex digits>` database in the selected project's PostgreSQL container, streams the dump into it, and compares core table counts and migration checksums with the source. It drops only that exact newly created database after checking its prefix, including on failure. This option needs the configured database role to have database-creation permission. It never overwrites the application database. The artifact archive is checked with `gzip -t`; both output files receive byte counts and SHA-256 hashes. A failed run preserves its partial directory for investigation; only a completed run emits its success record.
+
+Each Docker subprocess has a one-hour deadline covering input copying, process execution, and output draining. A stalled stream triggers process-tree termination and returns control to cleanup, including resuming the selected worker. Focused timeout, descendant-cleanup, binary-integrity, and secret-suppression checks passed after the full backup/restore verification.
+
+Backups contain application records and encrypted OAuth tokens, so keep them private and encrypt off-host copies. The script deliberately does not export environment secrets or proxy configuration; preserve those separately in encrypted storage together with the token-encryption key and image digests. No retention deletion or automatic restoration is performed.
+
+Verified on 2026-09-21 against **only** the local `under-review-staging-check` stack: the script wrote a 576,605-byte database dump and 1,188,429-byte artifact archive, validated the gzip stream, and restored the dump into a unique temporary database. Verification matched 557 games, 514 plays, 249 events, 3 revisions, 7 snapshots, 3 publications, 1 user, and all three migration checksums. One interrupted job remained preserved for recovery. The test database was removed; database, web, and resumed worker were healthy afterward. The generated manifest and SHA-256 hashes remain under ignored `deploy/private/backups/20260921T184250Z-3dadd468a37f42e890fd6c774be425ad/`. This verifies the local procedure; VPS backup execution, encrypted off-host storage, and retention remain separate operational checks.
+
 Backups cover **only** Under Review's PostgreSQL database/user, artifact volume, private configuration, and proxy route. Do not export another application's database or change a host-wide backup policy. Maintain an application-specific retention schedule and monitor free space. The worker defaults to a 1 GiB free-disk reserve (`MIN_FREE_DISK_BYTES`) and defers work below it.
 
 Before each release, capture the current image digests, project manifest/environment, schema migration checksums, and proxy snippet; take a fresh application-only backup. Apply additive compatible migrations where possible. A normal rollback restores the preceding Under Review image digests and configuration while retaining its data volumes. Validate readiness and existing-project health afterward.
@@ -74,14 +96,14 @@ For an unknown outcome, an administrator has two reconciliation choices: supply 
 
 No test, credential check, or deployment readiness check should submit a real X post. Live API delivery and OAuth authorization must be distinguished from mocked publishing tests and dry-run drafts in the release report.
 
-## Verified checks and pending release gates
+## Verified checks and release record
 
 Source validation tests have passed against the attributable 2023/2026 fixtures. A live TypeScript source-adapter check on 2026-09-21 fetched `2026_01_NE_SEA`: 166 PBP rows, 161 joined FTN rows, reconciled 10–13 score, and no join conflicts or unmatched charting records. This check did not claim R analysis or X delivery.
 
-The public source repository is [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). The initial public push followed a scan of 141 release files for secrets. That source-release result does not establish successful image publication, VPS deployment, or live X delivery.
+The public source repository is [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). The initial public push followed a scan of 141 release files for secrets; subsequent releases are scanned again before pushing. Public web and worker images were built in GitHub Actions, verified through anonymous registry manifest requests, and deployed by immutable digest. [deploy/images.json](deploy/images.json) records their actual source revisions and digests.
 
 The isolated PostgreSQL integration suites have passed revision/draft idempotency, old-score preservation after correction, concurrent same-game job exclusion, expired-lease recovery, retained manual review evidence, disabled default live posting, exact-post reconciliation, permanent cancellation, bounded 401 refresh, and no retry of ambiguous outcomes. Run them with `RUN_DB_TESTS=1 npx vitest run tests/database.integration.test.ts tests/publishing.integration.test.ts`. X transport is mocked; no test sends a real post.
 
 Local container analysis completed for `2023_01_DET_KC` (57 metric records) and `2026_01_NE_SEA` (70 metric records, clean source). The historical game also passed the full raw-source worker path after pinning gsisdecoder: 179 plays, a new attributable revision, no fallback warning, and identical metric values/statuses/model versions to its clean-source report. A repeated current-season clean analysis reused the same revision/input hash. These record counts include coverage/status distinctions and are not counts of proven errors. Chronological baseline training used 2015–2022, calibration 2023, and holdout 2024–2025; the recorded coaching gate passed its ten diagnostics. Model limitations, including the unknown upstream training cutoff and sensitive/out-of-domain states, remain visible.
 
-The final release report must separately record full container startup, executed R/model checks, browser smoke results, any GHCR push/pull, Hostinger deployment/health, and unaffected existing-project checks. Until those results are recorded, their status is **pending verification**, not successful deployment. Live X posting remains intentionally untested during development.
+The executed release evidence is recorded in [RELEASE.md](RELEASE.md): full container startup, R/model checks, desktop/mobile browser results, public image publication and retrieval, Hostinger action/health, and comparison of the existing projects. Local and VPS checks are identified separately. Live X posting remains intentionally untested and disabled; the verified backup/restore procedure still needs an encrypted off-host VPS backup schedule.

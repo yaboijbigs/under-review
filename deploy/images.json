@@ -1,0 +1,13 @@
+{
+  "verifiedAt": "2026-09-21T18:46:39.268Z",
+  "web": {
+    "sourceCommit": "03818639368b1e4d140d5d2334da0efb3dffd2bc",
+    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:26e2939692079f85fc6e71c8a57e6a5683713da6ab9ec7730c43534635120784",
+    "anonymousManifestVerified": true
+  },
+  "worker": {
+    "sourceCommit": "208bbf402b8ee2422dc0edb70676a718c8c236e3",
+    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:9bb5326dfe3cda816790cc8828552f056bcb76c5e0893abfe4dcaf7eaef03c31",
+    "anonymousManifestVerified": true
+  }
+}
