@@ -1,0 +1,2 @@
+import { defineConfig, devices } from "@playwright/test";
+export default defineConfig({testDir:"./tests",fullyParallel:true,retries:0,use:{baseURL:process.env.PLAYWRIGHT_BASE_URL || "http://localhost:4380",channel:process.env.PLAYWRIGHT_CHANNEL,trace:"retain-on-failure"},projects:[{name:"desktop",use:{...devices["Desktop Chrome"]}},{name:"mobile",use:{...devices["iPhone 13"],defaultBrowserType:"chromium"}}]});

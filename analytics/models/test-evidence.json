@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "version": "under-review-nfl4th-2026-v1",
+  "parityPassed": true,
+  "ruleTransitionTestsPassed": true,
+  "predecisionOnlyPassed": true,
+  "adapterChecksum": "924636dc5ce46720f552069bfe11a35de25bab35c425c62400bb9ed806c2fa39",
+  "statesChecksum": "f8ab733477657f820ff5a359e1d4c34ea010c2c4a56da94c2fb5581c6748f5c7",
+  "note": "Recorded only after every executable assertion above passes."
+}

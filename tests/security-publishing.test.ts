@@ -1,0 +1,27 @@
+import { describe,it,expect } from 'vitest';
+import { classifyPostResponse } from '../packages/core/src/publishing.js';
+import { draftPost,validateDraft,supportedFindings,metricDisplay } from '../packages/core/src/summaries.js';
+import { validCsrf,trustedOrigin,type Session } from '../packages/core/src/auth.js';
+import { safeError } from '../packages/core/src/config.js';
+import { reviewInputSchema } from '../packages/core/src/reviews.js';
+import { analysisSchema,type AnalysisResult,type Game } from '../packages/core/src/contracts.js';
+const game:Game={id:'2026_01_NE_SEA',season:2026,week:1,gameType:'REG',homeTeam:'SEA',awayTeam:'NE',homeScore:13,awayScore:10,kickoffAt:null,providerData:{}};
+const analysis:AnalysisResult={schemaVersion:1,metrics:[{id:'m1',category:'coaching',name:'Fourth-down decision cost',team:'NE',value:0.028,unit:'wp_delta',status:'supported',eventIds:['e1'],playIds:['10'],assumptions:[],modelVersion:'test',coverage:{eligible:1,modeled:1}}],events:[{id:'e1',playId:'10',quarter:4,clock:'02:00',description:'Synthetic test only',kind:'fourth_down',team:'NE',reviewStatus:'not_reviewed'}],timeline:[],coverage:[],models:[],warnings:[]};
+describe('evidence-constrained drafting',()=>{
+ it('converts fraction deltas to percentage points and keeps within weighted limits',()=>{const draft=draftPost(game,analysis,'https://example.com/a-very-long-report-link',true);expect(draft.valid).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text).toContain('2.8 percentage points');expect(draft.text).toContain('Preliminary');expect(draft.evidenceIds).toEqual(['m1']);});
+ it('rejects invented numbers and free-form wording',()=>{const draft=draftPost(game,analysis,'https://example.com/game',false);expect(validateDraft(draft.text.replace('2.8','9.8'),draft)).toBe(false);expect(validateDraft(draft.text+' Rigged.',draft)).toBe(false);});
+ it('excludes unsupported, broken-reference, and sensitive findings',()=>{const a=structuredClone(analysis);a.metrics[0].eventIds=['missing'];expect(supportedFindings(a)).toHaveLength(0);a.metrics[0].eventIds=['e1'];a.metrics[0].status='experimental';expect(supportedFindings(a)).toHaveLength(0);a.metrics[0].status='supported';a.metrics[0].assumptions=['kickoff_assumption_sensitive'];expect(supportedFindings(a)).toHaveLength(0);});
+ it('does not turn missing into zero',()=>{const m={...analysis.metrics[0],value:null,status:'unavailable' as const};expect(metricDisplay(m)).toBe('Unavailable');});
+ it('rejects nonfinite numeric and invalid WP timeline output',()=>{const a=structuredClone(analysis);a.metrics[0].value=Infinity;expect(analysisSchema.safeParse(a).success).toBe(false);a.metrics[0].value=0;a.timeline=[{playId:'10',quarter:1,clock:'10:00',homeWp:45,description:''}];expect(analysisSchema.safeParse(a).success).toBe(false);});
+});
+describe('safe external delivery classification',()=>{
+ it('only marks confirmed IDs as published',()=>{expect(classifyPostResponse(201,true)).toBe('published');expect(classifyPostResponse(201,false)).toBe('unknown_outcome');});
+ it('does not blindly retry ambiguous responses',()=>{expect(classifyPostResponse(503,false)).toBe('unknown_outcome');expect(classifyPostResponse(408,false)).toBe('unknown_outcome');expect(classifyPostResponse(429,false)).toBe('retry');expect(classifyPostResponse(403,false)).toBe('failed');});
+});
+describe('mutation security',()=>{
+ const session:Session={id:'id',userId:'user',username:'operator',role:'admin',csrfToken:'random-secret-csrf',expiresAt:new Date().toISOString()};
+ it('rejects missing and altered CSRF tokens',()=>{expect(validCsrf(session,session.csrfToken)).toBe(true);expect(validCsrf(session,'x')).toBe(false);expect(validCsrf(session,null)).toBe(false);});
+ it('does not accept cross-origin requests',()=>{expect(trustedOrigin('https://attacker.example')).toBe(false);expect(trustedOrigin(null)).toBe(false);});
+ it('requires substantive review evidence and safe links',()=>{expect(reviewInputSchema.safeParse({gameId:game.id,eventId:'e1',status:'likely_incorrect',ruleSeason:2026,ruleReference:'Rule 8',evidenceUrl:'javascript:alert(1)',rationale:'unsupported',confidence:'high',scope:'only this play'}).success).toBe(false);});
+ it('redacts connection strings and named secrets',()=>{const result=safeError(new Error('password=abc token=def postgresql://user:pw@host/db'));expect(result).not.toContain('abc');expect(result).not.toContain('def');expect(result).not.toContain('user:pw');});
+});

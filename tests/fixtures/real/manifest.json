@@ -1,0 +1,66 @@
+[
+  {
+    "file": "2023_01_DET_KC.pbp.csv",
+    "gameId": "2023_01_DET_KC",
+    "rows": 179,
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2023.csv",
+    "retrievedAt": "2026-09-21T17:49:07.2516567Z",
+    "sourceLastModified": "2/12/2026 10:24:55 AM +00:00",
+    "checksum": "06520ff0f8d125f055a3f4a9fa58f87acab0b77bb27bb008b19cc2e42da390a2",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "nflverse / nflfastR",
+    "modifications": "Extracted rows for this one game; columns retained; UTF-8 line endings normalized. Fixture is not a complete season."
+  },
+  {
+    "file": "2026_01_NE_SEA.pbp.csv",
+    "gameId": "2026_01_NE_SEA",
+    "rows": 166,
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv",
+    "retrievedAt": "2026-09-21T17:49:08.6220817Z",
+    "sourceLastModified": "9/21/2026 3:54:27 PM +00:00",
+    "checksum": "65422eb6327bb110cc8ca76db85367cfcd48514249d0bdb5cd8579e0911a036d",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "nflverse / nflfastR",
+    "modifications": "Extracted rows for this one game; columns retained; UTF-8 line endings normalized. Fixture is not a complete season."
+  },
+  {
+    "file": "2023_01_DET_KC.ftn_charting.csv",
+    "gameId": "2023_01_DET_KC",
+    "rows": 174,
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/ftn_charting/ftn_charting_2023.csv",
+    "retrievedAt": "2026-09-21T17:49:09.7716833Z",
+    "sourceLastModified": "9/6/2024 11:50:21 PM +00:00",
+    "checksum": "b26266af671fcc2846a04d3bbe9306cdba49f9feb841384eb1123d3610fc213b",
+    "license": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "FTN Data via nflverse",
+    "modifications": "Extracted rows for this one game; columns retained; UTF-8 line endings normalized. Fixture is not a complete season."
+  },
+  {
+    "file": "2026_01_NE_SEA.ftn_charting.csv",
+    "gameId": "2026_01_NE_SEA",
+    "rows": 161,
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/ftn_charting/ftn_charting_2026.csv",
+    "retrievedAt": "2026-09-21T17:49:10.0151177Z",
+    "sourceLastModified": "9/21/2026 5:01:35 PM +00:00",
+    "checksum": "dfd890776e01914c15fc88f7f14e8cd695aeed07f1a27bf5c13d7d0035e75e30",
+    "license": "CC-BY-SA-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "FTN Data via nflverse",
+    "modifications": "Extracted rows for this one game; columns retained; UTF-8 line endings normalized. Fixture is not a complete season."
+  },
+  {
+    "file": "schedules.csv",
+    "rows": 2,
+    "sourceUrl": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+    "retrievedAt": "2026-09-21T17:49:10.7083662Z",
+    "sourceLastModified": "Mon, 21 Sep 2026 17:16:49 GMT",
+    "checksum": "95f194841ea9fb447b20e1f73370c3afc9e970bec02253c3c9c11b3518902652",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "attribution": "Lee Sharpe and nflverse",
+    "modifications": "Extracted two game rows and normalized CSV quoting and line endings."
+  }
+]

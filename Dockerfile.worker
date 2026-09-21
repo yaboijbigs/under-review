@@ -1,0 +1,24 @@
+FROM node:24.15.0-bookworm-slim AS node
+FROM under-review-analytics:local
+COPY --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -sf /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && ln -sf /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+WORKDIR /app
+LABEL org.opencontainers.image.source=https://github.com/yaboijbigs/under-review
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/worker/package.json apps/worker/package.json
+COPY packages/core/package.json packages/core/package.json
+RUN npm ci --omit=dev --workspace=@under-review/worker --include-workspace-root
+COPY packages packages
+COPY apps/worker apps/worker
+COPY migrations migrations
+COPY analytics analytics
+COPY scripts scripts
+COPY LICENSE THIRD_PARTY_NOTICES.md DATA_SOURCES.md ./
+COPY tsconfig.json ./
+RUN groupadd -g 10001 underreview && useradd -u 10001 -g 10001 -m underreview && mkdir -p /data && chown -R underreview:underreview /data
+ENV NODE_ENV=production PROJECT_ROOT=/app DATA_DIR=/data ANALYTICS_SCRIPT=/app/analytics/run.R OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
+USER underreview
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD node --import tsx scripts/worker-health.ts
+CMD ["npm", "run", "worker"]

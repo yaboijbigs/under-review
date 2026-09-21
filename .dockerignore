@@ -1,0 +1,13 @@
+node_modules
+**/.next
+.git
+.env
+.env.*
+data
+artifacts
+deploy/private
+**/*.log
+**/renv/library
+**/renv/staging
+playwright-report
+test-results

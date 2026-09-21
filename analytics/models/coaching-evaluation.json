@@ -1,0 +1,341 @@
+{
+  "schemaVersion": 1,
+  "version": "under-review-nfl4th-2026-v1",
+  "seasons": {
+    "2025": {
+      "eligible": 4290,
+      "modeled": 3658,
+      "games": 285,
+      "exclusionReasons": {
+        "chosen_action_ambiguous": 467,
+        "outside_fourth_down_domain": 138,
+        "unsupported_overtime_or_period": 27
+      },
+      "go": {
+        "n": 888,
+        "brier": 0.2268546814799877,
+        "logLoss": 0.6455567498325123,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 9,
+            "predicted": 0.05905467799069205,
+            "observed": 0.1111111111111111
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 31,
+            "predicted": 0.1514119647549852,
+            "observed": 0.2258064516129032
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 57,
+            "predicted": 0.2604326637624661,
+            "observed": 0.2807017543859649
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 81,
+            "predicted": 0.3525171485523992,
+            "observed": 0.3703703703703703
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 192,
+            "predicted": 0.455279555581645,
+            "observed": 0.5052083333333334
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 166,
+            "predicted": 0.5481231739344234,
+            "observed": 0.6445783132530121
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 277,
+            "predicted": 0.6591427707175342,
+            "observed": 0.6606498194945848
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 75,
+            "predicted": 0.7202866298391988,
+            "observed": 0.7333333333333333
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          }
+        ],
+        "priorSeasonConstant": 0.5806861499364676,
+        "constantBrier": 0.2470605255197316
+      },
+      "fieldGoal": {
+        "n": 977,
+        "brier": 0.09714331153110892,
+        "logLoss": 0.3250831185733655,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 1,
+            "predicted": 0.1540267164655434,
+            "observed": 0
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 2,
+            "predicted": 0.2310400746983152,
+            "observed": 0.5
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 6,
+            "predicted": 0.4382874987279563,
+            "observed": 0.8333333333333334
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 37,
+            "predicted": 0.544228543886222,
+            "observed": 0.6486486486486487
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 87,
+            "predicted": 0.6627798515691222,
+            "observed": 0.7586206896551724
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 209,
+            "predicted": 0.7492503034850618,
+            "observed": 0.8038277511961722
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 186,
+            "predicted": 0.8491778047255762,
+            "observed": 0.8924731182795699
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 449,
+            "predicted": 0.9597048903174848,
+            "observed": 0.9621380846325167
+          }
+        ],
+        "priorSeasonConstant": 0.8596321393998064,
+        "constantBrier": 0.1043657689015076
+      },
+      "kickoffSensitivityChangedActionCount": 339,
+      "finiteActionCoverage": 3658,
+      "sourceChecksum": "162f95da5b7e5aa166689690f3f6769065f869a6b2995a5d582ba84ab22a49ef",
+      "status": "diagnostics_completed"
+    },
+    "2026": {
+      "eligible": 452,
+      "modeled": 374,
+      "games": 31,
+      "exclusionReasons": {
+        "chosen_action_ambiguous": 58,
+        "outside_fourth_down_domain": 15,
+        "unsupported_overtime_or_period": 5
+      },
+      "go": {
+        "n": 64,
+        "brier": 0.2357413993820822,
+        "logLoss": 0.6663292744524912,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 1,
+            "predicted": 0.07899666413140949,
+            "observed": 0
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 3,
+            "predicted": 0.1518829549895599,
+            "observed": 0.3333333333333333
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 5,
+            "predicted": 0.2386385913239792,
+            "observed": 0.4
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 5,
+            "predicted": 0.3623179891670588,
+            "observed": 0.4
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 9,
+            "predicted": 0.4447683354503372,
+            "observed": 0.3333333333333333
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 12,
+            "predicted": 0.5512513657088979,
+            "observed": 0.75
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 28,
+            "predicted": 0.6649165032028707,
+            "observed": 0.6071428571428571
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 1,
+            "predicted": 0.7175418163678842,
+            "observed": 1
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          }
+        ],
+        "priorSeasonConstant": 0.5590551181102362,
+        "constantBrier": 0.2479510896521793
+      },
+      "fieldGoal": {
+        "n": 106,
+        "brier": 0.1134020822579317,
+        "logLoss": 0.349253036965774,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 1,
+            "predicted": 0.4620801493966303,
+            "observed": 1
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 5,
+            "predicted": 0.5356380213280995,
+            "observed": 0.6
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 15,
+            "predicted": 0.6485233048553186,
+            "observed": 0.6
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 28,
+            "predicted": 0.7467781068602902,
+            "observed": 0.7142857142857143
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 15,
+            "predicted": 0.8478828250442271,
+            "observed": 0.9333333333333333
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 42,
+            "predicted": 0.9631190633026364,
+            "observed": 1
+          }
+        ],
+        "priorSeasonConstant": 0.8824130879345603,
+        "constantBrier": 0.1364874836794161
+      },
+      "kickoffSensitivityChangedActionCount": 41,
+      "finiteActionCoverage": 374,
+      "sourceChecksum": "fed94cea32a31341eb71e3729ef051412edecdd65e0709488bd32b38a28442b5",
+      "status": "diagnostics_completed"
+    }
+  },
+  "gate": {
+    "version": "2026-observed-action-gate-v1",
+    "checks": {
+      "parity": true,
+      "transitions": true,
+      "predecisionOnly": true,
+      "currentAdapterTested": true,
+      "currentStatesTested": true,
+      "priorSample": true,
+      "priorGoBrier": true,
+      "priorFgBrier": true,
+      "currentCoverage": true,
+      "empiricalPriorCoverage": true
+    },
+    "passed": true,
+    "failures": [],
+    "adapterChecksum": "924636dc5ce46720f552069bfe11a35de25bab35c425c62400bb9ed806c2fa39",
+    "statesChecksum": "f8ab733477657f820ff5a359e1d4c34ea010c2c4a56da94c2fb5581c6748f5c7",
+    "empiricalChecksum": "1b99601ae98dd0ad2bd795ab4519631a00da89edc56e8433afa2bc04676ee2bf",
+    "policy": "Parity/state/predecision tests; 2025 >=500 go and FG observations, each Brier no worse than previous-season constant +0.005; 2026 >=10 games, >=30 go/FG, all modeled rows finite; >=100 prior2025 ordinary kickoff starts.",
+    "statisticalValidation": "observed_action_diagnostics_only",
+    "upstreamProvenance": "training_cutoff_unknown",
+    "releaseStatus": "supported_model_relative_estimates_for_insensitive_domain",
+    "reason": "Promotion is model-relative within the tested domain; it does not establish causal counterfactual accuracy or eliminate unknown upstream training provenance."
+  },
+  "limitations": [
+    "No counterfactual validation of unchosen actions.",
+    "Upstream artifact training provenance cannot prove leakage-free evaluation.",
+    "Penalty/aborted/fake situations and overtime excluded; observed-action selection bias remains.",
+    "Kickoff sensitivity compares valid simplified branches, not confidence intervals."
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "under-review-nfl4th-2026-v1",
+  "upstream": "nfl4th 1.0.7; nflfastR 6.0.0; fastrmodels 2.1.0",
+  "artifacts": [
+    {
+      "file": "fd_model.rds",
+      "sha256": "db1c1763e763df41e11e013088d77889ddf57f75025e8529e1f587e0c2c4c31a",
+      "bytes": 9107324,
+      "source": "https://github.com/nflverse/nfl4th/releases/download/model_archive/fd_model.rds",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "wp_model.rds",
+      "sha256": "80adad2eb8d5cfb1e9610a31e7b123f9d88f73ce6706fba1ebf9da1b1cc54483",
+      "bytes": 2422111,
+      "source": "https://github.com/nflverse/nfl4th/releases/download/model_archive/wp_model.rds",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "fg_model.rds",
+      "sha256": "704cf38c5f20b9621787238091216758097834dcea5ba509ab02ae5bd4b0445d",
+      "bytes": 161487,
+      "source": "Pinned R package data",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "two_pt_model.rds",
+      "sha256": "c0b2a4a278bc0413c5aca64c1762f1f5b3691da1a1cfd27007e10d98b9bec769",
+      "bytes": 6562,
+      "source": "Pinned R package data",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "punt_df.rds",
+      "sha256": "0bf24a39dd41fe431eb23450210218c9d1afd9228aaf94a4a233c5b1e50b2830",
+      "bytes": 44856,
+      "source": "Pinned R package data",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "fastr_ep_model.rds",
+      "sha256": "6ad1956096599a015bf5eb2c6ca06930ebb4ec68b60d9241d88d5c21a4e6498f",
+      "bytes": 3228744,
+      "source": "Pinned R package data",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "fastr_wp_model.rds",
+      "sha256": "d25b149e6ce5632b0ea4fa3e89fea4cd78620692eccacdeb804ac6800b345bac",
+      "bytes": 29359,
+      "source": "Pinned R package data",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    },
+    {
+      "file": "fastr_wp_model_spread.rds",
+      "sha256": "e115e396d2c95b7a7d0dfe01602362f3fd231616135fd3c2433e143b63f085e0",
+      "bytes": 397032,
+      "source": "Pinned R package data",
+      "trainingWindow": null,
+      "provenanceStatus": "upstream_training_cutoff_unverified"
+    }
+  ]
+}

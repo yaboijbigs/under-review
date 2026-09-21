@@ -1,0 +1,47 @@
+name: Publish tested containers
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact requested revision
+        run: |
+          git init .
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          git fetch --depth 1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Build web
+        run: docker build -f Dockerfile.web -t ghcr.io/${{ github.repository_owner }}/under-review-web:${{ github.sha }} .
+      - name: Publish web
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push ghcr.io/${{ github.repository_owner }}/under-review-web:${{ github.sha }}
+  worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Check out the exact requested revision
+        run: |
+          git init .
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          git fetch --depth 1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Restore pinned analytics dependencies
+        run: docker build -f analytics/Dockerfile -t under-review-analytics:local .
+      - name: Test analytics
+        run: docker run --rm under-review-analytics:local Rscript analytics/tests/run.R
+      - name: Build worker
+        run: docker build -f Dockerfile.worker -t ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }} .
+      - name: Publish worker
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }}

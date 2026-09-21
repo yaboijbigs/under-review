@@ -1,0 +1,4 @@
+{
+  "name": "@under-review/core", "version": "0.1.0", "private": true, "type": "module",
+  "exports": { "./*": "./src/*.ts" }
+}

@@ -1,0 +1,41 @@
+{
+  "name": "under-review",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @under-review/web",
+    "build": "npm run build --workspace @under-review/web",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json && npm run typecheck --workspace @under-review/web",
+    "local:init": "tsx scripts/local-init.ts",
+    "ur": "tsx apps/worker/src/cli.ts",
+    "worker": "tsx apps/worker/src/index.ts",
+    "migrate": "tsx apps/worker/src/cli.ts migrate"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "2.2.1",
+    "csv-parse": "7.0.2",
+    "pg": "8.23.0",
+    "tsx": "4.23.15",
+    "twitter-text": "3.1.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "26.6.2",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/twitter-text": "3.1.10",
+    "typescript": "5.9.3",
+    "vitest": "5.0.1"
+  }
+}

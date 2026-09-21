@@ -1,0 +1,107 @@
+name: under-review
+x-env: &app-env
+  PROJECT_ROOT: /app
+  DATABASE_URL: postgresql://under_review:${POSTGRES_PASSWORD:?required}@db:5432/under_review
+  DATA_DIR: /data
+  SITE_URL: http://localhost:4380
+  PRIVATE_STAGING: "true"
+  VPS_STAGING: "true"
+  TARGET_SEASON: "2026"
+  LIVE_POSTING_ALLOWED: "false"
+  SESSION_SECRET: ${SESSION_SECRET:?required}
+  TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?required}
+  BRAND_NAME: Under Review
+  BRAND_TAGLINE: What actually swung the game?
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  ANALYTICS_TIMEOUT_MS: "900000"
+  MIN_FREE_DISK_BYTES: "5368709120"
+x-guard: &guard
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  pids_limit: 100
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "2"}
+services:
+  db:
+    <<: *guard
+    image: postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    environment:
+      POSTGRES_USER: under_review
+      POSTGRES_DB: under_review
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    command: [postgres, -c, shared_buffers=64MB, -c, max_connections=30]
+    volumes: ["database:/var/lib/postgresql/data"]
+    networks: [private]
+    cpus: 0.15
+    mem_limit: 512m
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U under_review -d under_review"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  bootstrap:
+    <<: *guard
+    image: ${WORKER_IMAGE:?required}
+    environment:
+      <<: *app-env
+      UR_ADMIN_USERNAME: owner
+      UR_ADMIN_PASSWORD: ${UR_ADMIN_PASSWORD:?required}
+      SEED_GAMES: 2023_01_DET_KC,2026_01_NE_SEA
+    command: [node, --import, tsx, scripts/bootstrap.ts]
+    read_only: true
+    tmpfs: ["/tmp:size=128m,mode=1777"]
+    volumes: ["artifacts:/data"]
+    networks: [private]
+    cpus: 0.25
+    mem_limit: 512m
+    depends_on: {db: {condition: service_healthy}}
+    restart: "no"
+  web:
+    <<: *guard
+    image: ${WEB_IMAGE:?required}
+    environment: *app-env
+    ports: ["127.0.0.1:4380:3000"]
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777", "/app/apps/web/.next/cache:size=32m,mode=1777"]
+    networks: [private]
+    cpus: 0.10
+    mem_limit: 512m
+    depends_on: {bootstrap: {condition: service_completed_successfully}}
+    restart: unless-stopped
+  worker:
+    <<: *guard
+    image: ${WORKER_IMAGE:?required}
+    environment: *app-env
+    read_only: true
+    tmpfs: ["/tmp:size=512m,mode=1777"]
+    volumes: ["artifacts:/data"]
+    networks: [private]
+    cpus: 0.25
+    mem_limit: 1536m
+    stop_grace_period: 60s
+    depends_on: {bootstrap: {condition: service_completed_successfully}}
+    restart: unless-stopped
+  check:
+    <<: *guard
+    image: ${WORKER_IMAGE:?required}
+    environment:
+      <<: *app-env
+      SEED_GAMES: 2023_01_DET_KC,2026_01_NE_SEA
+    command: [node, --import, tsx, scripts/staging-check.ts]
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    networks: [private]
+    cpus: 0.10
+    mem_limit: 192m
+    depends_on: {web: {condition: service_healthy}, worker: {condition: service_healthy}}
+    restart: "no"
+volumes:
+  database:
+  artifacts:
+networks:
+  private:

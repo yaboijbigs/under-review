@@ -1,0 +1,320 @@
+{
+  "schemaVersion": 1,
+  "version": "under-review-contextual-baselines-v1",
+  "sources": {
+    "2015": {
+      "season": 2015,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2015.rds",
+      "rows": 48122,
+      "checksum": "361f6d5cd85094739d942d752cba1fed0e54e2673eb13b32a797199b9b2138b5"
+    },
+    "2016": {
+      "season": 2016,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2016.rds",
+      "rows": 47651,
+      "checksum": "c4b14731e2256f0d3bcd07f5eeaaf26d8e2678b2a244ea070297bdbeafdf0d9d"
+    },
+    "2017": {
+      "season": 2017,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2017.rds",
+      "rows": 47245,
+      "checksum": "87683a9554dfd17dbaa2bd974764eb02c0d33fb8f666c052a5e32359210a7dc6"
+    },
+    "2018": {
+      "season": 2018,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2018.rds",
+      "rows": 47109,
+      "checksum": "1e23f43201ab327c997043db3af6ca6cf5315186fe7ae6cae6b652491b7874ad"
+    },
+    "2019": {
+      "season": 2019,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2019.rds",
+      "rows": 47260,
+      "checksum": "22b17c0baf8de45a6c87f3bc3d91fff53560ae04d8d5a134b3d3fada044fe524"
+    },
+    "2020": {
+      "season": 2020,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2020.rds",
+      "rows": 47705,
+      "checksum": "7b28fb9ca3ff07a08cfa905ca49b88766ef44e0ca0f63a0741b15bacf733516f"
+    },
+    "2021": {
+      "season": 2021,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2021.rds",
+      "rows": 49922,
+      "checksum": "782886a9af5e0b89def27b590c5fc10fcbcb9a2096b3cc10581820dd3c81123d"
+    },
+    "2022": {
+      "season": 2022,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.rds",
+      "rows": 49434,
+      "checksum": "4d02c2473298ce00095e60402a62f4c2bb1c98a2e461fce50c676c5972cdae87"
+    },
+    "2023": {
+      "season": 2023,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2023.rds",
+      "rows": 49665,
+      "checksum": "efb02ce170ab44b9be55a770c70083a9edc48ba775091c6d21b3a9a21d59f38c"
+    },
+    "2024": {
+      "season": 2024,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.rds",
+      "rows": 49492,
+      "checksum": "93fff52ead93cdcba19b9f79ba5fe9507bb702958e4fdd7d3d3fbdd15e309f15"
+    },
+    "2025": {
+      "season": 2025,
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2025.rds",
+      "rows": 48771,
+      "checksum": "162f95da5b7e5aa166689690f3f6769065f869a6b2995a5d582ba84ab22a49ef"
+    }
+  },
+  "splits": {
+    "train": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022],
+    "calibration": 2023,
+    "test": [2024, 2025]
+  },
+  "models": {
+    "fumble": {
+      "checksum": "5d13bdb7c25f0354cbde8abe1deb5c8bb15e865fb17ce275aca016772181b5e6",
+      "diagnostics": {
+        "n": 765,
+        "brier": 0.2346677661839339,
+        "logLoss": 0.6620014401522745,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 1,
+            "predicted": 0.2929713116522865,
+            "observed": 0
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 344,
+            "predicted": 0.3527691173963027,
+            "observed": 0.3866279069767442
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 315,
+            "predicted": 0.4425413088511103,
+            "observed": 0.4698412698412698
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 10,
+            "predicted": 0.5104760919421594,
+            "observed": 0.5
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 60,
+            "predicted": 0.7569013922534183,
+            "observed": 0.85
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 35,
+            "predicted": 0.824988626544551,
+            "observed": 0.6857142857142857
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          }
+        ],
+        "constantBrier": 0.2505065828636207
+      },
+      "trainingSeasons": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022],
+      "calibrationSeasons": 2023,
+      "testSeasons": [2024, 2025],
+      "inputSnapshot": "training-input-fumble-506e8775ec6349c4c93e30bc44d12ce6073bb0e74de6d4da56b3d26fe6fc2561.rds"
+    },
+    "fg": {
+      "checksum": "fc871868cb910470213a28e486eb40128705bdc11e935e8f0b54721750d5a928",
+      "diagnostics": {
+        "n": 2256,
+        "brier": 0.1036250127011407,
+        "logLoss": 0.3404411581737741,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 1,
+            "predicted": 0.2625846179976823,
+            "observed": 0
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 8,
+            "predicted": 0.3520312338014434,
+            "observed": 0.375
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 12,
+            "predicted": 0.4524371822843236,
+            "observed": 0.4166666666666667
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 42,
+            "predicted": 0.5689186777103834,
+            "observed": 0.5714285714285714
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 170,
+            "predicted": 0.6559345849027889,
+            "observed": 0.6823529411764706
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 377,
+            "predicted": 0.7531931664900684,
+            "observed": 0.7692307692307693
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 560,
+            "predicted": 0.8528055917942275,
+            "observed": 0.8321428571428572
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 1086,
+            "predicted": 0.9644015430037307,
+            "observed": 0.9640883977900553
+          }
+        ],
+        "constantBrier": 0.1169324758815553
+      },
+      "trainingSeasons": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022],
+      "calibrationSeasons": 2023,
+      "testSeasons": [2024, 2025],
+      "inputSnapshot": "training-input-fg-851acbf4467397b0812dd533f1acc894a4891b4cdbee2383bf64b838a91a7b4e.rds"
+    },
+    "xp": {
+      "checksum": "1b26bba80d0989fea447913c039c0ff8b51513944e8bbc8d6b557fa0248315ea",
+      "diagnostics": {
+        "n": 2579,
+        "brier": 0.03254134552689204,
+        "logLoss": 0.1449530074255946,
+        "bins": [
+          {
+            "bin": "[0,0.1]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.1,0.2]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.2,0.3]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.3,0.4]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.4,0.5]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.5,0.6]",
+            "n": 19,
+            "predicted": 0.5696993151493492,
+            "observed": 0.631578947368421
+          },
+          {
+            "bin": "(0.6,0.7]",
+            "n": 9,
+            "predicted": 0.6446605595335507,
+            "observed": 1
+          },
+          {
+            "bin": "(0.7,0.8]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.8,0.9]",
+            "n": 0,
+            "predicted": null,
+            "observed": null
+          },
+          {
+            "bin": "(0.9,1]",
+            "n": 2551,
+            "predicted": 0.9645560180298255,
+            "observed": 0.9682477459819678
+          }
+        ],
+        "constantBrier": 0.03334346682410633
+      },
+      "trainingSeasons": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022],
+      "calibrationSeasons": 2023,
+      "testSeasons": [2024, 2025],
+      "inputSnapshot": "training-input-xp-9422a952f47cc02693d1356928f9a5d2246366ac0dbedf0b9b91cfd0c64b23bb.rds"
+    },
+    "penalty": {
+      "checksum": "4f71562b86caf6c0d319cedf814c72a3d8fb0db90c7f28d622692ec0474013f0",
+      "diagnostics": {
+        "n": 4560,
+        "countRmse": 1.000954690431596,
+        "meanObserved": 0.9342105263157895,
+        "meanPredicted": 0.8397849946819642,
+        "poissonDispersion": 1.038071508807683,
+        "calibrationRatio": 0.9918599290041803,
+        "distribution": "poisson"
+      },
+      "trainingSeasons": [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022],
+      "calibrationSeasons": 2023,
+      "testSeasons": [2024, 2025],
+      "inputSnapshot": "training-input-penalty-089f46ff2f3330bc6bd8058097e36f07f6260c7c68ca03c2c7c853bc913d6968.rds"
+    }
+  }
+}

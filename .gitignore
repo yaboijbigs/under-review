@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.env
+.env.*
+!.env.example
+data/
+artifacts/
+coverage/
+test-results/
+playwright-report/
+*.log
+*.tsbuildinfo
+analytics/renv/library/
+analytics/renv/staging/
+analytics/.Rhistory
+analytics/.RData
+deploy/private/

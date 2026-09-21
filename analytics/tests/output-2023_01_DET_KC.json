@@ -1,0 +1,5023 @@
+{
+  "schemaVersion": 1,
+  "metrics": [
+    {
+      "id": "2023_01_DET_KC:124:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0.01161467669330774,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:124"
+      ],
+      "playIds": [
+        "124"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.32916/     NA/0.31754",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 1,
+        "half_seconds_remaining": 1761,
+        "game_seconds_remaining": 3561,
+        "quarter_seconds_remaining": 861,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 3,
+        "yardline_100": 68,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 1,
+        "elapsed_share": 0.01083333333333333,
+        "spread_time": 3.830368557926914,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.3291555317224624
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:289:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0.01145239704392564,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:289"
+      ],
+      "playIds": [
+        "289"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.63938/     NA/0.62793",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 1,
+        "half_seconds_remaining": 1558,
+        "game_seconds_remaining": 3358,
+        "quarter_seconds_remaining": 658,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 3,
+        "yardline_100": 62,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 1,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 1,
+        "elapsed_share": 0.06722222222222222,
+        "spread_time": 3.056912660685962,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.6393833049412276
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:386:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:386"
+      ],
+      "playIds": [
+        "386"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: go; preferred baseline action: go; expected WP go/FG/punt: 0.32306/     NA/0.30700",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 1,
+        "half_seconds_remaining": 1467,
+        "game_seconds_remaining": 3267,
+        "quarter_seconds_remaining": 567,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 2,
+        "yardline_100": 83,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 1,
+        "elapsed_share": 0.0925,
+        "spread_time": 2.762937322549419,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.3230584831361281
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:1452:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:1452"
+      ],
+      "playIds": [
+        "1452"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: punt; expected WP go/FG/punt: 0.56037/     NA/0.56332",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 2,
+        "half_seconds_remaining": 234,
+        "game_seconds_remaining": 2034,
+        "quarter_seconds_remaining": 234,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 5,
+        "yardline_100": 88,
+        "posteam_timeouts_remaining": 2,
+        "defteam_timeouts_remaining": 2,
+        "receive_2h_ko": 1,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 1,
+        "elapsed_share": 0.435,
+        "spread_time": 0.7020816024679875,
+        "home_timeouts_remaining": 2,
+        "away_timeouts_remaining": 2,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "punt",
+        "expectedWp": 0.5633212904971612
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:1537:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:1537"
+      ],
+      "playIds": [
+        "1537"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: punt; expected WP go/FG/punt: 0.36660/     NA/0.37774",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 2,
+        "half_seconds_remaining": 133,
+        "game_seconds_remaining": 1933,
+        "quarter_seconds_remaining": 133,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 8,
+        "yardline_100": 57,
+        "posteam_timeouts_remaining": 2,
+        "defteam_timeouts_remaining": 2,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 1,
+        "elapsed_share": 0.4630555555555556,
+        "spread_time": 0.6275525533639105,
+        "home_timeouts_remaining": 2,
+        "away_timeouts_remaining": 2,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "punt",
+        "expectedWp": 0.3777371238633855
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:1643:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "KC",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "unsupported_state",
+      "eventIds": [
+        "2023_01_DET_KC:1643"
+      ],
+      "playIds": [
+        "1643"
+      ],
+      "assumptions": [
+        "Ruling correctness is not assessed automatically."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:1986:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:1986"
+      ],
+      "playIds": [
+        "1986"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: go; preferred baseline action: go; expected WP go/FG/punt: 0.17339/     NA/0.17255",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 2,
+        "half_seconds_remaining": 3,
+        "game_seconds_remaining": 1803,
+        "quarter_seconds_remaining": 3,
+        "score_differential": -7,
+        "down": 4,
+        "ydstogo": 10,
+        "yardline_100": 58,
+        "posteam_timeouts_remaining": 0,
+        "defteam_timeouts_remaining": 0,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 1,
+        "elapsed_share": 0.4991666666666666,
+        "spread_time": 0.5431486141847427,
+        "home_timeouts_remaining": 0,
+        "away_timeouts_remaining": 0,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.1733903055354635
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2166:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:2166"
+      ],
+      "playIds": [
+        "2166"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: punt; expected WP go/FG/punt: 0.78352/     NA/0.79608",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1681,
+        "game_seconds_remaining": 1681,
+        "quarter_seconds_remaining": 781,
+        "score_differential": 7,
+        "down": 4,
+        "ydstogo": 8,
+        "yardline_100": 61,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.5330555555555555,
+        "spread_time": 0.4742940167414702,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "punt",
+        "expectedWp": 0.7960754258419181
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2228:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "DET",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "multiple_or_unparsed_penalties",
+      "eventIds": [
+        "2023_01_DET_KC:2228"
+      ],
+      "playIds": [
+        "2228"
+      ],
+      "assumptions": [
+        "Ruling correctness is not assessed automatically."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2286:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0.01206689522942869,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:2286"
+      ],
+      "playIds": [
+        "2286"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.15585/     NA/0.14378",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 3,
+        "half_seconds_remaining": 1612,
+        "game_seconds_remaining": 1612,
+        "quarter_seconds_remaining": 712,
+        "score_differential": -7,
+        "down": 4,
+        "ydstogo": 6,
+        "yardline_100": 89,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.5522222222222222,
+        "spread_time": 0.4392904234660397,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.1558466109942584
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2558:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0.009485739849243391,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:2558"
+      ],
+      "playIds": [
+        "2558"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.56622/     NA/0.55674",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1428,
+        "game_seconds_remaining": 1428,
+        "quarter_seconds_remaining": 528,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 4,
+        "yardline_100": 59,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.6033333333333334,
+        "spread_time": 0.3580656347076474,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.5662210245755566
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2638:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "DET",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "penalty_declined",
+      "eventIds": [
+        "2023_01_DET_KC:2638"
+      ],
+      "playIds": [
+        "2638"
+      ],
+      "assumptions": [
+        "Ruling correctness is not assessed automatically."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2754:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0.05299152433702953,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:2754"
+      ],
+      "playIds": [
+        "2754"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.46838/0.44315/0.41539",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 3,
+        "half_seconds_remaining": 1256,
+        "game_seconds_remaining": 1256,
+        "quarter_seconds_remaining": 356,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 3,
+        "yardline_100": 40,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.6511111111111111,
+        "spread_time": 0.2957768236116659,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.4683846186862959
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2872:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "KC",
+      "value": 0.1136196255683899,
+      "unit": "wp_delta",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:2872"
+      ],
+      "playIds": [
+        "2872"
+      ],
+      "assumptions": [
+        "Observed incomplete pass stands without enforcement; this is not an estimate of a foul-free play.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1080,
+        "game_seconds_remaining": 1080,
+        "quarter_seconds_remaining": 180,
+        "score_differential": 0,
+        "down": 1,
+        "ydstogo": 10,
+        "yardline_100": 25,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1080,
+        "game_seconds_remaining": 1080,
+        "quarter_seconds_remaining": 180,
+        "score_differential": 0,
+        "down": 2,
+        "ydstogo": 10,
+        "yardline_100": 66,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2872:ruling_ep",
+      "category": "officiating",
+      "name": "Ruling expected-points consequence",
+      "team": "KC",
+      "value": 3.083637028816156,
+      "unit": "points",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:2872"
+      ],
+      "playIds": [
+        "2872"
+      ],
+      "assumptions": [
+        "Observed incomplete pass stands without enforcement; this is not an estimate of a foul-free play.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1080,
+        "game_seconds_remaining": 1080,
+        "quarter_seconds_remaining": 180,
+        "score_differential": 0,
+        "down": 1,
+        "ydstogo": 10,
+        "yardline_100": 25,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1080,
+        "game_seconds_remaining": 1080,
+        "quarter_seconds_remaining": 180,
+        "score_differential": 0,
+        "down": 2,
+        "ydstogo": 10,
+        "yardline_100": 66,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:2982:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0.01044092864332757,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "kickoff_assumption_sensitive",
+      "eventIds": [
+        "2023_01_DET_KC:2982"
+      ],
+      "playIds": [
+        "2982"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: fg; preferred baseline action: go; expected WP go/FG/punt: 0.68062/0.67018/     NA",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 3,
+        "half_seconds_remaining": 1034,
+        "game_seconds_remaining": 1034,
+        "quarter_seconds_remaining": 134,
+        "score_differential": 0,
+        "down": 4,
+        "ydstogo": 2,
+        "yardline_100": 17,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.7127777777777777,
+        "spread_time": 0.2311203404013991,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.6806209174395464
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3055:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "DET",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "alternative_requires_review",
+      "eventIds": [
+        "2023_01_DET_KC:3055"
+      ],
+      "playIds": [
+        "3055"
+      ],
+      "assumptions": [
+        "Ruling correctness is not assessed automatically."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3137:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0.03612968937738564,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:3137"
+      ],
+      "playIds": [
+        "3137"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.29989/     NA/0.26377",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 3,
+        "half_seconds_remaining": 977,
+        "game_seconds_remaining": 977,
+        "quarter_seconds_remaining": 77,
+        "score_differential": -3,
+        "down": 4,
+        "ydstogo": 2,
+        "yardline_100": 67,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.7286111111111111,
+        "spread_time": 0.2169366109996648,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.2998948711545258
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3347:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0.01156989556800669,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "kickoff_assumption_sensitive",
+      "eventIds": [
+        "2023_01_DET_KC:3347"
+      ],
+      "playIds": [
+        "3347"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: fg; preferred baseline action: go; expected WP go/FG/punt: 0.78964/0.77807/     NA",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 736,
+        "game_seconds_remaining": 736,
+        "quarter_seconds_remaining": 736,
+        "score_differential": 3,
+        "down": 4,
+        "ydstogo": 2,
+        "yardline_100": 21,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.7955555555555556,
+        "spread_time": 0.1659733806353987,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.7896368418168543
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3437:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "KC",
+      "value": 0.02845881879329681,
+      "unit": "wp_delta",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:3437"
+      ],
+      "playIds": [
+        "3437"
+      ],
+      "assumptions": [
+        "Same-clock state without presnap enforcement; does not imply the foul was incorrectly called.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 646,
+        "game_seconds_remaining": 646,
+        "quarter_seconds_remaining": 646,
+        "score_differential": -6,
+        "down": 3,
+        "ydstogo": 12,
+        "yardline_100": 77,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 646,
+        "game_seconds_remaining": 646,
+        "quarter_seconds_remaining": 646,
+        "score_differential": -6,
+        "down": 3,
+        "ydstogo": 7,
+        "yardline_100": 72,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3437:ruling_ep",
+      "category": "officiating",
+      "name": "Ruling expected-points consequence",
+      "team": "KC",
+      "value": 0.7765985415317118,
+      "unit": "points",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:3437"
+      ],
+      "playIds": [
+        "3437"
+      ],
+      "assumptions": [
+        "Same-clock state without presnap enforcement; does not imply the foul was incorrectly called.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 646,
+        "game_seconds_remaining": 646,
+        "quarter_seconds_remaining": 646,
+        "score_differential": -6,
+        "down": 3,
+        "ydstogo": 12,
+        "yardline_100": 77,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 646,
+        "game_seconds_remaining": 646,
+        "quarter_seconds_remaining": 646,
+        "score_differential": -6,
+        "down": 3,
+        "ydstogo": 7,
+        "yardline_100": 72,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3486:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "DET",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "penalty_declined",
+      "eventIds": [
+        "2023_01_DET_KC:3486"
+      ],
+      "playIds": [
+        "3486"
+      ],
+      "assumptions": [
+        "Ruling correctness is not assessed automatically."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3745:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0.04988226728826195,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:3745"
+      ],
+      "playIds": [
+        "3745"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: punt; preferred baseline action: go; expected WP go/FG/punt: 0.41926/     NA/0.36938",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 316,
+        "game_seconds_remaining": 316,
+        "quarter_seconds_remaining": 316,
+        "score_differential": -1,
+        "down": 4,
+        "ydstogo": 4,
+        "yardline_100": 69,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.9122222222222223,
+        "spread_time": 0.1040800954423289,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.4192595617586186
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3765:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "KC",
+      "value": 0.03502893447875977,
+      "unit": "wp_delta",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:3765"
+      ],
+      "playIds": [
+        "3765"
+      ],
+      "assumptions": [
+        "Same-clock state without presnap enforcement; does not imply the foul was incorrectly called.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 307,
+        "game_seconds_remaining": 307,
+        "quarter_seconds_remaining": 307,
+        "score_differential": 1,
+        "down": 1,
+        "ydstogo": 15,
+        "yardline_100": 71,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 307,
+        "game_seconds_remaining": 307,
+        "quarter_seconds_remaining": 307,
+        "score_differential": 1,
+        "down": 1,
+        "ydstogo": 10,
+        "yardline_100": 66,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3765:ruling_ep",
+      "category": "officiating",
+      "name": "Ruling expected-points consequence",
+      "team": "KC",
+      "value": 0.5461319673340768,
+      "unit": "points",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:3765"
+      ],
+      "playIds": [
+        "3765"
+      ],
+      "assumptions": [
+        "Same-clock state without presnap enforcement; does not imply the foul was incorrectly called.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 307,
+        "game_seconds_remaining": 307,
+        "quarter_seconds_remaining": 307,
+        "score_differential": 1,
+        "down": 1,
+        "ydstogo": 15,
+        "yardline_100": 71,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 307,
+        "game_seconds_remaining": 307,
+        "quarter_seconds_remaining": 307,
+        "score_differential": 1,
+        "down": 1,
+        "ydstogo": 10,
+        "yardline_100": 66,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3889:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "DET",
+      "value": 0,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:3889"
+      ],
+      "playIds": [
+        "3889"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: go; preferred baseline action: go; expected WP go/FG/punt: 0.64076/0.48998/0.53136",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "DET",
+        "qtr": 4,
+        "half_seconds_remaining": 153,
+        "game_seconds_remaining": 153,
+        "quarter_seconds_remaining": 153,
+        "score_differential": 1,
+        "down": 4,
+        "ydstogo": 2,
+        "yardline_100": 45,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": -4,
+        "posteam_total": 24.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.9575,
+        "spread_time": 0.08683846251939428,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "DET",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "go",
+        "expectedWp": 0.6407638375349088
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:3935:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "KC",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "alternative_requires_review",
+      "eventIds": [
+        "2023_01_DET_KC:3935"
+      ],
+      "playIds": [
+        "3935"
+      ],
+      "assumptions": [
+        "Ruling correctness is not assessed automatically."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:4017:ruling",
+      "category": "officiating",
+      "name": "Observed ruling consequence",
+      "team": "KC",
+      "value": -0.02635416388511658,
+      "unit": "wp_delta",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:4017"
+      ],
+      "playIds": [
+        "4017"
+      ],
+      "assumptions": [
+        "Same-clock state without presnap enforcement; does not imply the foul was incorrectly called.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 129,
+        "game_seconds_remaining": 129,
+        "quarter_seconds_remaining": 129,
+        "score_differential": -1,
+        "down": 4,
+        "ydstogo": 25,
+        "yardline_100": 70,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 129,
+        "game_seconds_remaining": 129,
+        "quarter_seconds_remaining": 129,
+        "score_differential": -1,
+        "down": 4,
+        "ydstogo": 20,
+        "yardline_100": 65,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:4017:ruling_ep",
+      "category": "officiating",
+      "name": "Ruling expected-points consequence",
+      "team": "KC",
+      "value": -0.246694547124207,
+      "unit": "points",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:4017"
+      ],
+      "playIds": [
+        "4017"
+      ],
+      "assumptions": [
+        "Same-clock state without presnap enforcement; does not imply the foul was incorrectly called.",
+        "Home-team perspective in both states; opponent benefit is its negative.",
+        "Event-local comparison; never sum these into an alternate chance of winning.",
+        "Ties excluded from published WP training; no overtime model."
+      ],
+      "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 129,
+        "game_seconds_remaining": 129,
+        "quarter_seconds_remaining": 129,
+        "score_differential": -1,
+        "down": 4,
+        "ydstogo": 25,
+        "yardline_100": 70,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "alternativeState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 129,
+        "game_seconds_remaining": 129,
+        "quarter_seconds_remaining": 129,
+        "score_differential": -1,
+        "down": 4,
+        "ydstogo": 20,
+        "yardline_100": 65,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 0
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:4017:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": null,
+      "unit": "wp_delta",
+      "status": "unavailable",
+      "reasonCode": "chosen_action_ambiguous",
+      "eventIds": [
+        "2023_01_DET_KC:4017"
+      ],
+      "playIds": [
+        "4017"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:4041:coaching",
+      "category": "coaching",
+      "name": "Fourth-down decision cost",
+      "team": "KC",
+      "value": 0.06709790528537704,
+      "unit": "wp_delta",
+      "status": "experimental",
+      "reasonCode": "validation_gate_failed_or_stale:",
+      "eventIds": [
+        "2023_01_DET_KC:4041"
+      ],
+      "playIds": [
+        "4041"
+      ],
+      "assumptions": [
+        "Spread-adjusted nfl4th blended WP; distinct from officiating WP.",
+        "Six seconds per action; no added successful-conversion runoff.",
+        "No go-for-it turnover returns; kicking ignores kicker identity/weather; ordinary kickoff continuations only.",
+        "Close-call tolerance is a product rule of 1 percentage point, not model uncertainty.",
+        "Upstream training cutoff unverified; current-season validation status is documented separately.",
+        "Kickoff continuation scenarios: legacy_own25, touchback_own20, prior_return_start_25; sensitivity is not a confidence interval.",
+        "Chosen action: go; preferred baseline action: punt; expected WP go/FG/punt: 0.21824/     NA/0.28533",
+        "A supported value is a model-relative estimate in a tested domain, not a proven causal cost."
+      ],
+      "modelVersion": "under-review-nfl4th-2026-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": {
+        "season": 2023,
+        "home_team": "KC",
+        "away_team": "DET",
+        "posteam": "KC",
+        "qtr": 4,
+        "half_seconds_remaining": 129,
+        "game_seconds_remaining": 129,
+        "quarter_seconds_remaining": 129,
+        "score_differential": -1,
+        "down": 4,
+        "ydstogo": 25,
+        "yardline_100": 70,
+        "posteam_timeouts_remaining": 3,
+        "defteam_timeouts_remaining": 3,
+        "receive_2h_ko": 0,
+        "roof": "outdoors",
+        "spread_line": 4,
+        "total_line": 53,
+        "type": "reg",
+        "era0": 0,
+        "era1": 0,
+        "era2": 0,
+        "era3": 0,
+        "era4": 1,
+        "outdoors": 1,
+        "dome": 0,
+        "retractable": 0,
+        "fg_model_roof": "11",
+        "home_total": 28.5,
+        "away_total": 24.5,
+        "posteam_spread": 4,
+        "posteam_total": 28.5,
+        "home_opening_kickoff": 0,
+        "home_receive_2h_ko": 0,
+        "elapsed_share": 0.9641666666666666,
+        "spread_time": 0.08455337345087144,
+        "home_timeouts_remaining": 3,
+        "away_timeouts_remaining": 3,
+        "original_posteam": "KC",
+        "runoff": 0
+      },
+      "alternativeState": {
+        "action": "punt",
+        "expectedWp": 0.2853337960790271
+      },
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:fumble:KC",
+      "category": "fumble",
+      "name": "Fumble recoveries above expectation",
+      "team": "KC",
+      "value": 0,
+      "unit": "recoveries",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:"
+      ],
+      "playIds": [],
+      "assumptions": [
+        "Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.",
+        "Recovery residual only; no unsupported recovery WP branches.",
+        "Chronological training: 2015,2016,2017,2018,2019,2020,2021,2022; calibration: 2023"
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1-5d13bdb7c25f",
+      "coverage": {
+        "eligible": 0,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:fumble:DET",
+      "category": "fumble",
+      "name": "Fumble recoveries above expectation",
+      "team": "DET",
+      "value": null,
+      "unit": "recoveries",
+      "status": "unavailable",
+      "reasonCode": "baseline_leakage_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.",
+        "Recovery residual only; no unsupported recovery WP branches."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:fg:KC",
+      "category": "kicking",
+      "name": "Field-goal points above expectation",
+      "team": "KC",
+      "value": null,
+      "unit": "points",
+      "status": "unavailable",
+      "reasonCode": "baseline_leakage_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Nullified/blocked attempts and returns excluded; blocked kicks are not automatically kicker errors.",
+        "Distance, era and reported roof; no weather or kicker-history adjustment in this model."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 2,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:fg:DET",
+      "category": "kicking",
+      "name": "Field-goal points above expectation",
+      "team": "DET",
+      "value": 0,
+      "unit": "points",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:"
+      ],
+      "playIds": [],
+      "assumptions": [
+        "Nullified/blocked attempts and returns excluded; blocked kicks are not automatically kicker errors.",
+        "Distance, era and reported roof; no weather or kicker-history adjustment in this model.",
+        "Chronological training: 2015,2016,2017,2018,2019,2020,2021,2022; calibration: 2023"
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1-fc871868cb91",
+      "coverage": {
+        "eligible": 0,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:xp:KC",
+      "category": "kicking",
+      "name": "Extra-point points above expectation",
+      "team": "KC",
+      "value": null,
+      "unit": "points",
+      "status": "unavailable",
+      "reasonCode": "baseline_leakage_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Nullified/blocked attempts and returns excluded; blocked kicks are not automatically kicker errors.",
+        "Distance, era and reported roof; no weather or kicker-history adjustment in this model."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 2,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:xp:DET",
+      "category": "kicking",
+      "name": "Extra-point points above expectation",
+      "team": "DET",
+      "value": null,
+      "unit": "points",
+      "status": "unavailable",
+      "reasonCode": "baseline_leakage_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Nullified/blocked attempts and returns excluded; blocked kicks are not automatically kicker errors.",
+        "Distance, era and reported roof; no weather or kicker-history adjustment in this model."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 3,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:DET:presnap",
+      "category": "penalty_anomaly",
+      "name": "presnap called penalties above expectation",
+      "team": "DET",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 2 across 69 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 69,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:DET:offensive_holding",
+      "category": "penalty_anomaly",
+      "name": "offensive_holding called penalties above expectation",
+      "team": "DET",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 0 across 69 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 69,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:DET:defensive_holding",
+      "category": "penalty_anomaly",
+      "name": "defensive_holding called penalties above expectation",
+      "team": "DET",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 0 across 42 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 42,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:DET:pass_interference",
+      "category": "penalty_anomaly",
+      "name": "pass_interference called penalties above expectation",
+      "team": "DET",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 1 across 42 opportunities; penalty-generated first downs 1."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 42,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:KC:presnap",
+      "category": "penalty_anomaly",
+      "name": "presnap called penalties above expectation",
+      "team": "KC",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 1 across 66 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 66,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:KC:offensive_holding",
+      "category": "penalty_anomaly",
+      "name": "offensive_holding called penalties above expectation",
+      "team": "KC",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 2 across 66 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 66,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:KC:defensive_holding",
+      "category": "penalty_anomaly",
+      "name": "defensive_holding called penalties above expectation",
+      "team": "KC",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 0 across 36 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 36,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:penalty:KC:pass_interference",
+      "category": "penalty_anomaly",
+      "name": "pass_interference called penalties above expectation",
+      "team": "KC",
+      "value": null,
+      "unit": "calls",
+      "status": "unavailable",
+      "reasonCode": "baseline_not_trained_or_domain_guard",
+      "eventIds": [],
+      "playIds": [],
+      "assumptions": [
+        "Called/enforced penalties, not adjudicated foul correctness.",
+        "Family-specific opportunity counts; prior-game team/opponent tendencies; crew effects not normalized away.",
+        "Observed 0 across 36 opportunities; penalty-generated first downs 0."
+      ],
+      "modelVersion": "under-review-contextual-baselines-v1",
+      "coverage": {
+        "eligible": 36,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_drop:KC",
+      "category": "execution",
+      "name": "Charted drops",
+      "team": "KC",
+      "value": 6,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:902",
+        "2023_01_DET_KC:2364",
+        "2023_01_DET_KC:2959",
+        "2023_01_DET_KC:3324",
+        "2023_01_DET_KC:3912",
+        "2023_01_DET_KC:3971"
+      ],
+      "playIds": [
+        "902",
+        "2364",
+        "2959",
+        "3324",
+        "3912",
+        "3971"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 39,
+        "modeled": 39
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_drop:DET",
+      "category": "execution",
+      "name": "Charted drops",
+      "team": "DET",
+      "value": 1,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:2186"
+      ],
+      "playIds": [
+        "2186"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 34,
+        "modeled": 34
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_interception_worthy:KC",
+      "category": "execution",
+      "name": "Interception-worthy throws",
+      "team": "KC",
+      "value": 0,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:"
+      ],
+      "playIds": [],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 39,
+        "modeled": 39
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_interception_worthy:DET",
+      "category": "execution",
+      "name": "Interception-worthy throws",
+      "team": "DET",
+      "value": 0,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:"
+      ],
+      "playIds": [],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 34,
+        "modeled": 34
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_qb_fault_sack:KC",
+      "category": "execution",
+      "name": "QB-attributed sacks",
+      "team": "KC",
+      "value": null,
+      "unit": "count",
+      "status": "unavailable",
+      "reasonCode": "charting_tag_missing",
+      "eventIds": [
+        "2023_01_DET_KC:"
+      ],
+      "playIds": [],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 0,
+        "modeled": 0
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_qb_fault_sack:DET",
+      "category": "execution",
+      "name": "QB-attributed sacks",
+      "team": "DET",
+      "value": 1,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:1517"
+      ],
+      "playIds": [
+        "1517"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 1,
+        "modeled": 1
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_catchable_ball:KC",
+      "category": "execution",
+      "name": "Catchable targets",
+      "team": "KC",
+      "value": 29,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:194",
+        "2023_01_DET_KC:219",
+        "2023_01_DET_KC:736",
+        "2023_01_DET_KC:852",
+        "2023_01_DET_KC:877",
+        "2023_01_DET_KC:902",
+        "2023_01_DET_KC:974",
+        "2023_01_DET_KC:1001",
+        "2023_01_DET_KC:1563",
+        "2023_01_DET_KC:1618",
+        "2023_01_DET_KC:1679",
+        "2023_01_DET_KC:1711",
+        "2023_01_DET_KC:1741",
+        "2023_01_DET_KC:2067",
+        "2023_01_DET_KC:2118",
+        "2023_01_DET_KC:2141",
+        "2023_01_DET_KC:2364",
+        "2023_01_DET_KC:2435",
+        "2023_01_DET_KC:2510",
+        "2023_01_DET_KC:2825",
+        "2023_01_DET_KC:2906",
+        "2023_01_DET_KC:2936",
+        "2023_01_DET_KC:2959",
+        "2023_01_DET_KC:3185",
+        "2023_01_DET_KC:3233",
+        "2023_01_DET_KC:3324",
+        "2023_01_DET_KC:3674",
+        "2023_01_DET_KC:3912",
+        "2023_01_DET_KC:3971"
+      ],
+      "playIds": [
+        "194",
+        "219",
+        "736",
+        "852",
+        "877",
+        "902",
+        "974",
+        "1001",
+        "1563",
+        "1618",
+        "1679",
+        "1711",
+        "1741",
+        "2067",
+        "2118",
+        "2141",
+        "2364",
+        "2435",
+        "2510",
+        "2825",
+        "2906",
+        "2936",
+        "2959",
+        "3185",
+        "3233",
+        "3324",
+        "3674",
+        "3912",
+        "3971"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 39,
+        "modeled": 39
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_catchable_ball:DET",
+      "category": "execution",
+      "name": "Catchable targets",
+      "team": "DET",
+      "value": 23,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:436",
+        "2023_01_DET_KC:461",
+        "2023_01_DET_KC:530",
+        "2023_01_DET_KC:621",
+        "2023_01_DET_KC:1069",
+        "2023_01_DET_KC:1154",
+        "2023_01_DET_KC:1201",
+        "2023_01_DET_KC:1248",
+        "2023_01_DET_KC:1300",
+        "2023_01_DET_KC:1330",
+        "2023_01_DET_KC:1812",
+        "2023_01_DET_KC:1837",
+        "2023_01_DET_KC:1869",
+        "2023_01_DET_KC:2186",
+        "2023_01_DET_KC:2261",
+        "2023_01_DET_KC:2613",
+        "2023_01_DET_KC:2638",
+        "2023_01_DET_KC:2701",
+        "2023_01_DET_KC:2731",
+        "2023_01_DET_KC:3089",
+        "2023_01_DET_KC:3461",
+        "2023_01_DET_KC:3486",
+        "2023_01_DET_KC:3566"
+      ],
+      "playIds": [
+        "436",
+        "461",
+        "530",
+        "621",
+        "1069",
+        "1154",
+        "1201",
+        "1248",
+        "1300",
+        "1330",
+        "1812",
+        "1837",
+        "1869",
+        "2186",
+        "2261",
+        "2613",
+        "2638",
+        "2701",
+        "2731",
+        "3089",
+        "3461",
+        "3486",
+        "3566"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 34,
+        "modeled": 34
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_contested_ball:KC",
+      "category": "execution",
+      "name": "Contested targets",
+      "team": "KC",
+      "value": 5,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:713",
+        "2023_01_DET_KC:1679",
+        "2023_01_DET_KC:2141",
+        "2023_01_DET_KC:3674",
+        "2023_01_DET_KC:3971"
+      ],
+      "playIds": [
+        "713",
+        "1679",
+        "2141",
+        "3674",
+        "3971"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 39,
+        "modeled": 39
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_contested_ball:DET",
+      "category": "execution",
+      "name": "Contested targets",
+      "team": "DET",
+      "value": 7,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:1494",
+        "2023_01_DET_KC:1812",
+        "2023_01_DET_KC:1940",
+        "2023_01_DET_KC:2261",
+        "2023_01_DET_KC:2613",
+        "2023_01_DET_KC:3032",
+        "2023_01_DET_KC:3114"
+      ],
+      "playIds": [
+        "1494",
+        "1812",
+        "1940",
+        "2261",
+        "2613",
+        "3032",
+        "3114"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 34,
+        "modeled": 34
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_created_reception:KC",
+      "category": "execution",
+      "name": "Receiver-created receptions",
+      "team": "KC",
+      "value": 1,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:1679"
+      ],
+      "playIds": [
+        "1679"
+      ],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 39,
+        "modeled": 39
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    },
+    {
+      "id": "2023_01_DET_KC:is_created_reception:DET",
+      "category": "execution",
+      "name": "Receiver-created receptions",
+      "team": "DET",
+      "value": 0,
+      "unit": "count",
+      "status": "supported",
+      "reasonCode": null,
+      "eventIds": [
+        "2023_01_DET_KC:"
+      ],
+      "playIds": [],
+      "assumptions": [
+        "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
+        "Coverage counts nonmissing charted labels; uncharted plays are not zero errors.",
+        "FTN attribution and CC-BY-SA obligations apply."
+      ],
+      "modelVersion": "FTN-charting",
+      "coverage": {
+        "eligible": 34,
+        "modeled": 34
+      },
+      "actualState": null,
+      "alternativeState": null,
+      "details": null
+    }
+  ],
+  "events": [
+    {
+      "id": "2023_01_DET_KC:124",
+      "playId": "124",
+      "quarter": 1,
+      "clock": "14:21",
+      "description": "(14:21) 3-J.Fox punts 61 yards to KC 7, Center-47-S.Daly. 17-R.James to KC 13 for 6 yards (30-K.Dorsey).",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:289",
+      "playId": "289",
+      "quarter": 1,
+      "clock": "10:58",
+      "description": "(10:58) 5-T.Townsend punts 53 yards to DET 9, Center-41-J.Winchester, fair catch by 11-K.Raymond.",
+      "kind": "fourth_down",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:386",
+      "playId": "386",
+      "quarter": 1,
+      "clock": "09:27",
+      "description": "(9:27) (Punt formation) Direct snap to 42-J.Reeves-Maybin. 42-J.Reeves-Maybin up the middle to DET 20 for 3 yards (6-B.Cook).",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:647",
+      "playId": "647",
+      "quarter": 1,
+      "clock": "02:46",
+      "description": "36-R.Patterson extra point is GOOD, Center-47-S.Daly, Holder-3-J.Fox.",
+      "kind": "kick",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1031",
+      "playId": "1031",
+      "quarter": 2,
+      "clock": "11:50",
+      "description": "7-H.Butker extra point is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend.",
+      "kind": "kick",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1273",
+      "playId": "1273",
+      "quarter": 2,
+      "clock": "06:44",
+      "description": "(6:44) (Shotgun) 16-J.Goff Aborted. 77-F.Ragnow FUMBLES at KC 24, recovered by DET-16-J.Goff at KC 27. 16-J.Goff to KC 27 for no gain (56-G.Karlaftis).",
+      "kind": "fumble",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1330",
+      "playId": "1330",
+      "quarter": 2,
+      "clock": "05:21",
+      "description": "(5:21) (Shotgun) 16-J.Goff pass short right to 0-M.Jones to KC 14 for 3 yards (22-T.McDuffie). FUMBLES (22-T.McDuffie), RECOVERED by KC-6-B.Cook at KC 7.",
+      "kind": "fumble",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1452",
+      "playId": "1452",
+      "quarter": 2,
+      "clock": "03:54",
+      "description": "(3:54) 5-T.Townsend punts 47 yards to DET 41, Center-41-J.Winchester, fair catch by 11-K.Raymond.",
+      "kind": "fourth_down",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1537",
+      "playId": "1537",
+      "quarter": 2,
+      "clock": "02:13",
+      "description": "(2:13) 3-J.Fox punts 40 yards to KC 17, Center-47-S.Daly. 17-R.James to KC 18 for 1 yard (42-J.Reeves-Maybin, 30-K.Dorsey).",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1643",
+      "playId": "1643",
+      "quarter": 2,
+      "clock": "01:13",
+      "description": "(1:13) (Shotgun) 15-P.Mahomes pass short middle to 83-N.Gray to DET 48 for 6 yards (31-K.Joseph). PENALTY on KC-65-T.Smith, Offensive Holding, 10 yards, enforced at KC 46 - No Play.",
+      "kind": "penalty",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1767",
+      "playId": "1767",
+      "quarter": 2,
+      "clock": "00:34",
+      "description": "7-H.Butker extra point is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend.",
+      "kind": "kick",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1986",
+      "playId": "1986",
+      "quarter": 2,
+      "clock": "00:03",
+      "description": "(:03) (Shotgun) 16-J.Goff pass incomplete deep right.",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2166",
+      "playId": "2166",
+      "quarter": 3,
+      "clock": "13:01",
+      "description": "(13:01) 5-T.Townsend punts 54 yards to DET 7, Center-41-J.Winchester, fair catch by 11-K.Raymond.",
+      "kind": "fourth_down",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2228",
+      "playId": "2228",
+      "quarter": 3,
+      "clock": "12:50",
+      "description": "(12:50) 5-D.Montgomery right guard to DET 7 for no gain (56-G.Karlaftis). Penalty on DET-72-H.Vaitai, Unnecessary Roughness, offsetting. Penalty on KC-93-M.Dickerson, Unnecessary Roughness, offsetting.",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2286",
+      "playId": "2286",
+      "quarter": 3,
+      "clock": "11:52",
+      "description": "(11:52) 3-J.Fox punts 47 yards to KC 42, Center-47-S.Daly, fair catch by 17-R.James.",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2397",
+      "playId": "2397",
+      "quarter": 3,
+      "clock": "10:54",
+      "description": "36-R.Patterson extra point is GOOD, Center-47-S.Daly, Holder-3-J.Fox.",
+      "kind": "kick",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2558",
+      "playId": "2558",
+      "quarter": 3,
+      "clock": "08:48",
+      "description": "(8:48) 5-T.Townsend punts 58 yards to DET 1, Center-41-J.Winchester. 11-K.Raymond to DET 17 for 16 yards (27-C.Conner).",
+      "kind": "fourth_down",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2638",
+      "playId": "2638",
+      "quarter": 3,
+      "clock": "07:31",
+      "description": "(7:31) (Shotgun) 16-J.Goff pass short right to 87-S.LaPorta to KC 47 for 12 yards (2-J.Williams). Penalty on KC-38-L.Sneed, Defensive Holding, declined.",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2754",
+      "playId": "2754",
+      "quarter": 3,
+      "clock": "05:56",
+      "description": "(5:56) 3-J.Fox punts 30 yards to KC 10, Center-47-S.Daly, downed by DET-25-W.Harris.",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2872",
+      "playId": "2872",
+      "quarter": 3,
+      "clock": "03:07",
+      "description": "(3:07) 15-P.Mahomes pass incomplete deep middle to 84-Ju.Watson. PENALTY on DET-1-C.Sutton, Defensive Pass Interference, 41 yards, enforced at KC 34 - No Play.",
+      "kind": "penalty",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2982",
+      "playId": "2982",
+      "quarter": 3,
+      "clock": "02:14",
+      "description": "(2:14) 7-H.Butker 35 yard field goal is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend.",
+      "kind": "kick",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3055",
+      "playId": "3055",
+      "quarter": 3,
+      "clock": "02:06",
+      "description": "(2:06) (Shotgun) 16-J.Goff pass incomplete short right. PENALTY on DET-5-D.Montgomery, Tripping, 12 yards, enforced at DET 25 - No Play.",
+      "kind": "penalty",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3137",
+      "playId": "3137",
+      "quarter": 3,
+      "clock": "01:17",
+      "description": "(1:17) 3-J.Fox punts 44 yards to KC 23, Center-47-S.Daly. 17-R.James to KC 32 for 9 yards (30-K.Dorsey).",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3347",
+      "playId": "3347",
+      "quarter": 4,
+      "clock": "12:16",
+      "description": "(12:16) 7-H.Butker 39 yard field goal is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend.",
+      "kind": "kick",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3437",
+      "playId": "3437",
+      "quarter": 4,
+      "clock": "10:46",
+      "description": "(10:46) (Shotgun) PENALTY on DET, Delay of Game, 5 yards, enforced at DET 28 - No Play.",
+      "kind": "penalty",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3486",
+      "playId": "3486",
+      "quarter": 4,
+      "clock": "10:08",
+      "description": "(10:08) 16-J.Goff pass short right to 89-B.Wright to DET 49 for 8 yards (54-L.Chenal, 20-J.Reid). Penalty on KC-56-G.Karlaftis, Defensive Holding, declined.",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3636",
+      "playId": "3636",
+      "quarter": 4,
+      "clock": "07:06",
+      "description": "36-R.Patterson extra point is GOOD, Center-47-S.Daly, Holder-3-J.Fox.",
+      "kind": "kick",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3745",
+      "playId": "3745",
+      "quarter": 4,
+      "clock": "05:16",
+      "description": "(5:16) 5-T.Townsend punts 35 yards to DET 34, Center-41-J.Winchester, downed by KC-44-Ca.Jones.",
+      "kind": "fourth_down",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3765",
+      "playId": "3765",
+      "quarter": 4,
+      "clock": "05:07",
+      "description": "(5:07) PENALTY on DET-77-F.Ragnow, False Start, 5 yards, enforced at DET 34 - No Play.",
+      "kind": "penalty",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3889",
+      "playId": "3889",
+      "quarter": 4,
+      "clock": "02:33",
+      "description": "(2:33) (Shotgun) 16-J.Goff pass incomplete short right to 8-J.Reynolds (20-J.Reid).",
+      "kind": "fourth_down",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3935",
+      "playId": "3935",
+      "quarter": 4,
+      "clock": "02:25",
+      "description": "(2:25) (Shotgun) 15-P.Mahomes pass short right to 24-S.Moore to DET 38 for 17 yards (1-C.Sutton) [53-C.Harris]. PENALTY on KC-79-D.Smith, Offensive Holding, 10 yards, enforced at KC 45 - No Play.",
+      "kind": "penalty",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:4017",
+      "playId": "4017",
+      "quarter": 4,
+      "clock": "02:09",
+      "description": "(2:09) (Shotgun) PENALTY on KC-74-J.Taylor, False Start, 5 yards, enforced at KC 35 - No Play.",
+      "kind": "penalty",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:4041",
+      "playId": "4041",
+      "quarter": 4,
+      "clock": "02:09",
+      "description": "(2:09) (Shotgun) 15-P.Mahomes pass incomplete deep right to 84-Ju.Watson [79-J.Cominsky].",
+      "kind": "fourth_down",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:902",
+      "playId": "902",
+      "quarter": 2,
+      "clock": "13:54",
+      "description": "(13:54) (Shotgun) 15-P.Mahomes pass incomplete short left to 4-R.Rice.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2364",
+      "playId": "2364",
+      "quarter": 3,
+      "clock": "11:04",
+      "description": "(11:04) (Shotgun) 15-P.Mahomes pass short right intended for 19-K.Toney INTERCEPTED by 32-B.Branch at 50. 32-B.Branch for 50 yards, TOUCHDOWN.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2959",
+      "playId": "2959",
+      "quarter": 3,
+      "clock": "02:18",
+      "description": "(2:18) (Shotgun) 15-P.Mahomes pass incomplete short middle to 19-K.Toney.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3324",
+      "playId": "3324",
+      "quarter": 4,
+      "clock": "12:23",
+      "description": "(12:23) (Shotgun) 15-P.Mahomes pass incomplete short right to 1-J.McKinnon [41-J.Houston]. DET-91-L.Onwuzurike was injured during the play.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3912",
+      "playId": "3912",
+      "quarter": 4,
+      "clock": "02:30",
+      "description": "(2:30) 15-P.Mahomes pass incomplete deep right to 19-K.Toney.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3971",
+      "playId": "3971",
+      "quarter": 4,
+      "clock": "02:19",
+      "description": "(2:19) (Shotgun) 15-P.Mahomes pass incomplete short middle to 24-S.Moore (2-C.Gardner-Johnson).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2186",
+      "playId": "2186",
+      "quarter": 3,
+      "clock": "12:54",
+      "description": "(12:54) 16-J.Goff pass incomplete short right to 0-M.Jones.",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1517",
+      "playId": "1517",
+      "quarter": 2,
+      "clock": "03:01",
+      "description": "(3:01) (Shotgun) 16-J.Goff sacked at DET 43 for -3 yards (51-M.Danna).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:194",
+      "playId": "194",
+      "quarter": 1,
+      "clock": "12:56",
+      "description": "(12:56) (Shotgun) 15-P.Mahomes pass short left to 1-J.McKinnon to KC 31 for 10 yards (44-M.Rodriguez).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:219",
+      "playId": "219",
+      "quarter": 1,
+      "clock": "12:20",
+      "description": "(12:20) (Shotgun) 15-P.Mahomes pass short left to 83-N.Gray to KC 36 for 5 yards (34-A.Anzalone).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:736",
+      "playId": "736",
+      "quarter": 1,
+      "clock": "02:06",
+      "description": "(2:06) (Shotgun) 15-P.Mahomes pass deep right to 84-Ju.Watson to KC 46 for 19 yards (31-K.Joseph).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:852",
+      "playId": "852",
+      "quarter": 2,
+      "clock": "15:00",
+      "description": "(15:00) (Shotgun) 15-P.Mahomes pass short right to 10-I.Pacheco to DET 39 for 5 yards (97-A.Hutchinson).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:877",
+      "playId": "877",
+      "quarter": 2,
+      "clock": "14:25",
+      "description": "(14:25) 15-P.Mahomes pass short right to 11-M.Valdes-Scantling to DET 25 for 14 yards (2-C.Gardner-Johnson).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:974",
+      "playId": "974",
+      "quarter": 2,
+      "clock": "12:31",
+      "description": "(12:31) (Shotgun) Direct snap to 1-J.McKinnon. 15-P.Mahomes pass short middle to 19-K.Toney to DET 1 for 1 yard (94-B.Jones).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1001",
+      "playId": "1001",
+      "quarter": 2,
+      "clock": "11:56",
+      "description": "(11:56) (Shotgun) 15-P.Mahomes pass short left to 4-R.Rice for 1 yard, TOUCHDOWN.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1563",
+      "playId": "1563",
+      "quarter": 2,
+      "clock": "02:02",
+      "description": "(2:02) (Shotgun) 15-P.Mahomes pass short right to 4-R.Rice to KC 43 for 25 yards (46-J.Campbell).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1618",
+      "playId": "1618",
+      "quarter": 2,
+      "clock": "01:48",
+      "description": "(1:48) (Shotgun) 15-P.Mahomes pass short left to 4-R.Rice to KC 46 for 3 yards (32-B.Branch).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1679",
+      "playId": "1679",
+      "quarter": 2,
+      "clock": "01:07",
+      "description": "(1:07) (Shotgun) 15-P.Mahomes pass deep middle to 11-M.Valdes-Scantling to DET 30 for 34 yards (23-J.Jacobs).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1711",
+      "playId": "1711",
+      "quarter": 2,
+      "clock": "00:45",
+      "description": "(:45) (No Huddle, Shotgun) 15-P.Mahomes pass deep left to 84-Ju.Watson pushed ob at DET 4 for 26 yards (2-C.Gardner-Johnson).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1741",
+      "playId": "1741",
+      "quarter": 2,
+      "clock": "00:37",
+      "description": "(:37) (Shotgun) 15-P.Mahomes pass short right to 81-B.Bell for 4 yards, TOUCHDOWN.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2067",
+      "playId": "2067",
+      "quarter": 3,
+      "clock": "14:24",
+      "description": "(14:24) (Shotgun) 15-P.Mahomes pass short left to 10-I.Pacheco to KC 37 for 10 yards (94-B.Jones). KC-10-I.Pacheco was injured during the play.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2118",
+      "playId": "2118",
+      "quarter": 3,
+      "clock": "13:42",
+      "description": "(13:42) (Shotgun) 15-P.Mahomes pass incomplete short left to 81-B.Bell.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2141",
+      "playId": "2141",
+      "quarter": 3,
+      "clock": "13:38",
+      "description": "(13:38) (Shotgun) 15-P.Mahomes pass short right to 83-N.Gray to KC 39 for 2 yards (23-J.Jacobs) [97-A.Hutchinson].",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2435",
+      "playId": "2435",
+      "quarter": 3,
+      "clock": "10:54",
+      "description": "(10:54) (Shotgun) 15-P.Mahomes pass short left to 10-I.Pacheco pushed ob at KC 32 for 7 yards (55-D.Barnes) [53-C.Harris].",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2510",
+      "playId": "2510",
+      "quarter": 3,
+      "clock": "09:30",
+      "description": "(9:30) (Shotgun) 15-P.Mahomes pass short right to 17-R.James to KC 41 for 6 yards (31-K.Joseph).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2825",
+      "playId": "2825",
+      "quarter": 3,
+      "clock": "04:28",
+      "description": "(4:28) (Shotgun) 15-P.Mahomes pass short right to 10-I.Pacheco to KC 31 for 9 yards (53-C.Harris).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2906",
+      "playId": "2906",
+      "quarter": 3,
+      "clock": "03:00",
+      "description": "(3:00) (Shotgun) 15-P.Mahomes pass short right to 81-B.Bell pushed ob at DET 17 for 8 yards (34-A.Anzalone).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2936",
+      "playId": "2936",
+      "quarter": 3,
+      "clock": "02:21",
+      "description": "(2:21) (Shotgun) 15-P.Mahomes pass incomplete short left to 24-S.Moore.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3185",
+      "playId": "3185",
+      "quarter": 3,
+      "clock": "00:31",
+      "description": "(:31) (Shotgun) 15-P.Mahomes pass short right to 83-N.Gray to DET 40 for 24 yards (2-C.Gardner-Johnson). DET-32-B.Branch was injured during the play.",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3233",
+      "playId": "3233",
+      "quarter": 4,
+      "clock": "15:00",
+      "description": "(15:00) (Shotgun) 15-P.Mahomes pass short left to 25-C.Edwards-Helaire to DET 33 for 7 yards (46-J.Campbell; 31-K.Joseph).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3674",
+      "playId": "3674",
+      "quarter": 4,
+      "clock": "07:06",
+      "description": "(7:06) (Shotgun) 15-P.Mahomes pass short left to 8-J.Ross to KC 31 for 6 yards (23-J.Jacobs).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:436",
+      "playId": "436",
+      "quarter": 1,
+      "clock": "08:09",
+      "description": "(8:09) (Shotgun) 16-J.Goff pass short left to 14-A.St. Brown to DET 34 for 13 yards (20-J.Reid).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:461",
+      "playId": "461",
+      "quarter": 1,
+      "clock": "07:30",
+      "description": "(7:30) 16-J.Goff pass short right to 8-J.Reynolds to KC 45 for 21 yards (22-T.McDuffie).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:530",
+      "playId": "530",
+      "quarter": 1,
+      "clock": "05:36",
+      "description": "(5:36) (Shotgun) 16-J.Goff pass short right to 14-A.St. Brown to KC 19 for 5 yards (54-L.Chenal; 38-L.Sneed).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:621",
+      "playId": "621",
+      "quarter": 1,
+      "clock": "02:52",
+      "description": "(2:52) (Shotgun) 16-J.Goff pass short right to 14-A.St. Brown for 9 yards, TOUCHDOWN.",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1069",
+      "playId": "1069",
+      "quarter": 2,
+      "clock": "11:50",
+      "description": "(11:50) 16-J.Goff pass short middle to 89-B.Wright to DET 34 for 9 yards (32-N.Bolton, 50-W.Gay).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1154",
+      "playId": "1154",
+      "quarter": 2,
+      "clock": "10:11",
+      "description": "(10:11) 16-J.Goff pass deep left to 14-A.St. Brown to KC 40 for 21 yards (20-J.Reid).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1201",
+      "playId": "1201",
+      "quarter": 2,
+      "clock": "08:49",
+      "description": "(8:49) (Shotgun) 16-J.Goff pass short left to 87-S.LaPorta to KC 27 for 14 yards (51-M.Danna, 6-B.Cook).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1248",
+      "playId": "1248",
+      "quarter": 2,
+      "clock": "07:24",
+      "description": "(7:24) (Shotgun) 16-J.Goff pass short right to 26-J.Gibbs to KC 17 for 8 yards (23-D.Tranquill).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1300",
+      "playId": "1300",
+      "quarter": 2,
+      "clock": "06:01",
+      "description": "(6:01) (Shotgun) 16-J.Goff pass short left to 26-J.Gibbs pushed ob at KC 17 for 10 yards (32-N.Bolton).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1812",
+      "playId": "1812",
+      "quarter": 2,
+      "clock": "00:34",
+      "description": "(:34) (Shotgun) 16-J.Goff pass short right to 87-S.LaPorta to DET 30 for 5 yards (97-F.Anudike-Uzomah).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1837",
+      "playId": "1837",
+      "quarter": 2,
+      "clock": "00:29",
+      "description": "(:29) (Shotgun) 16-J.Goff pass short left to 87-S.LaPorta to DET 34 for 4 yards (22-T.McDuffie).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1869",
+      "playId": "1869",
+      "quarter": 2,
+      "clock": "00:22",
+      "description": "(:22) (Shotgun) 16-J.Goff pass short middle to 8-J.Reynolds to DET 42 for 8 yards (21-M.Edwards, 6-B.Cook).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2261",
+      "playId": "2261",
+      "quarter": 3,
+      "clock": "12:31",
+      "description": "(12:31) (Shotgun) 16-J.Goff pass short left to 87-S.LaPorta to DET 11 for 4 yards (20-J.Reid) [97-F.Anudike-Uzomah].",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2613",
+      "playId": "2613",
+      "quarter": 3,
+      "clock": "08:08",
+      "description": "(8:08) 16-J.Goff pass deep left to 14-A.St. Brown to DET 41 for 18 yards (22-T.McDuffie).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2701",
+      "playId": "2701",
+      "quarter": 3,
+      "clock": "06:25",
+      "description": "(6:25) (Shotgun) 16-J.Goff pass short left to 14-A.St. Brown pushed ob at KC 40 for 5 yards (6-B.Cook).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:2731",
+      "playId": "2731",
+      "quarter": 3,
+      "clock": "05:59",
+      "description": "(5:59) (No Huddle, Shotgun) 16-J.Goff pass incomplete short right to 8-J.Reynolds.",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3089",
+      "playId": "3089",
+      "quarter": 3,
+      "clock": "02:01",
+      "description": "(2:01) (Shotgun) 16-J.Goff pass deep middle to 11-K.Raymond to DET 33 for 20 yards (6-B.Cook).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3461",
+      "playId": "3461",
+      "quarter": 4,
+      "clock": "10:46",
+      "description": "(10:46) (Shotgun) 16-J.Goff pass deep left to 8-J.Reynolds to DET 41 for 18 yards (2-J.Williams) [38-L.Sneed].",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3566",
+      "playId": "3566",
+      "quarter": 4,
+      "clock": "08:31",
+      "description": "(8:31) 16-J.Goff pass short right to 8-J.Reynolds to KC 14 for 33 yards (50-W.Gay).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:713",
+      "playId": "713",
+      "quarter": 1,
+      "clock": "02:11",
+      "description": "(2:11) (Shotgun) 15-P.Mahomes pass incomplete short left to 83-N.Gray (34-A.Anzalone).",
+      "kind": "execution",
+      "team": "KC",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1494",
+      "playId": "1494",
+      "quarter": 2,
+      "clock": "03:06",
+      "description": "(3:06) 16-J.Goff pass incomplete deep left to 0-M.Jones.",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:1940",
+      "playId": "1940",
+      "quarter": 2,
+      "clock": "00:09",
+      "description": "(:09) (Shotgun) 16-J.Goff pass incomplete deep right to 0-M.Jones.",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3032",
+      "playId": "3032",
+      "quarter": 3,
+      "clock": "02:10",
+      "description": "(2:10) (Shotgun) 16-J.Goff pass incomplete short right to 14-A.St. Brown (20-J.Reid).",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    },
+    {
+      "id": "2023_01_DET_KC:3114",
+      "playId": "3114",
+      "quarter": 3,
+      "clock": "01:21",
+      "description": "(1:21) 16-J.Goff pass incomplete short right to 14-A.St. Brown.",
+      "kind": "execution",
+      "team": "DET",
+      "reviewStatus": "not_reviewed"
+    }
+  ],
+  "timeline": [
+    {
+      "playId": "1",
+      "quarter": 1,
+      "clock": "15:00",
+      "homeWp": null,
+      "description": "GAME"
+    },
+    {
+      "playId": "40",
+      "quarter": 1,
+      "clock": "15:00",
+      "homeWp": null,
+      "description": "7-H.Butker kicks 65 yards from KC 35 to end zone, Touchback."
+    },
+    {
+      "playId": "56",
+      "quarter": 1,
+      "clock": "15:00",
+      "homeWp": 0.5667920410633087,
+      "description": "(15:00) 5-D.Montgomery right guard to DET 32 for 7 yards (32-N.Bolton; 56-G.Karlaftis)."
+    },
+    {
+      "playId": "78",
+      "quarter": 1,
+      "clock": "14:29",
+      "homeWp": 0.5657681226730347,
+      "description": "(14:29) 16-J.Goff pass incomplete short right."
+    },
+    {
+      "playId": "101",
+      "quarter": 1,
+      "clock": "14:25",
+      "homeWp": 0.5837230682373047,
+      "description": "(14:25) (Shotgun) 16-J.Goff pass incomplete deep right to 8-J.Reynolds."
+    },
+    {
+      "playId": "124",
+      "quarter": 1,
+      "clock": "14:21",
+      "homeWp": 0.6106205880641937,
+      "description": "(14:21) 3-J.Fox punts 61 yards to KC 7, Center-47-S.Daly. 17-R.James to KC 13 for 6 yards (30-K.Dorsey)."
+    },
+    {
+      "playId": "150",
+      "quarter": 1,
+      "clock": "14:09",
+      "homeWp": 0.6032090187072754,
+      "description": "(14:09) (Shotgun) 25-C.Edwards-Helaire right end to KC 18 for 5 yards (97-A.Hutchinson)."
+    },
+    {
+      "playId": "172",
+      "quarter": 1,
+      "clock": "13:34",
+      "homeWp": 0.6034525036811829,
+      "description": "(13:34) (Shotgun) 25-C.Edwards-Helaire right end to KC 21 for 3 yards (54-A.McNeill; 34-A.Anzalone)."
+    },
+    {
+      "playId": "194",
+      "quarter": 1,
+      "clock": "12:56",
+      "homeWp": 0.608793318271637,
+      "description": "(12:56) (Shotgun) 15-P.Mahomes pass short left to 1-J.McKinnon to KC 31 for 10 yards (44-M.Rodriguez)."
+    },
+    {
+      "playId": "219",
+      "quarter": 1,
+      "clock": "12:20",
+      "homeWp": 0.621440589427948,
+      "description": "(12:20) (Shotgun) 15-P.Mahomes pass short left to 83-N.Gray to KC 36 for 5 yards (34-A.Anzalone)."
+    },
+    {
+      "playId": "244",
+      "quarter": 1,
+      "clock": "11:44",
+      "homeWp": 0.6308001279830933,
+      "description": "(11:44) 15-P.Mahomes pass incomplete short right [34-A.Anzalone]."
+    },
+    {
+      "playId": "267",
+      "quarter": 1,
+      "clock": "11:35",
+      "homeWp": 0.6057667136192322,
+      "description": "(11:35) (Shotgun) 15-P.Mahomes scrambles up the middle to KC 38 for 2 yards (79-J.Cominsky)."
+    },
+    {
+      "playId": "289",
+      "quarter": 1,
+      "clock": "10:58",
+      "homeWp": 0.5893240571022034,
+      "description": "(10:58) 5-T.Townsend punts 53 yards to DET 9, Center-41-J.Winchester, fair catch by 11-K.Raymond."
+    },
+    {
+      "playId": "309",
+      "quarter": 1,
+      "clock": "10:50",
+      "homeWp": 0.5885147154331207,
+      "description": "(10:50) 5-D.Montgomery left tackle to DET 12 for 3 yards (56-G.Karlaftis)."
+    },
+    {
+      "playId": "338",
+      "quarter": 1,
+      "clock": "10:10",
+      "homeWp": 0.5945903658866882,
+      "description": "(10:10) (Shotgun) 16-J.Goff pass incomplete short left to 0-M.Jones (51-M.Danna)."
+    },
+    {
+      "playId": "361",
+      "quarter": 1,
+      "clock": "10:06",
+      "homeWp": 0.6197472214698792,
+      "description": "(10:06) (Shotgun) 16-J.Goff pass short left to 0-M.Jones to DET 17 for 5 yards (20-J.Reid) [97-F.Anudike-Uzomah]."
+    },
+    {
+      "playId": "386",
+      "quarter": 1,
+      "clock": "09:27",
+      "homeWp": 0.6330817639827728,
+      "description": "(9:27) (Punt formation) Direct snap to 42-J.Reeves-Maybin. 42-J.Reeves-Maybin up the middle to DET 20 for 3 yards (6-B.Cook)."
+    },
+    {
+      "playId": "414",
+      "quarter": 1,
+      "clock": "08:50",
+      "homeWp": 0.5804899632930756,
+      "description": "(8:50) 26-J.Gibbs right guard to DET 21 for 1 yard (22-T.McDuffie)."
+    },
+    {
+      "playId": "436",
+      "quarter": 1,
+      "clock": "08:09",
+      "homeWp": 0.5865150094032288,
+      "description": "(8:09) (Shotgun) 16-J.Goff pass short left to 14-A.St. Brown to DET 34 for 13 yards (20-J.Reid)."
+    },
+    {
+      "playId": "461",
+      "quarter": 1,
+      "clock": "07:30",
+      "homeWp": 0.5494011342525482,
+      "description": "(7:30) 16-J.Goff pass short right to 8-J.Reynolds to KC 45 for 21 yards (22-T.McDuffie)."
+    },
+    {
+      "playId": "486",
+      "quarter": 1,
+      "clock": "06:57",
+      "homeWp": 0.5179192423820496,
+      "description": "(6:57) 5-D.Montgomery up the middle to KC 41 for 4 yards (54-L.Chenal)."
+    },
+    {
+      "playId": "508",
+      "quarter": 1,
+      "clock": "06:21",
+      "homeWp": 0.5059148073196411,
+      "description": "(6:21) (Shotgun) 26-J.Gibbs left end to KC 24 for 17 yards (50-W.Gay)."
+    },
+    {
+      "playId": "530",
+      "quarter": 1,
+      "clock": "05:36",
+      "homeWp": 0.4403766393661499,
+      "description": "(5:36) (Shotgun) 16-J.Goff pass short right to 14-A.St. Brown to KC 19 for 5 yards (54-L.Chenal; 38-L.Sneed)."
+    },
+    {
+      "playId": "555",
+      "quarter": 1,
+      "clock": "04:59",
+      "homeWp": 0.4438869953155518,
+      "description": "(4:59) 5-D.Montgomery left tackle to KC 13 for 6 yards (32-N.Bolton)."
+    },
+    {
+      "playId": "577",
+      "quarter": 1,
+      "clock": "04:20",
+      "homeWp": 0.422208845615387,
+      "description": "(4:20) 5-D.Montgomery left end to KC 9 for 4 yards (91-D.Nnadi; 20-J.Reid)."
+    },
+    {
+      "playId": "599",
+      "quarter": 1,
+      "clock": "03:37",
+      "homeWp": 0.4178207516670227,
+      "description": "(3:37) 26-J.Gibbs right guard to KC 9 for no gain (6-B.Cook, 38-L.Sneed)."
+    },
+    {
+      "playId": "621",
+      "quarter": 1,
+      "clock": "02:52",
+      "homeWp": 0.4326879978179932,
+      "description": "(2:52) (Shotgun) 16-J.Goff pass short right to 14-A.St. Brown for 9 yards, TOUCHDOWN."
+    },
+    {
+      "playId": "647",
+      "quarter": 1,
+      "clock": "02:46",
+      "homeWp": null,
+      "description": "36-R.Patterson extra point is GOOD, Center-47-S.Daly, Holder-3-J.Fox."
+    },
+    {
+      "playId": "662",
+      "quarter": 1,
+      "clock": "02:46",
+      "homeWp": null,
+      "description": "3-J.Fox kicks 65 yards from DET 35 to end zone, Touchback."
+    },
+    {
+      "playId": "686",
+      "quarter": 1,
+      "clock": "02:46",
+      "homeWp": 0.3790203928947449,
+      "description": "(2:46) 10-I.Pacheco left end pushed ob at KC 27 for 2 yards (34-A.Anzalone)."
+    },
+    {
+      "playId": "713",
+      "quarter": 1,
+      "clock": "02:11",
+      "homeWp": 0.3632712662220001,
+      "description": "(2:11) (Shotgun) 15-P.Mahomes pass incomplete short left to 83-N.Gray (34-A.Anzalone)."
+    },
+    {
+      "playId": "736",
+      "quarter": 1,
+      "clock": "02:06",
+      "homeWp": 0.3418188989162445,
+      "description": "(2:06) (Shotgun) 15-P.Mahomes pass deep right to 84-Ju.Watson to KC 46 for 19 yards (31-K.Joseph)."
+    },
+    {
+      "playId": "761",
+      "quarter": 1,
+      "clock": "01:29",
+      "homeWp": 0.4162622392177582,
+      "description": "(1:29) 24-S.Moore left end to 50 for 4 yards (2-C.Gardner-Johnson)."
+    },
+    {
+      "playId": "783",
+      "quarter": 1,
+      "clock": "00:52",
+      "homeWp": 0.4061944782733917,
+      "description": "(:52) (Shotgun) 10-I.Pacheco left end to 50 for no gain (2-C.Gardner-Johnson)."
+    },
+    {
+      "playId": "805",
+      "quarter": 1,
+      "clock": "00:13",
+      "homeWp": 0.3832986652851105,
+      "description": "(:13) (Shotgun) 15-P.Mahomes scrambles right end pushed ob at DET 44 for 6 yards (32-B.Branch)."
+    },
+    {
+      "playId": "832",
+      "quarter": 1,
+      "clock": "00:00",
+      "homeWp": null,
+      "description": "END QUARTER 1"
+    },
+    {
+      "playId": "852",
+      "quarter": 2,
+      "clock": "15:00",
+      "homeWp": 0.4233545660972595,
+      "description": "(15:00) (Shotgun) 15-P.Mahomes pass short right to 10-I.Pacheco to DET 39 for 5 yards (97-A.Hutchinson)."
+    },
+    {
+      "playId": "877",
+      "quarter": 2,
+      "clock": "14:25",
+      "homeWp": 0.4136698842048645,
+      "description": "(14:25) 15-P.Mahomes pass short right to 11-M.Valdes-Scantling to DET 25 for 14 yards (2-C.Gardner-Johnson)."
+    },
+    {
+      "playId": "902",
+      "quarter": 2,
+      "clock": "13:54",
+      "homeWp": 0.4691081047058105,
+      "description": "(13:54) (Shotgun) 15-P.Mahomes pass incomplete short left to 4-R.Rice."
+    },
+    {
+      "playId": "925",
+      "quarter": 2,
+      "clock": "13:49",
+      "homeWp": 0.4550953507423401,
+      "description": "(13:49) (Shotgun) 15-P.Mahomes scrambles up the middle ran ob at DET 9 for 16 yards (31-K.Joseph)."
+    },
+    {
+      "playId": "952",
+      "quarter": 2,
+      "clock": "13:09",
+      "homeWp": 0.4908513426780701,
+      "description": "(13:09) 10-I.Pacheco right end to DET 2 for 7 yards (93-J.Paschal)."
+    },
+    {
+      "playId": "974",
+      "quarter": 2,
+      "clock": "12:31",
+      "homeWp": 0.500494122505188,
+      "description": "(12:31) (Shotgun) Direct snap to 1-J.McKinnon. 15-P.Mahomes pass short middle to 19-K.Toney to DET 1 for 1 yard (94-B.Jones)."
+    },
+    {
+      "playId": "1001",
+      "quarter": 2,
+      "clock": "11:56",
+      "homeWp": 0.4745192229747772,
+      "description": "(11:56) (Shotgun) 15-P.Mahomes pass short left to 4-R.Rice for 1 yard, TOUCHDOWN."
+    },
+    {
+      "playId": "1031",
+      "quarter": 2,
+      "clock": "11:50",
+      "homeWp": null,
+      "description": "7-H.Butker extra point is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend."
+    },
+    {
+      "playId": "1046",
+      "quarter": 2,
+      "clock": "11:50",
+      "homeWp": null,
+      "description": "7-H.Butker kicks 65 yards from KC 35 to end zone, Touchback."
+    },
+    {
+      "playId": "1090",
+      "quarter": 2,
+      "clock": "11:50",
+      "homeWp": null,
+      "description": "Timeout #1 by DET at 11:50."
+    },
+    {
+      "playId": "1069",
+      "quarter": 2,
+      "clock": "11:50",
+      "homeWp": 0.565645158290863,
+      "description": "(11:50) 16-J.Goff pass short middle to 89-B.Wright to DET 34 for 9 yards (32-N.Bolton, 50-W.Gay)."
+    },
+    {
+      "playId": "1110",
+      "quarter": 2,
+      "clock": "11:30",
+      "homeWp": 0.5495868623256683,
+      "description": "(11:30) (No Huddle) 16-J.Goff up the middle to DET 36 for 2 yards (51-M.Danna; 93-M.Dickerson)."
+    },
+    {
+      "playId": "1132",
+      "quarter": 2,
+      "clock": "10:51",
+      "homeWp": 0.5439425408840179,
+      "description": "(10:51) 5-D.Montgomery left end to DET 39 for 3 yards (51-M.Danna; 54-L.Chenal)."
+    },
+    {
+      "playId": "1154",
+      "quarter": 2,
+      "clock": "10:11",
+      "homeWp": 0.5574001669883728,
+      "description": "(10:11) 16-J.Goff pass deep left to 14-A.St. Brown to KC 40 for 21 yards (20-J.Reid)."
+    },
+    {
+      "playId": "1179",
+      "quarter": 2,
+      "clock": "09:29",
+      "homeWp": 0.4866394400596619,
+      "description": "(9:29) 5-D.Montgomery left guard to KC 41 for -1 yards (99-K.Coburn, 22-T.McDuffie)."
+    },
+    {
+      "playId": "1201",
+      "quarter": 2,
+      "clock": "08:49",
+      "homeWp": 0.527921587228775,
+      "description": "(8:49) (Shotgun) 16-J.Goff pass short left to 87-S.LaPorta to KC 27 for 14 yards (51-M.Danna, 6-B.Cook)."
+    },
+    {
+      "playId": "1226",
+      "quarter": 2,
+      "clock": "08:06",
+      "homeWp": 0.4430651068687439,
+      "description": "(8:06) 5-D.Montgomery up the middle to KC 25 for 2 yards (56-G.Karlaftis; 32-N.Bolton)."
+    },
+    {
+      "playId": "1248",
+      "quarter": 2,
+      "clock": "07:24",
+      "homeWp": 0.4546161890029907,
+      "description": "(7:24) (Shotgun) 16-J.Goff pass short right to 26-J.Gibbs to KC 17 for 8 yards (23-D.Tranquill)."
+    },
+    {
+      "playId": "1273",
+      "quarter": 2,
+      "clock": "06:44",
+      "homeWp": 0.4289390444755554,
+      "description": "(6:44) (Shotgun) 16-J.Goff Aborted. 77-F.Ragnow FUMBLES at KC 24, recovered by DET-16-J.Goff at KC 27. 16-J.Goff to KC 27 for no gain (56-G.Karlaftis)."
+    },
+    {
+      "playId": "1300",
+      "quarter": 2,
+      "clock": "06:01",
+      "homeWp": 0.4780822396278381,
+      "description": "(6:01) (Shotgun) 16-J.Goff pass short left to 26-J.Gibbs pushed ob at KC 17 for 10 yards (32-N.Bolton)."
+    },
+    {
+      "playId": "1330",
+      "quarter": 2,
+      "clock": "05:21",
+      "homeWp": 0.465133011341095,
+      "description": "(5:21) (Shotgun) 16-J.Goff pass short right to 0-M.Jones to KC 14 for 3 yards (22-T.McDuffie). FUMBLES (22-T.McDuffie), RECOVERED by KC-6-B.Cook at KC 7."
+    },
+    {
+      "playId": "1371",
+      "quarter": 2,
+      "clock": "05:14",
+      "homeWp": 0.5680379271507263,
+      "description": "(5:14) (Shotgun) 25-C.Edwards-Helaire left tackle to KC 9 for 2 yards (23-J.Jacobs)."
+    },
+    {
+      "playId": "1400",
+      "quarter": 2,
+      "clock": "04:38",
+      "homeWp": 0.5600837469100952,
+      "description": "(4:38) (Shotgun) 15-P.Mahomes scrambles left end to KC 12 for 3 yards (34-A.Anzalone)."
+    },
+    {
+      "playId": "1434",
+      "quarter": 2,
+      "clock": "04:00",
+      "homeWp": null,
+      "description": "Timeout #1 by KC at 04:00."
+    },
+    {
+      "playId": "1422",
+      "quarter": 2,
+      "clock": "04:00",
+      "homeWp": 0.5465587973594666,
+      "description": "(4:00) (Shotgun) 15-P.Mahomes pass incomplete deep right to 83-N.Gray [97-A.Hutchinson]."
+    },
+    {
+      "playId": "1452",
+      "quarter": 2,
+      "clock": "03:54",
+      "homeWp": 0.5139181017875671,
+      "description": "(3:54) 5-T.Townsend punts 47 yards to DET 41, Center-41-J.Winchester, fair catch by 11-K.Raymond."
+    },
+    {
+      "playId": "1472",
+      "quarter": 2,
+      "clock": "03:47",
+      "homeWp": 0.5392465591430664,
+      "description": "(3:47) 5-D.Montgomery right end to DET 46 for 5 yards (56-G.Karlaftis; 93-M.Dickerson)."
+    },
+    {
+      "playId": "1494",
+      "quarter": 2,
+      "clock": "03:06",
+      "homeWp": 0.5418223440647125,
+      "description": "(3:06) 16-J.Goff pass incomplete deep left to 0-M.Jones."
+    },
+    {
+      "playId": "1517",
+      "quarter": 2,
+      "clock": "03:01",
+      "homeWp": 0.5627262890338898,
+      "description": "(3:01) (Shotgun) 16-J.Goff sacked at DET 43 for -3 yards (51-M.Danna)."
+    },
+    {
+      "playId": "1537",
+      "quarter": 2,
+      "clock": "02:13",
+      "homeWp": 0.6187710165977478,
+      "description": "(2:13) 3-J.Fox punts 40 yards to KC 17, Center-47-S.Daly. 17-R.James to KC 18 for 1 yard (42-J.Reeves-Maybin, 30-K.Dorsey)."
+    },
+    {
+      "playId": "1563",
+      "quarter": 2,
+      "clock": "02:02",
+      "homeWp": 0.5896937251091003,
+      "description": "(2:02) (Shotgun) 15-P.Mahomes pass short right to 4-R.Rice to KC 43 for 25 yards (46-J.Campbell)."
+    },
+    {
+      "playId": "1588",
+      "quarter": 2,
+      "clock": "01:54",
+      "homeWp": 0.629709005355835,
+      "description": "(1:54) (Shotgun) 15-P.Mahomes pass incomplete deep left to 17-R.James."
+    },
+    {
+      "playId": "1618",
+      "quarter": 2,
+      "clock": "01:48",
+      "homeWp": 0.6149706244468689,
+      "description": "(1:48) (Shotgun) 15-P.Mahomes pass short left to 4-R.Rice to KC 46 for 3 yards (32-B.Branch)."
+    },
+    {
+      "playId": "1643",
+      "quarter": 2,
+      "clock": "01:13",
+      "homeWp": 0.5884907245635986,
+      "description": "(1:13) (Shotgun) 15-P.Mahomes pass short middle to 83-N.Gray to DET 48 for 6 yards (31-K.Joseph). PENALTY on KC-65-T.Smith, Offensive Holding, 10 yards, enforced at KC 46 - No Play."
+    },
+    {
+      "playId": "1691",
+      "quarter": 2,
+      "clock": "01:07",
+      "homeWp": null,
+      "description": "Timeout #2 by KC at 01:07."
+    },
+    {
+      "playId": "1679",
+      "quarter": 2,
+      "clock": "01:07",
+      "homeWp": 0.5713353753089905,
+      "description": "(1:07) (Shotgun) 15-P.Mahomes pass deep middle to 11-M.Valdes-Scantling to DET 30 for 34 yards (23-J.Jacobs)."
+    },
+    {
+      "playId": "1711",
+      "quarter": 2,
+      "clock": "00:45",
+      "homeWp": 0.6834982633590698,
+      "description": "(:45) (No Huddle, Shotgun) 15-P.Mahomes pass deep left to 84-Ju.Watson pushed ob at DET 4 for 26 yards (2-C.Gardner-Johnson)."
+    },
+    {
+      "playId": "1741",
+      "quarter": 2,
+      "clock": "00:37",
+      "homeWp": 0.7229183316230774,
+      "description": "(:37) (Shotgun) 15-P.Mahomes pass short right to 81-B.Bell for 4 yards, TOUCHDOWN."
+    },
+    {
+      "playId": "1781",
+      "quarter": 2,
+      "clock": "00:34",
+      "homeWp": null,
+      "description": "Timeout #3 by KC at 00:34."
+    },
+    {
+      "playId": "1767",
+      "quarter": 2,
+      "clock": "00:34",
+      "homeWp": null,
+      "description": "7-H.Butker extra point is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend."
+    },
+    {
+      "playId": "1789",
+      "quarter": 2,
+      "clock": "00:34",
+      "homeWp": null,
+      "description": "7-H.Butker kicks 65 yards from KC 35 to end zone, Touchback."
+    },
+    {
+      "playId": "1812",
+      "quarter": 2,
+      "clock": "00:34",
+      "homeWp": 0.7669300436973572,
+      "description": "(:34) (Shotgun) 16-J.Goff pass short right to 87-S.LaPorta to DET 30 for 5 yards (97-F.Anudike-Uzomah)."
+    },
+    {
+      "playId": "1849",
+      "quarter": 2,
+      "clock": "00:29",
+      "homeWp": null,
+      "description": "Timeout #2 by DET at 00:29."
+    },
+    {
+      "playId": "1837",
+      "quarter": 2,
+      "clock": "00:29",
+      "homeWp": 0.7765168696641922,
+      "description": "(:29) (Shotgun) 16-J.Goff pass short left to 87-S.LaPorta to DET 34 for 4 yards (22-T.McDuffie)."
+    },
+    {
+      "playId": "1881",
+      "quarter": 2,
+      "clock": "00:22",
+      "homeWp": null,
+      "description": "Timeout #3 by DET at 00:22."
+    },
+    {
+      "playId": "1869",
+      "quarter": 2,
+      "clock": "00:22",
+      "homeWp": 0.7869724333286285,
+      "description": "(:22) (Shotgun) 16-J.Goff pass short middle to 8-J.Reynolds to DET 42 for 8 yards (21-M.Edwards, 6-B.Cook)."
+    },
+    {
+      "playId": "1901",
+      "quarter": 2,
+      "clock": "00:10",
+      "homeWp": 0.7781914472579956,
+      "description": "(:10) (No Huddle) 16-J.Goff spiked the ball to stop the clock."
+    },
+    {
+      "playId": "1940",
+      "quarter": 2,
+      "clock": "00:09",
+      "homeWp": 0.7913811355829239,
+      "description": "(:09) (Shotgun) 16-J.Goff pass incomplete deep right to 0-M.Jones."
+    },
+    {
+      "playId": "1963",
+      "quarter": 2,
+      "clock": "00:05",
+      "homeWp": 0.8049499094486237,
+      "description": "(:05) (Shotgun) 16-J.Goff pass incomplete short right to 14-A.St. Brown (56-G.Karlaftis)."
+    },
+    {
+      "playId": "1986",
+      "quarter": 2,
+      "clock": "00:03",
+      "homeWp": 0.8229364454746246,
+      "description": "(:03) (Shotgun) 16-J.Goff pass incomplete deep right."
+    },
+    {
+      "playId": "2009",
+      "quarter": 2,
+      "clock": "00:00",
+      "homeWp": null,
+      "description": "END QUARTER 2"
+    },
+    {
+      "playId": "2029",
+      "quarter": 3,
+      "clock": "15:00",
+      "homeWp": null,
+      "description": "3-J.Fox kicks 65 yards from DET 35 to end zone, Touchback."
+    },
+    {
+      "playId": "2045",
+      "quarter": 3,
+      "clock": "15:00",
+      "homeWp": 0.7868565320968628,
+      "description": "(15:00) 10-I.Pacheco left end to KC 27 for 2 yards (79-J.Cominsky; 55-D.Barnes)."
+    },
+    {
+      "playId": "2067",
+      "quarter": 3,
+      "clock": "14:24",
+      "homeWp": 0.772409975528717,
+      "description": "(14:24) (Shotgun) 15-P.Mahomes pass short left to 10-I.Pacheco to KC 37 for 10 yards (94-B.Jones). KC-10-I.Pacheco was injured during the play."
+    },
+    {
+      "playId": "2092",
+      "quarter": 3,
+      "clock": "13:48",
+      "homeWp": 0.8130903840065002,
+      "description": "(13:48) 15-P.Mahomes pass incomplete short left."
+    },
+    {
+      "playId": "2118",
+      "quarter": 3,
+      "clock": "13:42",
+      "homeWp": 0.7999699115753174,
+      "description": "(13:42) (Shotgun) 15-P.Mahomes pass incomplete short left to 81-B.Bell."
+    },
+    {
+      "playId": "2141",
+      "quarter": 3,
+      "clock": "13:38",
+      "homeWp": 0.7776919007301331,
+      "description": "(13:38) (Shotgun) 15-P.Mahomes pass short right to 83-N.Gray to KC 39 for 2 yards (23-J.Jacobs) [97-A.Hutchinson]."
+    },
+    {
+      "playId": "2166",
+      "quarter": 3,
+      "clock": "13:01",
+      "homeWp": 0.762550413608551,
+      "description": "(13:01) 5-T.Townsend punts 54 yards to DET 7, Center-41-J.Winchester, fair catch by 11-K.Raymond."
+    },
+    {
+      "playId": "2186",
+      "quarter": 3,
+      "clock": "12:54",
+      "homeWp": 0.7651880979537964,
+      "description": "(12:54) 16-J.Goff pass incomplete short right to 0-M.Jones."
+    },
+    {
+      "playId": "2228",
+      "quarter": 3,
+      "clock": "12:50",
+      "homeWp": 0.7802423536777496,
+      "description": "(12:50) 5-D.Montgomery right guard to DET 7 for no gain (56-G.Karlaftis). Penalty on DET-72-H.Vaitai, Unnecessary Roughness, offsetting. Penalty on KC-93-M.Dickerson, Unnecessary Roughness, offsetting."
+    },
+    {
+      "playId": "2261",
+      "quarter": 3,
+      "clock": "12:31",
+      "homeWp": 0.7983815670013428,
+      "description": "(12:31) (Shotgun) 16-J.Goff pass short left to 87-S.LaPorta to DET 11 for 4 yards (20-J.Reid) [97-F.Anudike-Uzomah]."
+    },
+    {
+      "playId": "2286",
+      "quarter": 3,
+      "clock": "11:52",
+      "homeWp": 0.8104887008666992,
+      "description": "(11:52) 3-J.Fox punts 47 yards to KC 42, Center-47-S.Daly, fair catch by 17-R.James."
+    },
+    {
+      "playId": "2306",
+      "quarter": 3,
+      "clock": "11:44",
+      "homeWp": 0.8288001418113708,
+      "description": "(11:44) (Shotgun) 15-P.Mahomes pass incomplete deep middle to 19-K.Toney (46-J.Campbell)."
+    },
+    {
+      "playId": "2342",
+      "quarter": 3,
+      "clock": "11:39",
+      "homeWp": 0.8165336847305298,
+      "description": "(11:39) (Shotgun) 25-C.Edwards-Helaire right guard to KC 46 for 4 yards (32-B.Branch; 94-B.Jones)."
+    },
+    {
+      "playId": "2364",
+      "quarter": 3,
+      "clock": "11:04",
+      "homeWp": 0.807034969329834,
+      "description": "(11:04) (Shotgun) 15-P.Mahomes pass short right intended for 19-K.Toney INTERCEPTED by 32-B.Branch at 50. 32-B.Branch for 50 yards, TOUCHDOWN."
+    },
+    {
+      "playId": "2397",
+      "quarter": 3,
+      "clock": "10:54",
+      "homeWp": null,
+      "description": "36-R.Patterson extra point is GOOD, Center-47-S.Daly, Holder-3-J.Fox."
+    },
+    {
+      "playId": "2412",
+      "quarter": 3,
+      "clock": "10:54",
+      "homeWp": null,
+      "description": "3-J.Fox kicks 65 yards from DET 35 to end zone, Touchback."
+    },
+    {
+      "playId": "2435",
+      "quarter": 3,
+      "clock": "10:54",
+      "homeWp": 0.5593234896659851,
+      "description": "(10:54) (Shotgun) 15-P.Mahomes pass short left to 10-I.Pacheco pushed ob at KC 32 for 7 yards (55-D.Barnes) [53-C.Harris]."
+    },
+    {
+      "playId": "2465",
+      "quarter": 3,
+      "clock": "10:20",
+      "homeWp": 0.5763906836509705,
+      "description": "(10:20) (Shotgun) 10-I.Pacheco left guard to KC 35 for 3 yards (93-J.Paschal)."
+    },
+    {
+      "playId": "2487",
+      "quarter": 3,
+      "clock": "09:37",
+      "homeWp": 0.5811101198196411,
+      "description": "(9:37) 15-P.Mahomes pass incomplete deep middle to 84-Ju.Watson."
+    },
+    {
+      "playId": "2510",
+      "quarter": 3,
+      "clock": "09:30",
+      "homeWp": 0.5631586909294128,
+      "description": "(9:30) (Shotgun) 15-P.Mahomes pass short right to 17-R.James to KC 41 for 6 yards (31-K.Joseph)."
+    },
+    {
+      "playId": "2535",
+      "quarter": 3,
+      "clock": "08:56",
+      "homeWp": 0.550760805606842,
+      "description": "(8:56) (Shotgun) 15-P.Mahomes pass incomplete deep right to 24-S.Moore [97-A.Hutchinson]."
+    },
+    {
+      "playId": "2558",
+      "quarter": 3,
+      "clock": "08:48",
+      "homeWp": 0.5079841613769531,
+      "description": "(8:48) 5-T.Townsend punts 58 yards to DET 1, Center-41-J.Winchester. 11-K.Raymond to DET 17 for 16 yards (27-C.Conner)."
+    },
+    {
+      "playId": "2584",
+      "quarter": 3,
+      "clock": "08:36",
+      "homeWp": 0.547934353351593,
+      "description": "(8:36) 26-J.Gibbs right end to DET 23 for 6 yards (38-L.Sneed)."
+    },
+    {
+      "playId": "2613",
+      "quarter": 3,
+      "clock": "08:08",
+      "homeWp": 0.5465107560157776,
+      "description": "(8:08) 16-J.Goff pass deep left to 14-A.St. Brown to DET 41 for 18 yards (22-T.McDuffie)."
+    },
+    {
+      "playId": "2638",
+      "quarter": 3,
+      "clock": "07:31",
+      "homeWp": 0.5064607262611389,
+      "description": "(7:31) (Shotgun) 16-J.Goff pass short right to 87-S.LaPorta to KC 47 for 12 yards (2-J.Williams). Penalty on KC-38-L.Sneed, Defensive Holding, declined."
+    },
+    {
+      "playId": "2678",
+      "quarter": 3,
+      "clock": "07:06",
+      "homeWp": 0.4783289432525635,
+      "description": "(7:06) 26-J.Gibbs right tackle to KC 45 for 2 yards (91-D.Nnadi; 23-D.Tranquill)."
+    },
+    {
+      "playId": "2701",
+      "quarter": 3,
+      "clock": "06:25",
+      "homeWp": 0.49946528673172,
+      "description": "(6:25) (Shotgun) 16-J.Goff pass short left to 14-A.St. Brown pushed ob at KC 40 for 5 yards (6-B.Cook)."
+    },
+    {
+      "playId": "2731",
+      "quarter": 3,
+      "clock": "05:59",
+      "homeWp": 0.4813624620437622,
+      "description": "(5:59) (No Huddle, Shotgun) 16-J.Goff pass incomplete short right to 8-J.Reynolds."
+    },
+    {
+      "playId": "2754",
+      "quarter": 3,
+      "clock": "05:56",
+      "homeWp": 0.5326339304447174,
+      "description": "(5:56) 3-J.Fox punts 30 yards to KC 10, Center-47-S.Daly, downed by DET-25-W.Harris."
+    },
+    {
+      "playId": "2774",
+      "quarter": 3,
+      "clock": "05:44",
+      "homeWp": 0.5416457653045654,
+      "description": "(5:44) 10-I.Pacheco right guard to KC 13 for 3 yards (55-D.Barnes)."
+    },
+    {
+      "playId": "2803",
+      "quarter": 3,
+      "clock": "05:10",
+      "homeWp": 0.539804220199585,
+      "description": "(5:10) (Shotgun) 15-P.Mahomes scrambles right end to KC 22 for 9 yards (94-B.Jones)."
+    },
+    {
+      "playId": "2825",
+      "quarter": 3,
+      "clock": "04:28",
+      "homeWp": 0.560259222984314,
+      "description": "(4:28) (Shotgun) 15-P.Mahomes pass short right to 10-I.Pacheco to KC 31 for 9 yards (53-C.Harris)."
+    },
+    {
+      "playId": "2850",
+      "quarter": 3,
+      "clock": "03:45",
+      "homeWp": 0.5844572782516479,
+      "description": "(3:45) 10-I.Pacheco left tackle to KC 34 for 3 yards (55-D.Barnes)."
+    },
+    {
+      "playId": "2872",
+      "quarter": 3,
+      "clock": "03:07",
+      "homeWp": 0.5876976251602173,
+      "description": "(3:07) 15-P.Mahomes pass incomplete deep middle to 84-Ju.Watson. PENALTY on DET-1-C.Sutton, Defensive Pass Interference, 41 yards, enforced at KC 34 - No Play."
+    },
+    {
+      "playId": "2906",
+      "quarter": 3,
+      "clock": "03:00",
+      "homeWp": 0.6768484711647034,
+      "description": "(3:00) (Shotgun) 15-P.Mahomes pass short right to 81-B.Bell pushed ob at DET 17 for 8 yards (34-A.Anzalone)."
+    },
+    {
+      "playId": "2936",
+      "quarter": 3,
+      "clock": "02:21",
+      "homeWp": 0.6921653151512146,
+      "description": "(2:21) (Shotgun) 15-P.Mahomes pass incomplete short left to 24-S.Moore."
+    },
+    {
+      "playId": "2959",
+      "quarter": 3,
+      "clock": "02:18",
+      "homeWp": 0.6648484468460083,
+      "description": "(2:18) (Shotgun) 15-P.Mahomes pass incomplete short middle to 19-K.Toney."
+    },
+    {
+      "playId": "2982",
+      "quarter": 3,
+      "clock": "02:14",
+      "homeWp": 0.6109363436698914,
+      "description": "(2:14) 7-H.Butker 35 yard field goal is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend."
+    },
+    {
+      "playId": "3002",
+      "quarter": 3,
+      "clock": "02:10",
+      "homeWp": null,
+      "description": "7-H.Butker kicks 65 yards from KC 35 to end zone, Touchback."
+    },
+    {
+      "playId": "3032",
+      "quarter": 3,
+      "clock": "02:10",
+      "homeWp": 0.6385917365550995,
+      "description": "(2:10) (Shotgun) 16-J.Goff pass incomplete short right to 14-A.St. Brown (20-J.Reid)."
+    },
+    {
+      "playId": "3055",
+      "quarter": 3,
+      "clock": "02:06",
+      "homeWp": 0.6625086665153503,
+      "description": "(2:06) (Shotgun) 16-J.Goff pass incomplete short right. PENALTY on DET-5-D.Montgomery, Tripping, 12 yards, enforced at DET 25 - No Play."
+    },
+    {
+      "playId": "3089",
+      "quarter": 3,
+      "clock": "02:01",
+      "homeWp": 0.6973024010658264,
+      "description": "(2:01) (Shotgun) 16-J.Goff pass deep middle to 11-K.Raymond to DET 33 for 20 yards (6-B.Cook)."
+    },
+    {
+      "playId": "3114",
+      "quarter": 3,
+      "clock": "01:21",
+      "homeWp": 0.6606170535087585,
+      "description": "(1:21) 16-J.Goff pass incomplete short right to 14-A.St. Brown."
+    },
+    {
+      "playId": "3137",
+      "quarter": 3,
+      "clock": "01:17",
+      "homeWp": 0.6911062300205231,
+      "description": "(1:17) 3-J.Fox punts 44 yards to KC 23, Center-47-S.Daly. 17-R.James to KC 32 for 9 yards (30-K.Dorsey)."
+    },
+    {
+      "playId": "3163",
+      "quarter": 3,
+      "clock": "01:06",
+      "homeWp": 0.7305582165718079,
+      "description": "(1:06) (Shotgun) 25-C.Edwards-Helaire right tackle to KC 36 for 4 yards (34-A.Anzalone, 55-D.Barnes)."
+    },
+    {
+      "playId": "3185",
+      "quarter": 3,
+      "clock": "00:31",
+      "homeWp": 0.7271064519882202,
+      "description": "(:31) (Shotgun) 15-P.Mahomes pass short right to 83-N.Gray to DET 40 for 24 yards (2-C.Gardner-Johnson). DET-32-B.Branch was injured during the play."
+    },
+    {
+      "playId": "3213",
+      "quarter": 3,
+      "clock": "00:00",
+      "homeWp": null,
+      "description": "END QUARTER 3"
+    },
+    {
+      "playId": "3233",
+      "quarter": 4,
+      "clock": "15:00",
+      "homeWp": 0.783203661441803,
+      "description": "(15:00) (Shotgun) 15-P.Mahomes pass short left to 25-C.Edwards-Helaire to DET 33 for 7 yards (46-J.Campbell; 31-K.Joseph)."
+    },
+    {
+      "playId": "3258",
+      "quarter": 4,
+      "clock": "14:22",
+      "homeWp": 0.8001561164855957,
+      "description": "(14:22) (Shotgun) 25-C.Edwards-Helaire left end to DET 29 for 4 yards (97-A.Hutchinson)."
+    },
+    {
+      "playId": "3280",
+      "quarter": 4,
+      "clock": "13:41",
+      "homeWp": 0.7997457385063171,
+      "description": "(13:41) (Shotgun) 15-P.Mahomes scrambles left end to DET 20 for 9 yards (23-J.Jacobs)."
+    },
+    {
+      "playId": "3302",
+      "quarter": 4,
+      "clock": "13:04",
+      "homeWp": 0.8296737670898438,
+      "description": "(13:04) 19-K.Toney left end to DET 21 for -1 yards (55-D.Barnes, 53-C.Harris)."
+    },
+    {
+      "playId": "3324",
+      "quarter": 4,
+      "clock": "12:23",
+      "homeWp": 0.8143762350082397,
+      "description": "(12:23) (Shotgun) 15-P.Mahomes pass incomplete short right to 1-J.McKinnon [41-J.Houston]. DET-91-L.Onwuzurike was injured during the play."
+    },
+    {
+      "playId": "3347",
+      "quarter": 4,
+      "clock": "12:16",
+      "homeWp": 0.7790319919586182,
+      "description": "(12:16) 7-H.Butker 39 yard field goal is GOOD, Center-41-J.Winchester, Holder-5-T.Townsend."
+    },
+    {
+      "playId": "3370",
+      "quarter": 4,
+      "clock": "12:11",
+      "homeWp": null,
+      "description": "7-H.Butker kicks 65 yards from KC 35 to end zone, Touchback."
+    },
+    {
+      "playId": "3393",
+      "quarter": 4,
+      "clock": "12:11",
+      "homeWp": 0.7956151962280273,
+      "description": "(12:11) 5-D.Montgomery right end to DET 30 for 5 yards (32-N.Bolton; 38-L.Sneed)."
+    },
+    {
+      "playId": "3415",
+      "quarter": 4,
+      "clock": "11:32",
+      "homeWp": 0.8071984499692917,
+      "description": "(11:32) 26-J.Gibbs right guard to DET 28 for -2 yards (38-L.Sneed, 54-L.Chenal)."
+    },
+    {
+      "playId": "3437",
+      "quarter": 4,
+      "clock": "10:46",
+      "homeWp": 0.8310618549585342,
+      "description": "(10:46) (Shotgun) PENALTY on DET, Delay of Game, 5 yards, enforced at DET 28 - No Play."
+    },
+    {
+      "playId": "3461",
+      "quarter": 4,
+      "clock": "10:46",
+      "homeWp": 0.8595206737518311,
+      "description": "(10:46) (Shotgun) 16-J.Goff pass deep left to 8-J.Reynolds to DET 41 for 18 yards (2-J.Williams) [38-L.Sneed]."
+    },
+    {
+      "playId": "3486",
+      "quarter": 4,
+      "clock": "10:08",
+      "homeWp": 0.781547486782074,
+      "description": "(10:08) 16-J.Goff pass short right to 89-B.Wright to DET 49 for 8 yards (54-L.Chenal, 20-J.Reid). Penalty on KC-56-G.Karlaftis, Defensive Holding, declined."
+    },
+    {
+      "playId": "3522",
+      "quarter": 4,
+      "clock": "09:50",
+      "homeWp": 0.7859118282794952,
+      "description": "(9:50) 5-D.Montgomery left tackle to 50 for 1 yard (91-D.Nnadi)."
+    },
+    {
+      "playId": "3544",
+      "quarter": 4,
+      "clock": "09:12",
+      "homeWp": 0.7988080382347107,
+      "description": "(9:12) 5-D.Montgomery right guard to KC 47 for 3 yards (22-T.McDuffie)."
+    },
+    {
+      "playId": "3566",
+      "quarter": 4,
+      "clock": "08:31",
+      "homeWp": 0.7553780823945999,
+      "description": "(8:31) 16-J.Goff pass short right to 8-J.Reynolds to KC 14 for 33 yards (50-W.Gay)."
+    },
+    {
+      "playId": "3591",
+      "quarter": 4,
+      "clock": "07:49",
+      "homeWp": 0.6428526341915131,
+      "description": "(7:49) 5-D.Montgomery right end to KC 8 for 6 yards (38-L.Sneed)."
+    },
+    {
+      "playId": "3613",
+      "quarter": 4,
+      "clock": "07:11",
+      "homeWp": 0.6030865907669067,
+      "description": "(7:11) 5-D.Montgomery up the middle for 8 yards, TOUCHDOWN."
+    },
+    {
+      "playId": "3636",
+      "quarter": 4,
+      "clock": "07:06",
+      "homeWp": null,
+      "description": "36-R.Patterson extra point is GOOD, Center-47-S.Daly, Holder-3-J.Fox."
+    },
+    {
+      "playId": "3651",
+      "quarter": 4,
+      "clock": "07:06",
+      "homeWp": null,
+      "description": "3-J.Fox kicks 65 yards from DET 35 to end zone, Touchback."
+    },
+    {
+      "playId": "3674",
+      "quarter": 4,
+      "clock": "07:06",
+      "homeWp": 0.5460705757141113,
+      "description": "(7:06) (Shotgun) 15-P.Mahomes pass short left to 8-J.Ross to KC 31 for 6 yards (23-J.Jacobs)."
+    },
+    {
+      "playId": "3699",
+      "quarter": 4,
+      "clock": "06:32",
+      "homeWp": 0.5307342410087585,
+      "description": "(6:32) 10-I.Pacheco right end to KC 34 for 3 yards (54-A.McNeill; 97-A.Hutchinson)."
+    },
+    {
+      "playId": "3721",
+      "quarter": 4,
+      "clock": "05:51",
+      "homeWp": 0.5360356569290161,
+      "description": "(5:51) (Shotgun) Direct snap to 81-B.Bell. 4-R.Rice right end to KC 31 for -3 yards (93-J.Paschal)."
+    },
+    {
+      "playId": "3745",
+      "quarter": 4,
+      "clock": "05:16",
+      "homeWp": 0.4273898005485535,
+      "description": "(5:16) 5-T.Townsend punts 35 yards to DET 34, Center-41-J.Winchester, downed by KC-44-Ca.Jones."
+    },
+    {
+      "playId": "3765",
+      "quarter": 4,
+      "clock": "05:07",
+      "homeWp": 0.3373018503189087,
+      "description": "(5:07) PENALTY on DET-77-F.Ragnow, False Start, 5 yards, enforced at DET 34 - No Play."
+    },
+    {
+      "playId": "3796",
+      "quarter": 4,
+      "clock": "05:07",
+      "homeWp": 0.3723307847976685,
+      "description": "(5:07) (Shotgun) 26-J.Gibbs right end pushed ob at DET 47 for 18 yards (51-M.Danna)."
+    },
+    {
+      "playId": "3823",
+      "quarter": 4,
+      "clock": "04:32",
+      "homeWp": 0.3003383874893188,
+      "description": "(4:32) 5-D.Montgomery left end to DET 49 for 2 yards (93-M.Dickerson)."
+    },
+    {
+      "playId": "3845",
+      "quarter": 4,
+      "clock": "03:54",
+      "homeWp": 0.2929482460021973,
+      "description": "(3:54) 5-D.Montgomery left end to KC 48 for 3 yards (51-M.Danna)."
+    },
+    {
+      "playId": "3867",
+      "quarter": 4,
+      "clock": "03:14",
+      "homeWp": 0.3137423396110535,
+      "description": "(3:14) (Shotgun) 5-D.Montgomery up the middle to KC 45 for 3 yards (97-F.Anudike-Uzomah, 21-M.Edwards)."
+    },
+    {
+      "playId": "3889",
+      "quarter": 4,
+      "clock": "02:33",
+      "homeWp": 0.3472461104393005,
+      "description": "(2:33) (Shotgun) 16-J.Goff pass incomplete short right to 8-J.Reynolds (20-J.Reid)."
+    },
+    {
+      "playId": "3912",
+      "quarter": 4,
+      "clock": "02:30",
+      "homeWp": 0.5833667516708374,
+      "description": "(2:30) 15-P.Mahomes pass incomplete deep right to 19-K.Toney."
+    },
+    {
+      "playId": "3935",
+      "quarter": 4,
+      "clock": "02:25",
+      "homeWp": 0.5541270971298218,
+      "description": "(2:25) (Shotgun) 15-P.Mahomes pass short right to 24-S.Moore to DET 38 for 17 yards (1-C.Sutton) [53-C.Harris]. PENALTY on KC-79-D.Smith, Offensive Holding, 10 yards, enforced at KC 45 - No Play."
+    },
+    {
+      "playId": "3971",
+      "quarter": 4,
+      "clock": "02:19",
+      "homeWp": 0.4967822730541229,
+      "description": "(2:19) (Shotgun) 15-P.Mahomes pass incomplete short middle to 24-S.Moore (2-C.Gardner-Johnson)."
+    },
+    {
+      "playId": "3994",
+      "quarter": 4,
+      "clock": "02:14",
+      "homeWp": 0.4316610097885132,
+      "description": "(2:14) (Shotgun) 15-P.Mahomes pass incomplete deep right to 4-R.Rice (2-C.Gardner-Johnson)."
+    },
+    {
+      "playId": "4017",
+      "quarter": 4,
+      "clock": "02:09",
+      "homeWp": 0.3825677037239075,
+      "description": "(2:09) (Shotgun) PENALTY on KC-74-J.Taylor, False Start, 5 yards, enforced at KC 35 - No Play."
+    },
+    {
+      "playId": "4041",
+      "quarter": 4,
+      "clock": "02:09",
+      "homeWp": 0.3562135398387909,
+      "description": "(2:09) (Shotgun) 15-P.Mahomes pass incomplete deep right to 84-Ju.Watson [79-J.Cominsky]."
+    },
+    {
+      "playId": "4064",
+      "quarter": 4,
+      "clock": "02:00",
+      "homeWp": 0.1538299918174744,
+      "description": "(2:00) 5-D.Montgomery right guard to KC 25 for 5 yards (56-G.Karlaftis; 22-T.McDuffie)."
+    },
+    {
+      "playId": "4105",
+      "quarter": 4,
+      "clock": "01:53",
+      "homeWp": null,
+      "description": "Timeout #1 by KC at 01:53."
+    },
+    {
+      "playId": "4093",
+      "quarter": 4,
+      "clock": "01:53",
+      "homeWp": 0.1560724377632141,
+      "description": "(1:53) 5-D.Montgomery right guard to KC 22 for 3 yards (32-N.Bolton, 6-B.Cook)."
+    },
+    {
+      "playId": "4136",
+      "quarter": 4,
+      "clock": "01:47",
+      "homeWp": null,
+      "description": "Timeout #2 by KC at 01:47."
+    },
+    {
+      "playId": "4122",
+      "quarter": 4,
+      "clock": "01:47",
+      "homeWp": 0.1470919847488403,
+      "description": "(1:47) 5-D.Montgomery up the middle to KC 20 for 2 yards (54-L.Chenal)."
+    },
+    {
+      "playId": "4165",
+      "quarter": 4,
+      "clock": "01:42",
+      "homeWp": null,
+      "description": "Timeout #3 by KC at 01:42."
+    },
+    {
+      "playId": "4153",
+      "quarter": 4,
+      "clock": "01:42",
+      "homeWp": 0.1015418767929077,
+      "description": "(1:42) 16-J.Goff kneels to KC 21 for -1 yards."
+    },
+    {
+      "playId": "4182",
+      "quarter": 4,
+      "clock": "01:02",
+      "homeWp": 0.09616357088088989,
+      "description": "(1:02) 16-J.Goff kneels to KC 22 for -1 yards."
+    },
+    {
+      "playId": "4204",
+      "quarter": 4,
+      "clock": "00:37",
+      "homeWp": 0.08164691925048828,
+      "description": "(:37) 16-J.Goff kneels to KC 23 for -1 yards."
+    },
+    {
+      "playId": "4226",
+      "quarter": 4,
+      "clock": "00:00",
+      "homeWp": null,
+      "description": "END GAME"
+    }
+  ],
+  "coverage": [
+    {
+      "category": "officiating",
+      "status": "partial",
+      "eligible": 10,
+      "modeled": 4,
+      "reason": null
+    },
+    {
+      "category": "coaching",
+      "status": "partial",
+      "eligible": 17,
+      "modeled": 16,
+      "reason": null
+    },
+    {
+      "category": "fumble",
+      "status": "unavailable",
+      "eligible": 1,
+      "modeled": 0,
+      "reason": null
+    },
+    {
+      "category": "kicking",
+      "status": "unavailable",
+      "eligible": 7,
+      "modeled": 0,
+      "reason": null
+    },
+    {
+      "category": "execution",
+      "status": "available",
+      "eligible": 366,
+      "modeled": 366,
+      "reason": null
+    },
+    {
+      "category": "penalty_anomaly",
+      "status": "unavailable",
+      "eligible": 426,
+      "modeled": 0,
+      "reason": null
+    }
+  ],
+  "models": [
+    {
+      "id": "nflfastR",
+      "version": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+      "trainingWindow": null,
+      "notes": "Published training excludes ties/OT; pinned artifact training cutoff unverified."
+    },
+    {
+      "id": "nfl4th-adapted",
+      "version": "under-review-nfl4th-2026-v1",
+      "trainingWindow": null,
+      "notes": "Rule-adapted experimental scenarios; recorded observed-action diagnostics do not identify unchosen counterfactual outcomes.",
+      "checksum": "faae6ad3afc60e034e619f892b2240046603ecad5287a1ce8e9f31a040be8811"
+    },
+    {
+      "id": "fumble",
+      "version": "under-review-contextual-baselines-v1",
+      "checksum": "5d13bdb7c25f0354cbde8abe1deb5c8bb15e865fb17ce275aca016772181b5e6",
+      "trainingWindow": "2015,2016,2017,2018,2019,2020,2021,2022",
+      "notes": "No future games, recovery locations, eventual yards gained, or kick outcomes in predictors."
+    },
+    {
+      "id": "fg",
+      "version": "under-review-contextual-baselines-v1",
+      "checksum": "fc871868cb910470213a28e486eb40128705bdc11e935e8f0b54721750d5a928",
+      "trainingWindow": "2015,2016,2017,2018,2019,2020,2021,2022",
+      "notes": "No future games, recovery locations, eventual yards gained, or kick outcomes in predictors."
+    },
+    {
+      "id": "xp",
+      "version": "under-review-contextual-baselines-v1",
+      "checksum": "1b26bba80d0989fea447913c039c0ff8b51513944e8bbc8d6b557fa0248315ea",
+      "trainingWindow": "2015,2016,2017,2018,2019,2020,2021,2022",
+      "notes": "No future games, recovery locations, eventual yards gained, or kick outcomes in predictors."
+    },
+    {
+      "id": "penalty",
+      "version": "under-review-contextual-baselines-v1",
+      "checksum": "4f71562b86caf6c0d319cedf814c72a3d8fb0db90c7f28d622692ec0474013f0",
+      "trainingWindow": "2015,2016,2017,2018,2019,2020,2021,2022",
+      "notes": "No future games, recovery locations, eventual yards gained, or kick outcomes in predictors."
+    }
+  ],
+  "warnings": [
+    "Overall percentile unavailable: no validated comparable-coverage aggregation.",
+    "Officiating correctness: not reviewed. No statistical result establishes intent.",
+    "Coaching promotion gate is absent, stale or failed: values remain experimental."
+  ]
+}

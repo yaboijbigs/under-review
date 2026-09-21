@@ -1,0 +1,5 @@
+{
+  "name": "@under-review/worker", "version": "0.1.0", "private": true, "type": "module",
+  "scripts": { "start": "tsx src/index.ts", "ur": "tsx src/cli.ts" },
+  "dependencies": { "@under-review/core": "0.1.0" }
+}
