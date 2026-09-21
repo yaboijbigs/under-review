@@ -4,6 +4,10 @@
 
 Next.js serves reports and authenticated administration. A separate TypeScript worker owns scheduling and ingestion; PostgreSQL stores revisions, reviews, jobs, and publication state. Pinned R models run through a bounded JSON subprocess contract. Sources, missing coverage, assumptions, and actual freshness accompany reports.
 
+Reports lead with a **Game anomaly audit**: unusual winning profiles, the exact prior win/loss counts for those conditions, actual team totals, and observed context such as returns, sacks and opponent penalties. A separate **Needs review** queue surfaces late consequential penalties, reviewed scoring plays, reversals, nullified scores and high-leverage incompletions, including plays whose ruling impact cannot be modeled. Every candidate links to its full source play.
+
+The versioned profile rules check seven combinations of offense below 200 yards, at least 100 penalty yards, and negative turnover margin. The frozen reference contains 7,256 games from 1999–2025, with target comparisons restricted to earlier seasons. Historical outlier and unusual-profile labels are descriptive product thresholds; sparse samples retain their exact counts. See [data provenance and reproduction](analytics/GAME_PROFILES.md) and the [development evaluation](benchmarks/game-audit/README.md).
+
 ## Start locally
 
 Requirements: Node.js 24, npm, and Docker with Compose. Run from the repository root. No X credentials, paid API access, or LLM account is required.

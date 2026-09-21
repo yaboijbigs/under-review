@@ -12,6 +12,13 @@ export function dateTime(value: unknown): string {
   const source = str(value); if (!source) return "Not yet available";
   const date = new Date(source); return Number.isNaN(date.getTime()) ? "Not yet available" : new Intl.DateTimeFormat("en-US", {dateStyle: "medium", timeStyle: "short", timeZone: "UTC"}).format(date) + " UTC";
 }
+export function referencePeriod(start: number | null, end: number | null): string {
+  if(start === null || end === null)return "Reference period unavailable";
+  return start === end ? `${start} season` : `${start}–${end} seasons`;
+}
+export function auditLabel(status: string): string {
+  return ({historical_outlier:"Historical outlier",unusual_profile:"Unusual winning profile",review_worthy:"Needs review",no_flag_found:"No supported flag found",insufficient_data:"Insufficient historical coverage",rare_sample:"Small historical sample",context:"Historical context"} as Record<string,string>)[status] || human(status);
+}
 export function safeLink(value: unknown): string | undefined { try { const url = new URL(str(value)); return ["https:", "http:"].includes(url.protocol) ? url.href : undefined; } catch { return undefined; } }
 export function statusTone(value: unknown): string { const text = str(value).toLowerCase(); return /failed|error|blocked|corrected/.test(text) ? "warning" : /reconciled|available|succeeded|completed|reviewed|approved/.test(text) && !/unavailable|not_reviewed|partially/.test(text) ? "positive" : "neutral"; }
 export const teams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LAC", "LAR", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS"];

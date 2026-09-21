@@ -1,6 +1,11 @@
 import { describe,it,expect } from 'vitest';
 import { classifyPostResponse } from '../packages/core/src/publishing.js';
-import { draftPost,validateDraft,supportedFindings,metricDisplay } from '../packages/core/src/summaries.js';
+import { draftPost,validateDraft,supportedFindings,metricDisplay,reportSummary } from '../packages/core/src/summaries.js';
+import { buildGameAudit } from '../packages/core/src/game-audit.js';
+import { readFile } from 'node:fs/promises';
+import { normalizeSchedule,normalizeRow } from '../packages/core/src/normalize.js';
+import { normalizeGameProfiles } from '../packages/core/src/game-profile-source.js';
+import { gameAuditCorrection } from '../packages/core/src/repository.js';
 import { validCsrf,trustedOrigin,type Session } from '../packages/core/src/auth.js';
 import { safeError } from '../packages/core/src/config.js';
 import { reviewInputSchema } from '../packages/core/src/reviews.js';
@@ -13,6 +18,29 @@ describe('evidence-constrained drafting',()=>{
  it('excludes unsupported, broken-reference, and sensitive findings',()=>{const a=structuredClone(analysis);a.metrics[0].eventIds=['missing'];expect(supportedFindings(a)).toHaveLength(0);a.metrics[0].eventIds=['e1'];a.metrics[0].status='experimental';expect(supportedFindings(a)).toHaveLength(0);a.metrics[0].status='supported';a.metrics[0].assumptions=['kickoff_assumption_sensitive'];expect(supportedFindings(a)).toHaveLength(0);});
  it('does not turn missing into zero',()=>{const m={...analysis.metrics[0],value:null,status:'unavailable' as const};expect(metricDisplay(m)).toBe('Unavailable');});
  it('rejects nonfinite numeric and invalid WP timeline output',()=>{const a=structuredClone(analysis);a.metrics[0].value=Infinity;expect(analysisSchema.safeParse(a).success).toBe(false);a.metrics[0].value=0;a.timeline=[{playId:'10',quarter:1,clock:'10:00',homeWp:45,description:''}];expect(analysisSchema.safeParse(a).success).toBe(false);});
+ it('leads with the computed historical finding and attributes counts to the correct conditions',async()=>{
+  const fixture=JSON.parse(await readFile('analytics/models/game-profile-validation.json','utf8'));
+  const reference=JSON.parse(await readFile('analytics/models/game-profiles.json','utf8'));
+  const current=normalizeSchedule(normalizeRow(fixture.scheduleRows[0]));
+  const profiles=normalizeGameProfiles(current,fixture.rawRows.map(normalizeRow));
+  const result={...analysis,gameAudit:buildGameAudit({game:current,profiles,reference})};
+  const draft=draftPost(current,result,'https://example.com/game',false);
+  expect(reportSummary(current,result)).toContain('historical outlier');
+  expect(draft.valid).toBe(true);expect(draft.text).toContain('6W/408L/0T (1999–2025)');
+  expect(draft.text).toContain('Total offense below 200 yards; Negative turnover margin');
+  expect(draft.text).not.toContain('100 penalty yards');
+  expect(draft.evidenceIds).toEqual([`${current.id}:GB:low_offense_turnovers`]);
+  expect(validateDraft(draft.text.replace('6W','0W'),draft)).toBe(false);
+  const audit=result.gameAudit;
+  expect(gameAuditCorrection(undefined,audit)).toBe(false);
+  expect(gameAuditCorrection(audit,structuredClone(audit))).toBe(false);
+  const changed=structuredClone(audit);changed.profiles[0].penaltyYards=0;
+  expect(gameAuditCorrection(audit,changed)).toBe(true);
+  const withdrawn=structuredClone(audit);withdrawn.flags=[];
+  expect(gameAuditCorrection(audit,withdrawn)).toBe(true);
+  const reviewOnly=structuredClone(audit);reviewOnly.notes.push('More context');
+  expect(gameAuditCorrection(audit,reviewOnly)).toBe(false);
+ });
 });
 describe('safe external delivery classification',()=>{
  it('only marks confirmed IDs as published',()=>{expect(classifyPostResponse(201,true)).toBe('published');expect(classifyPostResponse(201,false)).toBe('unknown_outcome');});

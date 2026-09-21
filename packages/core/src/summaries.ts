@@ -18,6 +18,7 @@ export function supportedFindings(analysis:AnalysisResult):Metric[]{
 export function reportSummary(game:Game,analysis:AnalysisResult):string{
  const findings=supportedFindings(analysis).slice(0,2);
  const score=`${game.awayTeam} ${game.awayScore ?? '–'}, ${game.homeTeam} ${game.homeScore ?? '–'}.`;
+ if(analysis.gameAudit)return `${score} ${analysis.gameAudit.headline} Officiating correctness: not reviewed.`;
  return `${score} ${findings.length?findings.map(m=>`${m.team?m.team+': ':''}${m.name}: ${metricDisplay(m)}.`).join(' '):'The final score is reconciled; supported category findings are still being processed.'} Officiating correctness: not reviewed.`;
 }
 export interface EvidenceDraft{text:string;evidenceIds:string[];weightedLength:number;valid:boolean}
@@ -25,6 +26,15 @@ export function draftPost(game:Game,analysis:AnalysisResult,url:string,prelimina
  const prefix=`${kind==='initial'?'':kind==='correction'?'Correction: ':'Update: '}${game.awayTeam} ${game.awayScore}–${game.homeScore} ${game.homeTeam}.`;
  const findings=supportedFindings(analysis);
  const suffix=`${preliminary?' Preliminary.':''} ${reviewStatus==='not_reviewed'?'Calls not reviewed.':'Selected calls reviewed; limited scope.'} ${url}`;
+ const audit=analysis.gameAudit;
+ if(audit){
+  const flag=audit.flags.find(f=>f.status==='historical_outlier'||f.status==='unusual_profile')??audit.flags.find(f=>f.status==='rare_sample');
+  const comparison=flag?.reference;
+  const detail=flag&&comparison?`${flag.team} won: ${flag.conditions.join('; ')}. ${comparison.matchingGames?`Prior: ${comparison.wins}W/${comparison.losses}L/${comparison.ties}T (${comparison.startSeason}–${comparison.endSeason}).`:'No comparable prior records available.'}`:audit.reviewCandidates.length?`${audit.reviewCandidates.length} plays queued for review.`:audit.headline;
+  const attempts=[`${prefix} ${detail}${suffix}`,`${prefix} ${audit.headline}${suffix}`];
+  const text=attempts.find(t=>twitterText.parseTweet(t).valid);
+  if(text){const parsed=twitterText.parseTweet(text);return {text,evidenceIds:flag?[flag.id]:audit.reviewCandidates.map(c=>c.id),weightedLength:parsed.weightedLength,valid:parsed.valid};}
+ }
  const selected:Metric[]=[];
  let text=prefix+suffix;
  for(const metric of findings){

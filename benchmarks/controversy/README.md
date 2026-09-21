@@ -2,7 +2,7 @@
 
 This is a fixed, deliberately selected case study of five famous disputed games and two comparison blowouts. The cohort was selected before inspecting application results. Comparison games are not established controversy-free controls. Seven cases cannot establish population accuracy or agreement with public sentiment, and public controversy is not proof of an incorrect ruling.
 
-The application has no controversy classifier or validated overall score. This benchmark inspects whether the independently identified disputed play is retained in the timeline, selected as an event, modeled with a supported impact, included among the first 12 events, or linked to either headline finding. All plays must be matched by quarter, clock, and description before interpreting a match. A linked aggregate is not proof the headline describes that incident. No reviews are inserted and no model is fitted or changed to match the selected games.
+The original application tested here had no game-level audit or review-candidate scan. This benchmark inspects whether the independently identified disputed play is retained in the timeline, selected as an event, modeled with a supported impact, included among the first 12 events, or linked to either headline finding. All plays must be matched by quarter, clock, and description before interpreting a match. A linked aggregate is not proof the headline describes that incident. No reviews were inserted and no model was fitted or changed to match the selected games in this baseline. The subsequent [game-audit development evaluation](../game-audit/README.md) records the new feature separately; rerunning this harness with current code uses that new feature.
 
 ## Case evidence
 

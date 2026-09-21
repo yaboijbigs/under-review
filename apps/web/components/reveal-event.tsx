@@ -4,7 +4,7 @@ export function RevealEvent() {
   useEffect(()=>{
     const reveal=()=>{
       let id:string;try{id=decodeURIComponent(window.location.hash.slice(1));}catch{return;}
-      if(!id.startsWith("event-"))return;
+      if(!id.startsWith("event-")&&!id.startsWith("play-"))return;
       const target=document.getElementById(id);if(!(target instanceof HTMLDetailsElement))return;
       target.open=true;
       let ancestor=target.parentElement?.closest("details");

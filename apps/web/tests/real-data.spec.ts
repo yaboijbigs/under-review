@@ -2,12 +2,15 @@ import { test, expect } from "@playwright/test";
 // Login secrets must never be retained in Playwright action traces.
 test.use({trace:"off"});
 test("real report exposes revision, coverage, timeline, and evidence", async ({page},testInfo) => {
+  const pageErrors:string[]=[];page.on('pageerror',error=>pageErrors.push(error.message));
   const gameId=process.env.SMOKE_GAME_ID;
   test.skip(!gameId,"Set SMOKE_GAME_ID to a real ingested game; no demo report is substituted.");
   await page.goto(`/games/${encodeURIComponent(gameId!)}`);
+  await expect(page.getByRole("heading",{name:"Game anomaly audit",exact:true})).toBeVisible();
+  await expect(page.getByRole("heading",{name:/^Needs review/})).toBeVisible();
   await expect(page.getByRole("heading",{name:"The category record"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Win-probability timeline"})).toBeVisible();
-  await expect(page.getByText("Overall percentile unavailable",{exact:true})).toBeVisible();
+  await expect(page.locator('.audit-footer')).toContainText('Historical comparisons');
   await expect(page.getByRole("heading",{name:"Revision history"})).toBeVisible();
   const evidence=page.locator("details.evidence").first();
   if(await evidence.count()) {await evidence.locator("summary").click(); await expect(evidence).toHaveAttribute("open","");}
@@ -19,10 +22,19 @@ test("real report exposes revision, coverage, timeline, and evidence", async ({p
     await expect(page.locator(`[id="${id}"]`)).toHaveAttribute('open','');
     await page.locator('.more-evidence > summary').click();
   }
+  const source=page.locator('.source-play').first();
+  if(await source.count()) {
+    const sourceId=await source.getAttribute('id');
+    await page.goto(`/games/${encodeURIComponent(gameId!)}#${encodeURIComponent(sourceId!)}`);
+    await expect(page.locator('.source-play-archive')).toHaveAttribute('open','');
+    await expect(page.locator(`[id="${sourceId}"]`)).toHaveAttribute('open','');
+    await page.locator('.source-play-archive > summary').click();
+  }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.screenshot({path:testInfo.outputPath("report.png"),fullPage:true});
   await page.evaluate(()=>window.scrollTo(0,0));
   await page.screenshot({path:testInfo.outputPath("report-top.png")});
+  expect(pageErrors).toEqual([]);
 });
 test("authenticated operator desk retains guarded forms", async ({page},testInfo) => {
   const username=process.env.SMOKE_ADMIN_USERNAME,password=process.env.SMOKE_ADMIN_PASSWORD;

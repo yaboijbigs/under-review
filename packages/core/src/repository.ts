@@ -12,6 +12,13 @@ export function stableJson(value:unknown):string{
  return '{'+Object.keys(value).sort().filter(k=>(value as Record<string,unknown>)[k]!==undefined).map(k=>JSON.stringify(k)+':'+stableJson((value as Record<string,unknown>)[k])).join(',')+'}';
 }
 export const contentHash=(value:unknown)=>createHash('sha256').update(stableJson(value)).digest('hex');
+export function gameAuditCorrection(previous:AnalysisResult['gameAudit'],current:AnalysisResult['gameAudit']):boolean{
+ if(!previous)return false;
+ if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null);
+ const fields=['totalYards','opponentYards','penalties','penaltyYards','turnoverMargin','nonOffensiveTouchdowns'] as const;
+ const profileChanged=previous.profiles.some(p=>fields.some(key=>p[key]!==null&&p[key]!==current.profiles.find(n=>n.team===p.team)?.[key]));
+ return profileChanged||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
+}
 function sourceEvent(event:Record<string,unknown>|undefined){if(!event)return null;const {reviewStatus,notes,...evidence}=event;return evidence;}
 export async function saveGames(games:Game[],publicationEligible=false){
  await transaction(async client=>{for(const game of games)await client.query(`INSERT INTO games(id,season,week,game_type,home_team,away_team,kickoff_at,game_json,publication_eligible)
@@ -75,8 +82,10 @@ export async function saveAnalysis(game:Game,plays:Record<string,unknown>[],snap
   const charting=analysis.coverage.find(c=>c.category==='execution');
   const chartingStatus=charting?.status==='available'?'available':charting?.modeled?'partial':'unavailable';
   const scoreChanged=previous&&(previous.game_json.homeScore!==game.homeScore||previous.game_json.awayScore!==game.awayScore);
-  const status=previous&&(numericalChanges.length||scoreChanged)?'corrected':sourceKind==='raw'?'preliminary':'reconciled';
-  const changeSummary=!previous?'Initial evidence-backed report.':`${changes.length} metric records changed; ${numericalChanges.length} previously reported statistical findings changed. ${scoreChanged?'Final score corrected. ':''}${chartingStatus!==previous.charting_status?'Charting coverage updated.':''}`.trim();
+  const auditCorrection=gameAuditCorrection(previous?.analysis?.gameAudit,analysis.gameAudit);
+  const status=previous&&(numericalChanges.length||scoreChanged||auditCorrection)?'corrected':sourceKind==='raw'?'preliminary':'reconciled';
+  const auditChanged=previous&&stableJson(previous.analysis.gameAudit)!==stableJson(analysis.gameAudit);
+  const changeSummary=!previous?'Initial evidence-backed report.':`${changes.length} metric records changed; ${numericalChanges.length} previously reported category findings changed. ${scoreChanged?'Final score corrected. ':''}${chartingStatus!==previous.charting_status?'Charting coverage updated. ':''}${auditCorrection?'Previously reported game profile or historical comparison corrected.':auditChanged?'Game profile audit and review priorities updated.':''}`.trim();
   const snapshotIds=snapshots.map(s=>s.id);
   await client.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json)
   VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[id,game.id,number,inputHash,status,chartingStatus,changeSummary,reportSummary(game,analysis),JSON.stringify(analysis),JSON.stringify(snapshotIds),JSON.stringify(game)]);

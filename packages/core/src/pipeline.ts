@@ -6,6 +6,8 @@ import { runAnalytics } from './analytics-bridge.js';
 import { getGame,saveGames,saveSnapshots,saveAnalysis } from './repository.js';
 import { enqueue } from './jobs.js';
 import { maybeAutomaticDraft } from './publishing.js';
+import { ingestGameProfiles,loadGameProfileReference } from './game-profile-source.js';
+import { buildGameAudit } from './game-audit.js';
 
 const store=()=>new LocalSnapshotStore(path.join(config.dataDir,'snapshots'));
 export async function syncSeason(season:number,scheduleJobs=true){
@@ -37,7 +39,14 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  if(!ingested.validation.valid)throw new Error('Game awaits complete final data: '+ingested.validation.issues.join(', '));
  const snapshots=[...schedule.snapshots,...ingested.snapshots];
  const analysis=await runAnalytics({schemaVersion:1,action:'analyze',game,plays:ingested.plays,ftn:ingested.ftn,snapshots,config:{closeCallTolerance:config.closeCallTolerance,modelDirectory:process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),chartingCoverage:ingested.chartingCoverage}},{scriptPath:path.join(projectRoot,'analytics/run.R'),timeoutMs:config.analyticsTimeoutMs});
- analysis.warnings=[...new Set([...analysis.warnings,...ingested.warnings])];
+ const profileSource=await ingestGameProfiles(game,store(),ingested.plays);
+ await saveSnapshots(profileSource.snapshots);snapshots.push(...profileSource.snapshots);
+ let historical:Awaited<ReturnType<typeof loadGameProfileReference>>|undefined;
+ try{historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));}
+ catch{profileSource.warnings.push('game_profile_reference_unavailable: Historical winning-profile comparisons are unavailable.');}
+ analysis.gameAudit=buildGameAudit({game,plays:ingested.plays,profiles:profileSource.profiles,reference:historical?.reference,referenceChecksum:historical?.checksum,events:analysis.events});
+ analysis.models.push({id:'game-profile-audit',version:analysis.gameAudit.version,...(historical?{checksum:historical.checksum}:{}),trainingWindow:historical?`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`:null,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'});
+ analysis.warnings=[...new Set([...analysis.warnings,...ingested.warnings,...profileSource.warnings])];
  const revision=await saveAnalysis(game,ingested.plays,snapshots,analysis,ingested.sourceKind);
  if(revision.created&&!backfill){
   await maybeAutomaticDraft(gameId);

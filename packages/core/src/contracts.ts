@@ -19,12 +19,32 @@ export const metricSchema=z.object({
 export type Metric=z.infer<typeof metricSchema>;
 export const eventSchema=z.object({id:z.string(),playId:z.string(),quarter:z.number().nullable(),clock:z.string().nullable(),description:z.string(),kind:z.string(),team:z.string().nullable(),reviewStatus:z.string().default('not_reviewed'),notes:z.array(z.string()).optional()});
 export type EvidenceEvent=z.infer<typeof eventSchema>;
+export const gameProfileSchema=z.object({
+  gameId:z.string(),season:z.number().int(),team:z.string(),opponent:z.string(),
+  pointsFor:z.number().nullable(),pointsAgainst:z.number().nullable(),totalYards:z.number().nullable(),opponentYards:z.number().nullable(),
+  penalties:z.number().nullable(),penaltyYards:z.number().nullable(),turnoverMargin:z.number().nullable(),nonOffensiveTouchdowns:z.number().nullable()
+});
+export type GameProfile=z.infer<typeof gameProfileSchema>;
+export interface GameProfileReference {schemaVersion:1;version:string;startSeason:number;endSeason:number;sourceUrls:string[];sourceChecksums:Record<string,string>;rows:GameProfile[];notes:string[]}
+const profileComparisonSchema=z.object({startSeason:z.number().nullable(),endSeason:z.number().nullable(),teamGames:z.number().int(),matchingGames:z.number().int(),wins:z.number().int(),losses:z.number().int(),ties:z.number().int(),winRate:z.number().nullable()});
+export const gameAuditFlagSchema=z.object({id:z.string(),team:z.string(),title:z.string(),conditions:z.array(z.string()),status:z.enum(['historical_outlier','unusual_profile','rare_sample','context']),detail:z.string(),reference:profileComparisonSchema});
+export type GameAuditFlag=z.infer<typeof gameAuditFlagSchema>;
+export const reviewCandidateSchema=z.object({id:z.string(),playId:z.string(),quarter:z.number().nullable(),clock:z.string().nullable(),description:z.string(),team:z.string().nullable(),reasons:z.array(z.string()),priority:z.enum(['high','medium']),observedWpSwing:z.number().nullable(),existingEventId:z.string().nullable()});
+export type ReviewCandidate=z.infer<typeof reviewCandidateSchema>;
+export const gameAuditSchema=z.object({
+  version:z.string(),status:z.enum(['historical_outlier','unusual_profile','review_worthy','no_flag_found','insufficient_data']),headline:z.string(),
+  profiles:z.array(gameProfileSchema),flags:z.array(gameAuditFlagSchema),reviewCandidates:z.array(reviewCandidateSchema),
+  context:z.array(z.object({team:z.string().nullable(),text:z.string(),playIds:z.array(z.string()),kind:z.string()})),
+  reference:z.object({version:z.string(),checksum:z.string().nullable(),startSeason:z.number().nullable(),endSeason:z.number().nullable(),teamGames:z.number().int()}),
+  notes:z.array(z.string())
+});
+export type GameAudit=z.infer<typeof gameAuditSchema>;
 export const analysisSchema=z.object({
   schemaVersion:z.literal(1),metrics:z.array(metricSchema),events:z.array(eventSchema),
   timeline:z.array(z.object({playId:z.string(),quarter:z.number().nullable(),clock:z.string().nullable(),homeWp:z.number().min(0).max(1).nullable(),description:z.string()})),
   coverage:z.array(z.object({category:z.string(),status:z.string(),eligible:z.number(),modeled:z.number(),reason:z.string().nullable().optional()})),
   models:z.array(z.object({id:z.string(),version:z.string(),trainingWindow:z.string().nullable().optional(),checksum:z.string().optional(),notes:z.string().optional()}).passthrough()),
-  warnings:z.array(z.string())
+  warnings:z.array(z.string()),gameAudit:gameAuditSchema.optional()
 });
 export type AnalysisResult=z.infer<typeof analysisSchema>;
 export interface AnalysisRequest {schemaVersion:1;action:'analyze';game:Game;plays:Record<string,unknown>[];ftn?:Record<string,unknown>[];snapshots:SourceSnapshot[];config:Record<string,unknown>}

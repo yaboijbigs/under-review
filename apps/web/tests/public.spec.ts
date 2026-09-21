@@ -12,6 +12,8 @@ test("archive is usable without fabricated results", async ({page},testInfo) => 
 });
 test("methodology preserves uncertainty and report links", async ({page}) => {
   await page.goto("/methodology");
+  await expect(page.getByRole("heading",{name:"Why an unusual win gets flagged"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Why a play needs review"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Why there is no rigging score"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Unavailable means unavailable"})).toBeVisible();
   await page.goto("/sources");

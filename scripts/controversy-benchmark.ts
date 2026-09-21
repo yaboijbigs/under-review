@@ -16,14 +16,14 @@ const rawCases=await readFile(caseFile);
 const cohort=JSON.parse(rawCases.toString()) as {design:string;cases:BenchmarkCase[]};
 const startedAt=new Date().toISOString();
 const hashes:Record<string,string>={};
-for(const file of ['analytics/models/manifest.json','analytics/models/evaluation.json','analytics/models/category-reference.json']){
+for(const file of ['analytics/models/manifest.json','analytics/models/evaluation.json','analytics/models/category-reference.json','analytics/models/game-profiles.json']){
  hashes[file]=createHash('sha256').update(await readFile(path.join(projectRoot,file))).digest('hex');
 }
 const codeHashes:Record<string,string>={};
-for(const file of ['packages/core/src/normalize.ts','packages/core/src/summaries.ts','analytics/R/engine.R','scripts/controversy-benchmark.ts'])codeHashes[file]=createHash('sha256').update(await readFile(path.join(projectRoot,file))).digest('hex');
+for(const file of ['packages/core/src/normalize.ts','packages/core/src/summaries.ts','packages/core/src/game-audit.ts','packages/core/src/game-profile-source.ts','packages/core/src/pipeline.ts','analytics/R/engine.R','scripts/controversy-benchmark.ts'])codeHashes[file]=createHash('sha256').update(await readFile(path.join(projectRoot,file))).digest('hex');
 await mkdir(outputDirectory,{recursive:true});
 const outcomes:Record<string,unknown>[]=[];
-const save=()=>writeFile(path.join(outputDirectory,'results.json'),JSON.stringify({startedAt,updatedAt:new Date().toISOString(),sourceCommit:process.env.BENCHMARK_SOURCE_COMMIT??null,codeFileHashes:codeHashes,cohortChecksum:createHash('sha256').update(rawCases).digest('hex'),modelFileHashes:hashes,design:cohort.design,mode:'unchanged models; clean historical source; backfill; no manual reviews; no social submissions',outcomes},null,2));
+const save=()=>writeFile(path.join(outputDirectory,'results.json'),JSON.stringify({startedAt,updatedAt:new Date().toISOString(),sourceCommit:process.env.BENCHMARK_SOURCE_COMMIT??null,codeFileHashes:codeHashes,cohortChecksum:createHash('sha256').update(rawCases).digest('hex'),modelFileHashes:hashes,design:cohort.design,mode:'existing statistical models plus versioned game audit; clean source; backfill; no manual reviews; no social submissions',outcomes},null,2));
 try{
  for(const entry of cohort.cases){
   const began=Date.now();console.log(JSON.stringify({event:'benchmark.started',gameId:entry.gameId}));
@@ -44,9 +44,10 @@ try{
    for(const m of analysis.metrics)if(m.status==='supported'&&m.unit==='wp_delta'&&m.value!==null&&m.eventIds.length===1)impact.set(m.eventIds[0],Math.max(impact.get(m.eventIds[0])??0,Math.abs(m.value)));
    const orderedEvents=[...analysis.events].sort((a,b)=>(impact.get(b.id)??-1)-(impact.get(a.id)??-1));
    const findings=supportedFindings(analysis);
+   const auditEvidence={gameAudit:analysis.gameAudit,targetReviewCandidates:analysis.gameAudit?.reviewCandidates.filter(c=>playIds.has(c.playId))??[],targetNeedsReview:analysis.gameAudit?.reviewCandidates.some(c=>playIds.has(c.playId))??false};
    const row={...entry,elapsedSeconds:(Date.now()-began)/1000,result,score:{away:report.game.awayTeam,awayScore:report.game.awayScore,home:report.game.homeTeam,homeScore:report.game.homeScore},revision:report.revision.number,inputHash:report.revision.inputHash,summary:report.revision.summary,reviewStatus:report.revision.reviewStatus,chartingStatus:report.revision.chartingStatus,metricCount:analysis.metrics.length,eventCount:analysis.events.length,coverage:analysis.coverage,metricStatusCounts:Object.fromEntries(['supported','experimental','unavailable'].map(s=>[s,analysis.metrics.filter(m=>m.status===s).length])),reasonCounts:analysis.metrics.reduce<Record<string,number>>((a,m)=>{if(m.reasonCode)a[m.reasonCode]=(a[m.reasonCode]??0)+1;return a;},{}),supportedFindings:findings,headlineMetrics:findings.slice(0,2),targetMatchedPlays:matchedPlays,targetTimeline:analysis.timeline.filter(p=>playIds.has(p.playId)),targetEvents:targetEvents.map(e=>({...e,eventRank:orderedEvents.findIndex(x=>x.id===e.id)+1,visibleInTop12:orderedEvents.findIndex(x=>x.id===e.id)<12})),targetMetrics,targetInHeadline:findings.slice(0,2).some(m=>m.playIds.some(id=>playIds.has(id))||m.eventIds.some(id=>targetEventIds.has(id))),supportedRarities:analysis.metrics.filter(m=>m.rarity?.status==='supported'),draftPreview:draftPost(report.game,analysis,`${config.siteUrl}/games/${entry.gameId}`,false,report.revision.reviewStatus),warnings:analysis.warnings};
    await writeFile(path.join(outputDirectory,entry.gameId+'.json'),JSON.stringify(report,null,2));
-   outcomes.push(row);console.log(JSON.stringify({event:'benchmark.completed',gameId:entry.gameId,elapsedSeconds:row.elapsedSeconds,metrics:row.metricCount,matchedTargetPlays:matchedPlays.length}));
+   outcomes.push({...row,...auditEvidence});console.log(JSON.stringify({event:'benchmark.completed',gameId:entry.gameId,elapsedSeconds:row.elapsedSeconds,metrics:row.metricCount,matchedTargetPlays:matchedPlays.length,auditStatus:analysis.gameAudit?.status,targetNeedsReview:auditEvidence.targetNeedsReview}));
   }catch(error){const row={...entry,error:safeError(error),elapsedSeconds:(Date.now()-began)/1000};outcomes.push(row);console.error(JSON.stringify({event:'benchmark.failed',...row}));process.exitCode=1;}
   await save();
  }
