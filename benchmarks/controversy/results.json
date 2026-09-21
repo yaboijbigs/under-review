@@ -1,0 +1,335 @@
+{
+  "startedAt": "2026-09-21T19:30:30.644Z",
+  "completedAt": "2026-09-21T19:34:10.143Z",
+  "baseSourceCommit": "1544626f248d8a3ab37b5004d0c5a07ccd421320",
+  "codeFileHashes": {
+    "packages/core/src/normalize.ts": "df17501e88578bc7ec0e876d8ea0011557e7eb0ab32353cf94f12cb8033bcccd",
+    "packages/core/src/summaries.ts": "f87f90329be2d9ec772b0e44bb38fb966f569255eb709d269641c7104969cdc2",
+    "analytics/R/engine.R": "97f222df7cad5aa19f1161f8278cff2a8c50815ff0a02517b804a27bdea0c9be",
+    "scripts/controversy-benchmark.ts": "d68f95bb2e59ca6e8c05df993a0d9ee890c1360d761ff5679edc2739c8a9433c"
+  },
+  "cohortChecksum": "4013c96c91939358f1459fe552a8af62d936960cc102ea0472daa6800da616f1",
+  "modelFileHashes": {
+    "analytics/models/manifest.json": "ad1f31b3f3b659ec82d696f45d3215f2b448f553df92a3eb09ec246a6dbc0fe2",
+    "analytics/models/evaluation.json": "622bb574a6bd95f1ba4e59859041410465971bf929d189be287b91c1c600c123",
+    "analytics/models/category-reference.json": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
+  },
+  "modelAndCohortHashesUnchanged": true,
+  "previouslySuccessfulGamesWithUnchangedInputAndRevision": [
+    "2014_19_DAL_GB",
+    "2022_22_KC_PHI",
+    "2023_17_DET_DAL",
+    "2023_17_MIA_BAL",
+    "2024_22_KC_PHI"
+  ],
+  "initialFailures": [
+    {
+      "gameId": "2012_03_GB_SEA",
+      "error": "Game awaits complete final data: explicit_game_end_missing"
+    },
+    {
+      "gameId": "2018_20_LA_NO",
+      "error": "Game awaits complete final data: explicit_game_end_missing"
+    }
+  ],
+  "outcomes": [
+    {
+      "gameId": "2012_03_GB_SEA",
+      "group": "disputed",
+      "label": "Fail Mary",
+      "score": {
+        "away": "GB",
+        "awayScore": 12,
+        "home": "SEA",
+        "homeScore": 14
+      },
+      "elapsedSeconds": 28.56,
+      "revision": 1,
+      "inputHash": "6bb2095b51f8009878508e7bada89675cb016590713b34edeca331480ae1c7e2",
+      "summary": "GB 12, SEA 14. SEA: Observed ruling consequence: 17.6 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "unavailable",
+      "metricCount": 69,
+      "metricStatusCounts": {
+        "supported": 20,
+        "experimental": 13,
+        "unavailable": 36
+      },
+      "targetPlays": [
+        {
+          "playId": "4153",
+          "quarter": 4,
+          "clock": "00:08"
+        }
+      ],
+      "targetEvents": [
+        {
+          "id": "2012_03_GB_SEA:4153",
+          "kind": "fourth_down",
+          "eventRank": 43,
+          "visibleInTop12": false
+        }
+      ],
+      "targetMetrics": [
+        {
+          "id": "2012_03_GB_SEA:4153:coaching",
+          "category": "coaching",
+          "name": "Fourth-down decision cost",
+          "team": "SEA",
+          "value": null,
+          "unit": "wp_delta",
+          "status": "unavailable",
+          "reasonCode": "outside_fourth_down_domain"
+        }
+      ],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    },
+    {
+      "gameId": "2014_19_DAL_GB",
+      "group": "disputed",
+      "label": "Dez Bryant catch reversal",
+      "score": {
+        "away": "DAL",
+        "awayScore": 21,
+        "home": "GB",
+        "homeScore": 26
+      },
+      "elapsedSeconds": 22.547,
+      "revision": 1,
+      "inputHash": "f86cac0edea85dac27ddd70dc51b6c0b4d6df7712f156a90c250bbe100e3e007",
+      "summary": "DAL 21, GB 26. GB: Observed ruling consequence: -8.7 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "unavailable",
+      "metricCount": 43,
+      "metricStatusCounts": {
+        "supported": 9,
+        "experimental": 6,
+        "unavailable": 28
+      },
+      "targetPlays": [
+        {
+          "playId": "3578",
+          "quarter": 4,
+          "clock": "04:42"
+        }
+      ],
+      "targetEvents": [
+        {
+          "id": "2014_19_DAL_GB:3578",
+          "kind": "fourth_down",
+          "eventRank": 29,
+          "visibleInTop12": false
+        }
+      ],
+      "targetMetrics": [
+        {
+          "id": "2014_19_DAL_GB:3578:coaching",
+          "category": "coaching",
+          "name": "Fourth-down decision cost",
+          "team": "DAL",
+          "value": 0,
+          "unit": "wp_delta",
+          "status": "experimental",
+          "reasonCode": "empirical_scenario_unavailable"
+        }
+      ],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    },
+    {
+      "gameId": "2018_20_LA_NO",
+      "group": "disputed",
+      "label": "NFC Championship missed pass interference",
+      "score": {
+        "away": "LA",
+        "awayScore": 26,
+        "home": "NO",
+        "homeScore": 23
+      },
+      "elapsedSeconds": 32.784,
+      "revision": 1,
+      "inputHash": "8b944d43b26da53348ebc89bd8a2a09554ca6cb017729893bf4bd326cf025096",
+      "summary": "LA 26, NO 23. NO: Observed ruling consequence: 6.2 percentage points. NO: Fourth-down decision cost: 2.1 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "unavailable",
+      "metricCount": 48,
+      "metricStatusCounts": {
+        "supported": 20,
+        "experimental": 1,
+        "unavailable": 27
+      },
+      "targetPlays": [
+        {
+          "playId": "4006",
+          "quarter": 4,
+          "clock": "01:49"
+        }
+      ],
+      "targetEvents": [],
+      "targetMetrics": [],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    },
+    {
+      "gameId": "2022_22_KC_PHI",
+      "group": "disputed",
+      "label": "Super Bowl LVII late defensive holding",
+      "score": {
+        "away": "KC",
+        "awayScore": 38,
+        "home": "PHI",
+        "homeScore": 35
+      },
+      "elapsedSeconds": 27.199,
+      "revision": 1,
+      "inputHash": "c7e3b22c1afe43a3a52a42c866dec120d1b844345dff9fea2b68798bac959de5",
+      "summary": "KC 38, PHI 35. PHI: Observed ruling consequence: 6.2 percentage points. PHI: Fourth-down decision cost: 4.6 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "available",
+      "metricCount": 48,
+      "metricStatusCounts": {
+        "supported": 23,
+        "experimental": 0,
+        "unavailable": 25
+      },
+      "targetPlays": [
+        {
+          "playId": "3907",
+          "quarter": 4,
+          "clock": "01:54"
+        }
+      ],
+      "targetEvents": [
+        {
+          "id": "2022_22_KC_PHI:3907",
+          "kind": "penalty",
+          "eventRank": 30,
+          "visibleInTop12": false
+        }
+      ],
+      "targetMetrics": [
+        {
+          "id": "2022_22_KC_PHI:3907:ruling",
+          "category": "officiating",
+          "name": "Observed ruling consequence",
+          "team": "KC",
+          "value": null,
+          "unit": "wp_delta",
+          "status": "unavailable",
+          "reasonCode": "clock_or_period_ambiguity"
+        }
+      ],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    },
+    {
+      "gameId": "2023_17_DET_DAL",
+      "group": "disputed",
+      "label": "Lions two-point eligibility penalty",
+      "score": {
+        "away": "DET",
+        "awayScore": 19,
+        "home": "DAL",
+        "homeScore": 20
+      },
+      "elapsedSeconds": 36.301,
+      "revision": 1,
+      "inputHash": "6b902d323e26c43785dcc7dd1f2dce42c610c83791ded7d4c43376bf43e47616",
+      "summary": "DET 19, DAL 20. DAL: Observed ruling consequence: 6.3 percentage points. DET: Fourth-down decision cost: 4.1 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "available",
+      "metricCount": 60,
+      "metricStatusCounts": {
+        "supported": 39,
+        "experimental": 0,
+        "unavailable": 21
+      },
+      "targetPlays": [
+        {
+          "playId": "4088",
+          "quarter": 4,
+          "clock": "00:23"
+        }
+      ],
+      "targetEvents": [
+        {
+          "id": "2023_17_DET_DAL:4088",
+          "kind": "penalty",
+          "eventRank": 31,
+          "visibleInTop12": false
+        }
+      ],
+      "targetMetrics": [
+        {
+          "id": "2023_17_DET_DAL:4088:ruling",
+          "category": "officiating",
+          "name": "Observed ruling consequence",
+          "team": "DET",
+          "value": null,
+          "unit": "wp_delta",
+          "status": "unavailable",
+          "reasonCode": "multiple_or_unparsed_penalties"
+        }
+      ],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    },
+    {
+      "gameId": "2023_17_MIA_BAL",
+      "group": "comparison",
+      "label": "Same-week comparison: Dolphins at Ravens",
+      "score": {
+        "away": "MIA",
+        "awayScore": 19,
+        "home": "BAL",
+        "homeScore": 56
+      },
+      "elapsedSeconds": 31.942,
+      "revision": 1,
+      "inputHash": "a879b9631e04b624a3ef920d386b96d62b899ac7e2e804565a0c983d250bc56c",
+      "summary": "MIA 19, BAL 56. BAL: Fourth-down decision cost: 1.6 percentage points. BAL: Observed ruling consequence: -0.1 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "available",
+      "metricCount": 59,
+      "metricStatusCounts": {
+        "supported": 35,
+        "experimental": 1,
+        "unavailable": 23
+      },
+      "targetPlays": [],
+      "targetEvents": [],
+      "targetMetrics": [],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    },
+    {
+      "gameId": "2024_22_KC_PHI",
+      "group": "comparison",
+      "label": "Super Bowl LIX comparison",
+      "score": {
+        "away": "KC",
+        "awayScore": 22,
+        "home": "PHI",
+        "homeScore": 40
+      },
+      "elapsedSeconds": 40.048,
+      "revision": 1,
+      "inputHash": "7d9bde448b918297a57af48d980fe5d14d37b4456dbc5dbb1f9c35fe66bf4e76",
+      "summary": "KC 22, PHI 40. PHI: Observed ruling consequence: -2.7 percentage points. KC: Fourth-down decision cost: 2.5 percentage points. Officiating correctness: not reviewed.",
+      "reviewStatus": "not_reviewed",
+      "chartingStatus": "available",
+      "metricCount": 65,
+      "metricStatusCounts": {
+        "supported": 44,
+        "experimental": 1,
+        "unavailable": 20
+      },
+      "targetPlays": [],
+      "targetEvents": [],
+      "targetMetrics": [],
+      "targetInHeadline": false,
+      "supportedRarityCount": 0
+    }
+  ]
+}

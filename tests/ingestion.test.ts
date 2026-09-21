@@ -76,6 +76,22 @@ describe('real attributable nflverse ingestion', () => {
 });
 
 describe('conservative finality and incomplete-data gates', () => {
+  it.each([null, undefined, '', '   '])('accepts explicit game end with absent optional drive transition %s', async (transition) => {
+    const { game, plays } = await sample();
+    const rows = plays.map((row, index) => index === plays.length - 1 ? { ...row, drive_end_transition: transition } : row);
+    expect(validateGameData(game, rows)).toEqual({ valid: true, issues: [] });
+    expect(plays.at(-1)?.drive_end_transition).toBe('END_GAME');
+  });
+  it.each(['TOUCHDOWN', 'FIELD_GOAL', 'END_HALF'])('rejects contradictory terminal drive transition %s', async (transition) => {
+    const { game, plays } = await sample();
+    const rows = plays.map((row, index) => index === plays.length - 1 ? { ...row, drive_end_transition: transition } : row);
+    expect(validateGameData(game, rows).issues).toContain('terminal_drive_transition_conflict');
+  });
+  it('requires the explicit terminal marker even with an END_GAME drive annotation', async () => {
+    const { game, plays } = await sample();
+    const rows = plays.map((row, index) => index === plays.length - 1 ? { ...row, desc: 'END QUARTER' } : row);
+    expect(validateGameData(game, rows).issues).toContain('explicit_game_end_missing');
+  });
   it('rejects scores without an explicit terminal provider record', async () => {
     const { game, plays } = await sample();
     expect(validateGameData(game, plays.slice(0, -1)).issues).toContain('explicit_game_end_missing');

@@ -144,7 +144,11 @@ export function validateGameData(game: Game, plays: ProviderRow[]): GameValidati
   if (![1, 2, 3, 4].every((quarter) => quarters.has(quarter))) issues.add('quarters_incomplete');
   if (String(plays[0]?.desc ?? '').trim() !== 'GAME') issues.add('game_start_marker_missing');
   const terminal = plays[plays.length - 1];
-  if (String(terminal.desc ?? '').trim() !== 'END GAME' || terminal.drive_end_transition !== 'END_GAME') issues.add('explicit_game_end_missing');
+  if (String(terminal.desc ?? '').trim() !== 'END GAME') issues.add('explicit_game_end_missing');
+  // Completed scoring drives can leave this optional drive annotation empty even
+  // when the provider supplies an explicit END GAME record (including overtime).
+  const terminalTransition = terminal.drive_end_transition;
+  if (terminalTransition !== null && terminalTransition !== undefined && String(terminalTransition).trim() !== '' && terminalTransition !== 'END_GAME') issues.add('terminal_drive_transition_conflict');
   if ((numberOrNull(terminal.qtr) ?? 0) < 4) issues.add('terminal_quarter_invalid');
   if (numberOrNull(terminal.total_home_score) !== game.homeScore || numberOrNull(terminal.total_away_score) !== game.awayScore) issues.add('final_score_mismatch');
   if (game.homeScore !== null && game.awayScore !== null && numberOrNull(game.providerData.result) !== game.homeScore - game.awayScore) issues.add('schedule_score_mismatch');

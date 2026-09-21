@@ -1,0 +1,12 @@
+{
+  "design": "Fixed purposive cohort selected before running the application. Five widely disputed games plus two comparison blowouts; comparison games are not certified controversy-free. Do not interpret this as classifier accuracy or change models to fit these labels.",
+  "cases": [
+    {"gameId":"2012_03_GB_SEA","group":"disputed","label":"Fail Mary","target":{"quarter":4,"maximumSecondsRemaining":10,"pattern":"Tate"}},
+    {"gameId":"2014_19_DAL_GB","group":"disputed","label":"Dez Bryant catch reversal","target":{"quarter":4,"maximumSecondsRemaining":300,"pattern":"Bryant"}},
+    {"gameId":"2018_20_LA_NO","group":"disputed","label":"NFC Championship missed pass interference","target":{"quarter":4,"maximumSecondsRemaining":120,"pattern":"T\\.Lewis|Tommylee"}},
+    {"gameId":"2022_22_KC_PHI","group":"disputed","label":"Super Bowl LVII late defensive holding","target":{"quarter":4,"maximumSecondsRemaining":120,"pattern":"Bradberry|Defensive Holding"}},
+    {"gameId":"2023_17_DET_DAL","group":"disputed","label":"Lions two-point eligibility penalty","target":{"quarter":4,"maximumSecondsRemaining":60,"pattern":"Decker|Illegal Touch|Ineligible"}},
+    {"gameId":"2023_17_MIA_BAL","group":"comparison","label":"Same-week comparison: Dolphins at Ravens"},
+    {"gameId":"2024_22_KC_PHI","group":"comparison","label":"Super Bowl LIX comparison"}
+  ]
+}

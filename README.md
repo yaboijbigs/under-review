@@ -70,6 +70,8 @@ The worker runs one job at a time, renews durable leases, retries failed jobs wi
 
 ## Analytics, tests, and limits
 
+The [controversial-game benchmark](benchmarks/controversy/README.md) runs five documented disputed games and two comparison games through the actual pipeline without changing models or adding reviews. Its [observed results](benchmarks/controversy/RESULTS.md) document gaps between automatic impact reporting and the incidents behind public controversy, plus a historical finality regression and fix.
+
 Verified source contracts and fixture attribution are in [DATA_SOURCES.md](DATA_SOURCES.md); model commands, domains, and assumptions are in [analytics/README.md](analytics/README.md). The checked-in real fixtures cover `2023_01_DET_KC` and `2026_01_NE_SEA`, including separately licensed FTN rows. Synthetic tests are explicitly labeled and cannot enter production publishing.
 
 Recorded checks on 2026-09-21 passed all 56 TypeScript unit/integration tests, including real PostgreSQL tests with isolated schemas; 50 R assertions and additional model-contract checks; TypeScript checks; the production web build; and 12 desktop/mobile browser tests. Runtime configuration was also verified in both private and public modes against the same built web artifact. The historical game passed both clean and raw worker pipelines with 57 matching metric values/statuses; the current-season pipeline produced 70 metric records and reused its revision on identical input. Status and coverage vary by metric: these are not counts of officiating errors. The executed release checks are recorded in [RELEASE.md](RELEASE.md), with recovery procedures in [OPERATIONS.md](OPERATIONS.md).

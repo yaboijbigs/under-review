@@ -1,0 +1,11 @@
+services:
+  worker:
+    image: under-review-worker:benchmark
+    cpus: 1.0
+    mem_limit: 2g
+    environment:
+      LIVE_POSTING_ALLOWED: "false"
+      BENCHMARK_SOURCE_COMMIT: ${BENCHMARK_SOURCE_COMMIT:-unknown}
+    volumes:
+      - ./benchmarks/controversy:/benchmark:ro
+      - ./data/controversy-benchmark:/results
