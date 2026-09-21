@@ -39,6 +39,12 @@ docker compose run --rm worker npm run ur -- draft --game 2026_01_NE_SEA
 
 `--backfill` prevents automatic posting and follow-up scheduling for that invocation; `draft` creates a dry-run preview. Omit `--clean` to attempt the per-game raw-PBP builder first, with clean data as fallback. A game fails publication validation if its explicit terminal record, scores, or completeness checks do not reconcile. Unsupported model results stay unavailable or experimental.
 
+## Branding and runtime configuration
+
+Set `BRAND_NAME`, `BRAND_TAGLINE`, and `SITE_URL` in the deployment environment. Optional `BRAND_ACCENT`, `BRAND_BACKGROUND`, and `BRAND_INK` override the existing accent, page background, and text colors; each must be a six-digit hex color, quoted in `.env` (for example, `BRAND_ACCENT="#e2ff54"`). Optional `SOCIAL_HANDLE` adds the public X profile link in the footer and accepts 1–15 letters, digits, or underscores without `@`. Invalid colors or handles fail configuration validation. Defaults retain the Under Review theme.
+
+These settings and `PRIVATE_STAGING` are read when the web process starts, so an existing image can be configured without rebuilding it. Restart the web process after changes. Staging remains excluded from search indexing; set `PRIVATE_STAGING=false` explicitly for public indexing. After a web production build, `node apps/web/tests/runtime-config.mjs` verifies both runtime modes against that same build using isolated loopback servers.
+
 ## Commands and behavior
 
 | Command after `npm run ur --` | Purpose |

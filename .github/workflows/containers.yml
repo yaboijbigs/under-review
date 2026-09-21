@@ -1,11 +1,18 @@
 name: Publish tested containers
 on:
   workflow_dispatch:
+    inputs:
+      component:
+        description: Container component to rebuild
+        type: choice
+        options: [all, web, worker]
+        default: all
 permissions:
   contents: read
   packages: write
 jobs:
   web:
+    if: inputs.component != 'worker'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -24,6 +31,7 @@ jobs:
           printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker push ghcr.io/${{ github.repository_owner }}/under-review-web:${{ github.sha }}
   worker:
+    if: inputs.component != 'web'
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:

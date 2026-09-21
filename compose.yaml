@@ -11,6 +11,10 @@ x-app-env: &app-env
   TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
   BRAND_NAME: ${BRAND_NAME:-Under Review}
   BRAND_TAGLINE: ${BRAND_TAGLINE:-What actually swung the game?}
+  BRAND_ACCENT: ${BRAND_ACCENT:-}
+  BRAND_BACKGROUND: ${BRAND_BACKGROUND:-}
+  BRAND_INK: ${BRAND_INK:-}
+  SOCIAL_HANDLE: ${SOCIAL_HANDLE:-}
 services:
   db:
     image: postgres:17-alpine
@@ -47,6 +51,7 @@ services:
     image: under-review-worker:local
     build: {context: ., dockerfile: Dockerfile.worker}
     environment: *app-env
+    command: [node, --import, tsx, apps/worker/src/index.ts]
     volumes: ["artifacts:/data"]
     depends_on: {migrate: {condition: service_completed_successfully}}
     networks: [private]

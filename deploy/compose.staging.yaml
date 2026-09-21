@@ -12,12 +12,17 @@ x-env: &app-env
   TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?required}
   BRAND_NAME: Under Review
   BRAND_TAGLINE: What actually swung the game?
+  BRAND_ACCENT: ${BRAND_ACCENT:-}
+  BRAND_BACKGROUND: ${BRAND_BACKGROUND:-}
+  BRAND_INK: ${BRAND_INK:-}
+  SOCIAL_HANDLE: ${SOCIAL_HANDLE:-}
   OMP_NUM_THREADS: "1"
   OPENBLAS_NUM_THREADS: "1"
   MKL_NUM_THREADS: "1"
   ANALYTICS_TIMEOUT_MS: "900000"
   MIN_FREE_DISK_BYTES: "5368709120"
 x-guard: &guard
+  cpu_shares: 128
   security_opt: ["no-new-privileges:true"]
   cap_drop: [ALL]
   pids_limit: 100
@@ -77,6 +82,7 @@ services:
     <<: *guard
     image: ${WORKER_IMAGE:?required}
     environment: *app-env
+    command: [node, --import, tsx, apps/worker/src/index.ts]
     read_only: true
     tmpfs: ["/tmp:size=512m,mode=1777"]
     volumes: ["artifacts:/data"]
@@ -92,7 +98,27 @@ services:
     environment:
       <<: *app-env
       SEED_GAMES: 2023_01_DET_KC,2026_01_NE_SEA
-    command: [node, --import, tsx, scripts/staging-check.ts]
+    command:
+      - node
+      - --import
+      - tsx
+      - --input-type=module
+      - -e
+      - |
+        const {getReport}=await import('@under-review/core/repository');
+        const games=process.env.SEED_GAMES.split(',');
+        const deadline=Date.now()+1800000;
+        let ready=false;
+        while(Date.now()<deadline){
+          const reports=await Promise.all(games.map(id=>getReport(id)));
+          ready=reports.every(r=>r&&r.drafts.length&&r.revision.analysis.metrics.some(m=>m.status==='supported'));
+          if(ready)break;
+          console.log(JSON.stringify({event:'staging.awaiting_reports',games:games.filter((id,i)=>!reports[i]?.drafts.length)}));
+          await new Promise(resolve=>setTimeout(resolve,30000));
+        }
+        if(!ready){console.error('Seed reports did not become ready within 30 minutes.');process.exit(1);}
+        for(const id of games){const r=await fetch('http://web:3000/games/'+id);if(!r.ok)process.exit(1);}
+        await import('./scripts/staging-check.ts');
     read_only: true
     tmpfs: ["/tmp:size=32m,mode=1777"]
     networks: [private]

@@ -21,4 +21,4 @@ RUN groupadd -g 10001 underreview && useradd -u 10001 -g 10001 -m underreview &&
 ENV NODE_ENV=production PROJECT_ROOT=/app DATA_DIR=/data ANALYTICS_SCRIPT=/app/analytics/run.R OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 USER underreview
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 CMD node --import tsx scripts/worker-health.ts
-CMD ["npm", "run", "worker"]
+CMD ["node", "--import", "tsx", "apps/worker/src/index.ts"]
