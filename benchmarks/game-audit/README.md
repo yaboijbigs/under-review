@@ -2,6 +2,8 @@
 
 This evaluation runs the actual ingestion, analytics, game audit and immutable-report pipeline. It extends the [original controversy cohort](../controversy/README.md) with Green Bay's 20–17 overtime win at the Jets on September 20, 2026. Source and model hashes, exact audit outputs and target-play matches are preserved in `results.json`.
 
+Read the [observed results](RESULTS.md) for the completed eight-game run and its limitations.
+
 The Packers example and the earlier inspected plays motivated the uniform versioned rules. This is a development behavior check, not a held-out accuracy estimate or an independent validation of public perception. All games receive the same rules. No game IDs or team names are encoded into the audit logic. No manual reviews or social posts are created. Existing R model outputs remain distinct from the descriptive historical comparisons and review candidates.
 
 ## Packers source evidence

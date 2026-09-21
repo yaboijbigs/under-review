@@ -1,0 +1,1703 @@
+{
+  "startedAt": "2026-09-21T23:20:24.845Z",
+  "updatedAt": "2026-09-21T23:24:43.487Z",
+  "sourceCommit": "173dbd49ce5b9695255e083ff21aebef1f66c2d4",
+  "codeFileHashes": {
+    "packages/core/src/normalize.ts": "df17501e88578bc7ec0e876d8ea0011557e7eb0ab32353cf94f12cb8033bcccd",
+    "packages/core/src/summaries.ts": "058e8f6f3ba89defd71b36c931a7e042dd1ea6e57889d77a4475640902cfe46b",
+    "packages/core/src/game-audit.ts": "f20eeaf41d4afa9055103d8a6e57fd5335b4ef334ae3c2e128b97f0f883f9a97",
+    "packages/core/src/game-profile-source.ts": "3b3fa3f9e559530fdf26a0ec1afb6f809379176a83057a4b83e88fad1e2da8b4",
+    "packages/core/src/pipeline.ts": "cce21000adb3c1fbecc5abfb8b2f8b0ce803d8c24497ccd1c35eae84ceac0dca",
+    "analytics/R/engine.R": "97f222df7cad5aa19f1161f8278cff2a8c50815ff0a02517b804a27bdea0c9be",
+    "scripts/controversy-benchmark.ts": "ca772819e9dcc9458c2b13aa4c60475db4a47e376990919e2b2f96cf09a8e2d0"
+  },
+  "modelFileHashes": {
+    "analytics/models/manifest.json": "ad1f31b3f3b659ec82d696f45d3215f2b448f553df92a3eb09ec246a6dbc0fe2",
+    "analytics/models/evaluation.json": "622bb574a6bd95f1ba4e59859041410465971bf929d189be287b91c1c600c123",
+    "analytics/models/category-reference.json": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1",
+    "analytics/models/game-profiles.json": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385"
+  },
+  "cohortChecksum": "707b098c7ee9e467bf56a732b4625ac38d9549246aa8ac2e9f5ff55c21d1b160",
+  "design": "Exploratory development evaluation: the known Packers example and previously inspected controversy cohort informed the versioned generic audit rules. This is a behavior check, not a held-out accuracy or false-positive estimate. All games use identical rules and prior-season-only comparisons.",
+  "mode": "existing statistical models plus versioned game audit; clean source; backfill; no manual reviews; no social submissions",
+  "verification": {
+    "unitAndIntegrationTests": 108,
+    "browserDesktopAndMobileTests": 18,
+    "webBuild": "passed",
+    "workerBuild": "passed",
+    "allEightReportRoutes": 200
+  },
+  "outcomes": [
+    {
+      "gameId": "2026_02_GB_NYJ",
+      "label": "Packers win with 199 yards, 133 penalty yards and negative turnover margin",
+      "group": "statistical_anomaly",
+      "score": {
+        "away": "GB",
+        "awayScore": 20,
+        "home": "NYJ",
+        "homeScore": 17
+      },
+      "elapsedSeconds": 29.64,
+      "revision": 1,
+      "inputHash": "aa61f2709f461e81b3e4f34727a8c863940a7447f0cccc6dfc627aafeee4af41",
+      "summary": "GB 20, NYJ 17. GB: historical outlier — win with total offense below 200 yards and negative turnover margin; 6 wins in 414 matching prior team-games. 5 plays need review. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [
+          {
+            "id": "2026_02_GB_NYJ:GB:low_offense_penalties_turnovers",
+            "team": "GB",
+            "title": "Limited historical comparison",
+            "detail": "GB won. Prior matching team-games: 0 wins, 14 losses, 0 ties among 14 matches from 14512 complete prior team-games. Fewer than 20 matches; no rarity label or historical win-rate claim.",
+            "status": "rare_sample",
+            "reference": {
+              "ties": 0,
+              "wins": 0,
+              "losses": 14,
+              "winRate": null,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 14
+            },
+            "conditions": [
+              "Total offense below 200 yards",
+              "At least 100 penalty yards",
+              "Negative turnover margin"
+            ]
+          },
+          {
+            "id": "2026_02_GB_NYJ:GB:low_offense_penalties",
+            "team": "GB",
+            "title": "Winning-profile context",
+            "detail": "GB won. Prior matching team-games: 3 wins, 23 losses, 0 ties among 26 matches from 14512 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "context",
+            "reference": {
+              "ties": 0,
+              "wins": 3,
+              "losses": 23,
+              "winRate": 0.11538461538461539,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 26
+            },
+            "conditions": [
+              "Total offense below 200 yards",
+              "At least 100 penalty yards"
+            ]
+          },
+          {
+            "id": "2026_02_GB_NYJ:GB:low_offense_turnovers",
+            "team": "GB",
+            "title": "Historical outlier",
+            "detail": "GB won. Prior matching team-games: 6 wins, 408 losses, 0 ties among 414 matches from 14512 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "historical_outlier",
+            "reference": {
+              "ties": 0,
+              "wins": 6,
+              "losses": 408,
+              "winRate": 0.014492753623188406,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 414
+            },
+            "conditions": [
+              "Total offense below 200 yards",
+              "Negative turnover margin"
+            ]
+          },
+          {
+            "id": "2026_02_GB_NYJ:GB:penalties_turnovers",
+            "team": "GB",
+            "title": "Winning-profile context",
+            "detail": "GB won. Prior matching team-games: 58 wins, 257 losses, 2 ties among 317 matches from 14512 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "context",
+            "reference": {
+              "ties": 2,
+              "wins": 58,
+              "losses": 257,
+              "winRate": 0.1829652996845426,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 317
+            },
+            "conditions": [
+              "At least 100 penalty yards",
+              "Negative turnover margin"
+            ]
+          },
+          {
+            "id": "2026_02_GB_NYJ:GB:low_offense",
+            "team": "GB",
+            "title": "Winning-profile context",
+            "detail": "GB won. Prior matching team-games: 105 wins, 691 losses, 0 ties among 796 matches from 14512 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "context",
+            "reference": {
+              "ties": 0,
+              "wins": 105,
+              "losses": 691,
+              "winRate": 0.13190954773869346,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 796
+            },
+            "conditions": [
+              "Total offense below 200 yards"
+            ]
+          },
+          {
+            "id": "2026_02_GB_NYJ:GB:heavy_penalties",
+            "team": "GB",
+            "title": "Winning-profile context",
+            "detail": "GB won. Prior matching team-games: 336 wins, 435 losses, 3 ties among 774 matches from 14512 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "context",
+            "reference": {
+              "ties": 3,
+              "wins": 336,
+              "losses": 435,
+              "winRate": 0.43410852713178294,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 774
+            },
+            "conditions": [
+              "At least 100 penalty yards"
+            ]
+          },
+          {
+            "id": "2026_02_GB_NYJ:GB:negative_turnovers",
+            "team": "GB",
+            "title": "Winning-profile context",
+            "detail": "GB won. Prior matching team-games: 1226 wins, 4513 losses, 13 ties among 5752 matches from 14512 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "context",
+            "reference": {
+              "ties": 13,
+              "wins": 1226,
+              "losses": 4513,
+              "winRate": 0.21314325452016689,
+              "endSeason": 2025,
+              "teamGames": 14512,
+              "startSeason": 1999,
+              "matchingGames": 5752
+            },
+            "conditions": [
+              "Negative turnover margin"
+            ]
+          }
+        ],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "historical_outlier",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "NYJ",
+            "text": "Allowed 4 sacks, including 2 in overtime.",
+            "playIds": [
+              "1061",
+              "3312",
+              "4507",
+              "4527"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "NYJ",
+            "text": "Opponent GB was charged 14 penalties for 133 yards.",
+            "playIds": [
+              "249",
+              "358",
+              "510",
+              "553",
+              "1239",
+              "1487",
+              "2366",
+              "2487",
+              "2520",
+              "2924",
+              "3332",
+              "3651",
+              "3689",
+              "4398"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "GB",
+            "text": "Allowed 3 sacks, including 0 in overtime.",
+            "playIds": [
+              "63",
+              "2544",
+              "4422"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "GB",
+            "text": "Opponent NYJ was charged 13 penalties for 156 yards.",
+            "playIds": [
+              "295",
+              "659",
+              "962",
+              "1840",
+              "2453",
+              "2596",
+              "2960",
+              "3184",
+              "3499",
+              "3725",
+              "3904",
+              "4547",
+              "4683"
+            ]
+          },
+          {
+            "kind": "long_punt_return",
+            "team": "GB",
+            "text": "63-yard punt return.",
+            "playIds": [
+              "4039"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "GB: historical outlier — win with total offense below 200 yards and negative turnover margin; 6 wins in 414 matching prior team-games. 5 plays need review.",
+        "profiles": [
+          {
+            "team": "NYJ",
+            "gameId": "2026_02_GB_NYJ",
+            "season": 2026,
+            "opponent": "GB",
+            "penalties": 13,
+            "pointsFor": 17,
+            "totalYards": 285,
+            "penaltyYards": 156,
+            "opponentYards": 199,
+            "pointsAgainst": 20,
+            "turnoverMargin": 1,
+            "nonOffensiveTouchdowns": 0
+          },
+          {
+            "team": "GB",
+            "gameId": "2026_02_GB_NYJ",
+            "season": 2026,
+            "opponent": "NYJ",
+            "penalties": 14,
+            "pointsFor": 20,
+            "totalYards": 199,
+            "penaltyYards": 133,
+            "opponentYards": 285,
+            "pointsAgainst": 17,
+            "turnoverMargin": -1,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2025,
+          "teamGames": 14512,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2026_02_GB_NYJ:3807:needs-review",
+            "team": "GB",
+            "clock": "08:47",
+            "playId": "3807",
+            "quarter": 4,
+            "reasons": [
+              "A touchdown or two-point play was explicitly nullified."
+            ],
+            "priority": "high",
+            "description": "(8:47) (No Huddle, Shotgun) 10-J.Love scrambles left tackle for 7 yards, TOUCHDOWN NULLIFIED by Penalty. Penalty on NYJ-44-J.Sherwood, Unnecessary Roughness, offsetting, enforced at NYJ 7 - No Play. Penalty on GB-71-A.Belton, Offensive Holding, offsetting.",
+            "existingEventId": "2026_02_GB_NYJ:3807",
+            "observedWpSwing": 0
+          },
+          {
+            "id": "2026_02_GB_NYJ:4398:needs-review",
+            "team": "GB",
+            "clock": "00:21",
+            "playId": "4398",
+            "quarter": 4,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(:21) (Shotgun) PENALTY on GB, Delay of Game, 5 yards, enforced at NYJ 45 - No Play. 10-second runoff.",
+            "existingEventId": "2026_02_GB_NYJ:4398",
+            "observedWpSwing": 0.024700462818145974
+          },
+          {
+            "id": "2026_02_GB_NYJ:4185:needs-review",
+            "team": "NYJ",
+            "clock": "02:54",
+            "playId": "4185",
+            "quarter": 4,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(2:54) (Shotgun) 7-G.Smith pass short right to 5-G.Wilson to NYJ 41 for 11 yards (25-K.Nixon). Penalty on GB-25-K.Nixon, Defensive Pass Interference, declined.",
+            "existingEventId": "2026_02_GB_NYJ:4185",
+            "observedWpSwing": 0.02169370651245106
+          },
+          {
+            "id": "2026_02_GB_NYJ:4547:needs-review",
+            "team": "NYJ",
+            "clock": "08:23",
+            "playId": "4547",
+            "quarter": 5,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(8:23) (Shotgun) PENALTY on NYJ-18-I.Williams, False Start, 5 yards, enforced at NYJ 15 - No Play.",
+            "existingEventId": "2026_02_GB_NYJ:4547",
+            "observedWpSwing": null
+          },
+          {
+            "id": "2026_02_GB_NYJ:4683:needs-review",
+            "team": "GB",
+            "clock": "06:17",
+            "playId": "4683",
+            "quarter": 5,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(6:17) (Shotgun) 10-J.Love pass short right to 30-C.Brooks pushed ob at NYJ 37 for 15 yards (2-J.Brownlee). PENALTY on NYJ-2-J.Brownlee, Unnecessary Roughness, 15 yards, enforced at NYJ 37.",
+            "existingEventId": "2026_02_GB_NYJ:4683",
+            "observedWpSwing": null
+          }
+        ]
+      },
+      "targetNeedsReview": false,
+      "targetReviewCandidates": [],
+      "existingMetricsUnchanged": null,
+      "profileWarnings": [],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2012_03_GB_SEA",
+      "label": "Fail Mary",
+      "group": "disputed",
+      "score": {
+        "away": "GB",
+        "awayScore": 12,
+        "home": "SEA",
+        "homeScore": 14
+      },
+      "elapsedSeconds": 29.36,
+      "revision": 2,
+      "inputHash": "9c74e355c632d791da694ddca76362ae147d94b4dc9b89687cf8de4e1351ee30",
+      "summary": "GB 12, SEA 14. 4 plays need review; no call-correctness judgment has been made. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [
+          {
+            "id": "2012_03_GB_SEA:SEA:heavy_penalties",
+            "team": "SEA",
+            "title": "Winning-profile context",
+            "detail": "SEA won. Prior matching team-games: 146 wins, 191 losses, 0 ties among 337 matches from 6854 complete prior team-games. This frequency describes the comparison group, not the probability that this result was improper.",
+            "status": "context",
+            "reference": {
+              "ties": 0,
+              "wins": 146,
+              "losses": 191,
+              "winRate": 0.4332344213649852,
+              "endSeason": 2011,
+              "teamGames": 6854,
+              "startSeason": 1999,
+              "matchingGames": 337
+            },
+            "conditions": [
+              "At least 100 penalty yards"
+            ]
+          }
+        ],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "review_worthy",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "SEA",
+            "text": "Allowed 1 sacks, including 0 in overtime.",
+            "playIds": [
+              "2409"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "SEA",
+            "text": "Opponent GB was charged 10 penalties for 127 yards.",
+            "playIds": [
+              "428",
+              "714",
+              "814",
+              "1354",
+              "1444",
+              "1637",
+              "2322",
+              "2899",
+              "3459",
+              "3641"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "GB",
+            "text": "Allowed 8 sacks, including 0 in overtime.",
+            "playIds": [
+              "249",
+              "619",
+              "771",
+              "1040",
+              "1267",
+              "1607",
+              "1670",
+              "1706"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "GB",
+            "text": "Opponent SEA was charged 14 penalties for 118 yards.",
+            "playIds": [
+              "104",
+              "384",
+              "655",
+              "940",
+              "1322",
+              "1607",
+              "2134",
+              "2213",
+              "2355",
+              "2428",
+              "2678",
+              "3114",
+              "3575",
+              "3609"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "4 plays need review; no call-correctness judgment has been made.",
+        "profiles": [
+          {
+            "team": "SEA",
+            "gameId": "2012_03_GB_SEA",
+            "season": 2012,
+            "opponent": "GB",
+            "penalties": 14,
+            "pointsFor": 14,
+            "totalYards": 238,
+            "penaltyYards": 118,
+            "opponentYards": 268,
+            "pointsAgainst": 12,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          },
+          {
+            "team": "GB",
+            "gameId": "2012_03_GB_SEA",
+            "season": 2012,
+            "opponent": "SEA",
+            "penalties": 10,
+            "pointsFor": 12,
+            "totalYards": 268,
+            "penaltyYards": 127,
+            "opponentYards": 238,
+            "pointsAgainst": 14,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2011,
+          "teamGames": 6854,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2012_03_GB_SEA:4153:needs-review",
+            "team": "SEA",
+            "clock": "00:08",
+            "playId": "4153",
+            "quarter": 4,
+            "reasons": [
+              "Catch or scoring ruling reviewed in the final minute of a one-score game; an upheld ruling is not an error finding."
+            ],
+            "priority": "high",
+            "description": "(:08) (Shotgun) 3-R.Wilson pass deep left to 81-G.Tate for 24 yards, TOUCHDOWN [52-C.Matthews]. The Replay Assistant challenged the pass completion ruling, and the play was Upheld.",
+            "existingEventId": "2012_03_GB_SEA:4153",
+            "observedWpSwing": 0.5317736445966671
+          },
+          {
+            "id": "2012_03_GB_SEA:3856:needs-review",
+            "team": "SEA",
+            "clock": "02:00",
+            "playId": "3856",
+            "quarter": 4,
+            "reasons": [
+              "Late third- or fourth-down incompletion inside the opponent 25 in a one-score game."
+            ],
+            "priority": "high",
+            "description": "(2:00) (Shotgun) 3-R.Wilson pass incomplete short left to 81-G.Tate.",
+            "existingEventId": "2012_03_GB_SEA:3856",
+            "observedWpSwing": 0.28773543238639787
+          },
+          {
+            "id": "2012_03_GB_SEA:4131:needs-review",
+            "team": "SEA",
+            "clock": "00:12",
+            "playId": "4131",
+            "quarter": 4,
+            "reasons": [
+              "Late third- or fourth-down incompletion inside the opponent 25 in a one-score game."
+            ],
+            "priority": "high",
+            "description": "(:12) (Shotgun) 3-R.Wilson pass incomplete deep right to 81-G.Tate.",
+            "existingEventId": null,
+            "observedWpSwing": 0.060255572199822
+          },
+          {
+            "id": "2012_03_GB_SEA:3275:needs-review",
+            "team": "GB",
+            "clock": "09:38",
+            "playId": "3275",
+            "quarter": 4,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(9:38) (Shotgun) 12-A.Rodgers pass short right to 85-G.Jennings for 11 yards, TOUCHDOWN. The Replay Assistant challenged the runner was in bounds ruling, and the play was REVERSED. (Shotgun) 12-A.Rodgers pass short right to 85-G.Jennings ran ob at SEA 2 for 9 yards.",
+            "existingEventId": null,
+            "observedWpSwing": 0.038761556148529
+          }
+        ]
+      },
+      "targetNeedsReview": true,
+      "targetReviewCandidates": [
+        {
+          "id": "2012_03_GB_SEA:4153:needs-review",
+          "team": "SEA",
+          "clock": "00:08",
+          "playId": "4153",
+          "quarter": 4,
+          "reasons": [
+            "Catch or scoring ruling reviewed in the final minute of a one-score game; an upheld ruling is not an error finding."
+          ],
+          "priority": "high",
+          "description": "(:08) (Shotgun) 3-R.Wilson pass deep left to 81-G.Tate for 24 yards, TOUCHDOWN [52-C.Matthews]. The Replay Assistant challenged the pass completion ruling, and the play was Upheld.",
+          "existingEventId": "2012_03_GB_SEA:4153",
+          "observedWpSwing": 0.5317736445966671
+        }
+      ],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2014_19_DAL_GB",
+      "label": "Dez Bryant catch reversal",
+      "group": "disputed",
+      "score": {
+        "away": "DAL",
+        "awayScore": 21,
+        "home": "GB",
+        "homeScore": 26
+      },
+      "elapsedSeconds": 23.94,
+      "revision": 2,
+      "inputHash": "438cd7de41769cef8bb00171b52ca0b8b6507265c638f329cdcf1f34137e2a6f",
+      "summary": "DAL 21, GB 26. 4 plays need review; no call-correctness judgment has been made. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "review_worthy",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "GB",
+            "text": "Allowed 2 sacks, including 0 in overtime.",
+            "playIds": [
+              "1106",
+              "1912"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "GB",
+            "text": "Opponent DAL was charged 5 penalties for 35 yards.",
+            "playIds": [
+              "477",
+              "844",
+              "940",
+              "1436",
+              "1816"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "DAL",
+            "text": "Allowed 4 sacks, including 0 in overtime.",
+            "playIds": [
+              "100",
+              "3108",
+              "3143",
+              "3535"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "DAL",
+            "text": "Opponent GB was charged 10 penalties for 87 yards.",
+            "playIds": [
+              "444",
+              "709",
+              "1259",
+              "2318",
+              "2390",
+              "2521",
+              "2781",
+              "2981",
+              "3729",
+              "3830"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "4 plays need review; no call-correctness judgment has been made.",
+        "profiles": [
+          {
+            "team": "GB",
+            "gameId": "2014_19_DAL_GB",
+            "season": 2014,
+            "opponent": "DAL",
+            "penalties": 10,
+            "pointsFor": 26,
+            "totalYards": 416,
+            "penaltyYards": 87,
+            "opponentYards": 315,
+            "pointsAgainst": 21,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          },
+          {
+            "team": "DAL",
+            "gameId": "2014_19_DAL_GB",
+            "season": 2014,
+            "opponent": "GB",
+            "penalties": 5,
+            "pointsFor": 21,
+            "totalYards": 315,
+            "penaltyYards": 35,
+            "opponentYards": 416,
+            "pointsAgainst": 26,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2013,
+          "teamGames": 7922,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2014_19_DAL_GB:3578:needs-review",
+            "team": "DAL",
+            "clock": "04:42",
+            "playId": "3578",
+            "quarter": 4,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(4:42) (Shotgun) 9-T.Romo pass deep left to 88-D.Bryant to GB 1 for 31 yards (37-S.Shields). Green Bay challenged the pass completion ruling, and the play was REVERSED. (Shotgun) 9-T.Romo pass incomplete deep left to 88-D.Bryant (37-S.Shields). Yard marker changed due to change of passession.",
+            "existingEventId": "2014_19_DAL_GB:3578",
+            "observedWpSwing": 0.09061892330646504
+          },
+          {
+            "id": "2014_19_DAL_GB:1689:needs-review",
+            "team": "DAL",
+            "clock": "00:48",
+            "playId": "1689",
+            "quarter": 2,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(:48) (No Huddle, Shotgun) 9-T.Romo pass short left to 82-J.Witten to GB 25 for 8 yards (58-S.Barrington; 52-C.Matthews). The Replay Official challenged the first down ruling, and the play was REVERSED. (No Huddle, Shotgun) 9-T.Romo pass short left to 82-J.Witten to GB 27 for 6 yards (58-S.Barrington; 52-C.Matthews).",
+            "existingEventId": null,
+            "observedWpSwing": 0.00014692544937100482
+          },
+          {
+            "id": "2014_19_DAL_GB:3830:needs-review",
+            "team": "GB",
+            "clock": "02:00",
+            "playId": "3830",
+            "quarter": 4,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(2:00) (Shotgun) 12-A.Rodgers pass short right to 18-R.Cobb to DAL 23 for 12 yards (32-O.Scandrick). PENALTY on GB-18-R.Cobb, Delay of Game, 5 yards, enforced between downs.",
+            "existingEventId": "2014_19_DAL_GB:3830",
+            "observedWpSwing": 0.027857959270477073
+          },
+          {
+            "id": "2014_19_DAL_GB:3729:needs-review",
+            "team": "GB",
+            "clock": "02:24",
+            "playId": "3729",
+            "quarter": 4,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(2:24) (Shotgun) PENALTY on GB-81-A.Quarless, False Start, 5 yards, enforced at DAL 34 - No Play.",
+            "existingEventId": "2014_19_DAL_GB:3729",
+            "observedWpSwing": 0.00408041477203369
+          }
+        ]
+      },
+      "targetNeedsReview": true,
+      "targetReviewCandidates": [
+        {
+          "id": "2014_19_DAL_GB:3578:needs-review",
+          "team": "DAL",
+          "clock": "04:42",
+          "playId": "3578",
+          "quarter": 4,
+          "reasons": [
+            "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+          ],
+          "priority": "high",
+          "description": "(4:42) (Shotgun) 9-T.Romo pass deep left to 88-D.Bryant to GB 1 for 31 yards (37-S.Shields). Green Bay challenged the pass completion ruling, and the play was REVERSED. (Shotgun) 9-T.Romo pass incomplete deep left to 88-D.Bryant (37-S.Shields). Yard marker changed due to change of passession.",
+          "existingEventId": "2014_19_DAL_GB:3578",
+          "observedWpSwing": 0.09061892330646504
+        }
+      ],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2018_20_LA_NO",
+      "label": "NFC Championship missed pass interference",
+      "group": "disputed",
+      "score": {
+        "away": "LA",
+        "awayScore": 26,
+        "home": "NO",
+        "homeScore": 23
+      },
+      "elapsedSeconds": 33.34,
+      "revision": 2,
+      "inputHash": "eb937e104e86cdc5c5e0ae2f12cdb3d80394e74d9341590c8d4d58cf53cec83f",
+      "summary": "LA 26, NO 23. 2 plays need review; no call-correctness judgment has been made. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "review_worthy",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "NO",
+            "text": "Allowed 2 sacks, including 0 in overtime.",
+            "playIds": [
+              "1771",
+              "1795"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "NO",
+            "text": "Opponent LA was charged 7 penalties for 64 yards.",
+            "playIds": [
+              "341",
+              "879",
+              "989",
+              "1874",
+              "3324",
+              "3702",
+              "4438"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "LA",
+            "text": "Allowed 1 sacks, including 0 in overtime.",
+            "playIds": [
+              "3255"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "LA",
+            "text": "Opponent NO was charged 3 penalties for 20 yards.",
+            "playIds": [
+              "2809",
+              "3297",
+              "3356"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "2 plays need review; no call-correctness judgment has been made.",
+        "profiles": [
+          {
+            "team": "NO",
+            "gameId": "2018_20_LA_NO",
+            "season": 2018,
+            "opponent": "LA",
+            "penalties": 3,
+            "pointsFor": 23,
+            "totalYards": 290,
+            "penaltyYards": 20,
+            "opponentYards": 378,
+            "pointsAgainst": 26,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          },
+          {
+            "team": "LA",
+            "gameId": "2018_20_LA_NO",
+            "season": 2018,
+            "opponent": "NO",
+            "penalties": 7,
+            "pointsFor": 26,
+            "totalYards": 378,
+            "penaltyYards": 64,
+            "opponentYards": 290,
+            "pointsAgainst": 23,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2017,
+          "teamGames": 10058,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2018_20_LA_NO:4006:needs-review",
+            "team": "NO",
+            "clock": "01:49",
+            "playId": "4006",
+            "quarter": 4,
+            "reasons": [
+              "Late third- or fourth-down incompletion inside the opponent 25 in a one-score game."
+            ],
+            "priority": "high",
+            "description": "(1:49) (Shotgun) 9-D.Brees pass incomplete short right to 11-T.Lewis.",
+            "existingEventId": null,
+            "observedWpSwing": 0.058143436908721924
+          },
+          {
+            "id": "2018_20_LA_NO:4438:needs-review",
+            "team": "NO",
+            "clock": "14:53",
+            "playId": "4438",
+            "quarter": 5,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(14:53) (Shotgun) 9-D.Brees pass incomplete deep middle to 85-D.Arnold. PENALTY on LA-26-M.Barron, Defensive Pass Interference, 14 yards, enforced at NO 26 - No Play.",
+            "existingEventId": "2018_20_LA_NO:4438",
+            "observedWpSwing": null
+          }
+        ]
+      },
+      "targetNeedsReview": true,
+      "targetReviewCandidates": [
+        {
+          "id": "2018_20_LA_NO:4006:needs-review",
+          "team": "NO",
+          "clock": "01:49",
+          "playId": "4006",
+          "quarter": 4,
+          "reasons": [
+            "Late third- or fourth-down incompletion inside the opponent 25 in a one-score game."
+          ],
+          "priority": "high",
+          "description": "(1:49) (Shotgun) 9-D.Brees pass incomplete short right to 11-T.Lewis.",
+          "existingEventId": null,
+          "observedWpSwing": 0.058143436908721924
+        }
+      ],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2022_22_KC_PHI",
+      "label": "Super Bowl LVII late defensive holding",
+      "group": "disputed",
+      "score": {
+        "away": "KC",
+        "awayScore": 38,
+        "home": "PHI",
+        "homeScore": 35
+      },
+      "elapsedSeconds": 29.065,
+      "revision": 2,
+      "inputHash": "db0a6a7a146761a87b69b5ecef5175adf6faea121f4aeb3c61481758dddfc32b",
+      "summary": "KC 38, PHI 35. 4 plays need review; no call-correctness judgment has been made. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Complete official aggregate profiles are unavailable for one or both teams; affected historical comparisons are withheld.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "review_worthy",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "PHI",
+            "text": "Allowed 2 sacks, including 0 in overtime.",
+            "playIds": [
+              "2894",
+              "3559"
+            ]
+          },
+          {
+            "kind": "long_punt_return",
+            "team": "KC",
+            "text": "65-yard punt return.",
+            "playIds": [
+              "3365"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "4 plays need review; no call-correctness judgment has been made.",
+        "profiles": [
+          {
+            "team": "PHI",
+            "gameId": "2022_22_KC_PHI",
+            "season": 2022,
+            "opponent": "KC",
+            "penalties": null,
+            "pointsFor": 35,
+            "totalYards": null,
+            "penaltyYards": null,
+            "opponentYards": null,
+            "pointsAgainst": 38,
+            "turnoverMargin": null,
+            "nonOffensiveTouchdowns": null
+          },
+          {
+            "team": "KC",
+            "gameId": "2022_22_KC_PHI",
+            "season": 2022,
+            "opponent": "PHI",
+            "penalties": null,
+            "pointsFor": 38,
+            "totalYards": null,
+            "penaltyYards": null,
+            "opponentYards": null,
+            "pointsAgainst": 35,
+            "turnoverMargin": null,
+            "nonOffensiveTouchdowns": null
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2021,
+          "teamGames": 12234,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2022_22_KC_PHI:3907:needs-review",
+            "team": "KC",
+            "clock": "01:54",
+            "playId": "3907",
+            "quarter": 4,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review.",
+              "Late third- or fourth-down incompletion inside the opponent 25 in a one-score game."
+            ],
+            "priority": "high",
+            "description": "(1:54) (Shotgun) 15-P.Mahomes pass incomplete short left to 9-J.Smith-Schuster [94-J.Sweat]. PENALTY on PHI-24-J.Bradberry, Defensive Holding, 4 yards, enforced at PHI 15 - No Play.",
+            "existingEventId": "2022_22_KC_PHI:3907",
+            "observedWpSwing": 0.0981937050819397
+          },
+          {
+            "id": "2022_22_KC_PHI:282:needs-review",
+            "team": "PHI",
+            "clock": "10:22",
+            "playId": "282",
+            "quarter": 1,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(10:22) (Shotgun) 14-K.Gainwell up the middle for 4 yards, TOUCHDOWN. The Replay Official reviewed the runner broke the plane ruling, and the play was REVERSED. (Shotgun) 14-K.Gainwell up the middle to KC 1 for 3 yards (35-Ja.Watson).",
+            "existingEventId": null,
+            "observedWpSwing": 0.03155821561813399
+          },
+          {
+            "id": "2022_22_KC_PHI:1918:needs-review",
+            "team": "PHI",
+            "clock": "01:00",
+            "playId": "1918",
+            "quarter": 2,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(1:00) (No Huddle, Shotgun) 1-J.Hurts pass deep right to 6-D.Smith pushed ob at KC 13 for 35 yards (38-L.Sneed). The Replay Official reviewed the pass completion ruling, and the play was REVERSED. (No Huddle, Shotgun) 1-J.Hurts pass incomplete deep right to 6-D.Smith (38-L.Sneed).",
+            "existingEventId": "2022_22_KC_PHI:1918",
+            "observedWpSwing": 0.013853073120116965
+          },
+          {
+            "id": "2022_22_KC_PHI:2443:needs-review",
+            "team": "PHI",
+            "clock": "09:30",
+            "playId": "2443",
+            "quarter": 3,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(9:30) (Shotgun) 1-J.Hurts pass short right to 26-M.Sanders to PHI 22 for -3 yards (38-L.Sneed). FUMBLES (38-L.Sneed), RECOVERED by KC-32-N.Bolton at PHI 24. 32-N.Bolton for 24 yards, TOUCHDOWN. The Replay Official reviewed the pass completion ruling, and the play was REVERSED. (Shotgun) 1-J.Hurts pass incomplete short right to 26-M.Sanders (38-L.Sneed).",
+            "existingEventId": "2022_22_KC_PHI:2443",
+            "observedWpSwing": 0.0007063746452330433
+          }
+        ]
+      },
+      "targetNeedsReview": true,
+      "targetReviewCandidates": [
+        {
+          "id": "2022_22_KC_PHI:3907:needs-review",
+          "team": "KC",
+          "clock": "01:54",
+          "playId": "3907",
+          "quarter": 4,
+          "reasons": [
+            "Recorded penalty late in a one-score game; correctness and impact require review.",
+            "Late third- or fourth-down incompletion inside the opponent 25 in a one-score game."
+          ],
+          "priority": "high",
+          "description": "(1:54) (Shotgun) 15-P.Mahomes pass incomplete short left to 9-J.Smith-Schuster [94-J.Sweat]. PENALTY on PHI-24-J.Bradberry, Defensive Holding, 4 yards, enforced at PHI 15 - No Play.",
+          "existingEventId": "2022_22_KC_PHI:3907",
+          "observedWpSwing": 0.0981937050819397
+        }
+      ],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [
+        "team_stats_score_mismatch: Game-profile comparison awaits paired team statistics; play review remains available."
+      ],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2023_17_DET_DAL",
+      "label": "Lions two-point eligibility penalty",
+      "group": "disputed",
+      "score": {
+        "away": "DET",
+        "awayScore": 19,
+        "home": "DAL",
+        "homeScore": 20
+      },
+      "elapsedSeconds": 38.873,
+      "revision": 2,
+      "inputHash": "7866cb92dd5f53475917333e062ae007d8c9269e402499e8ab0e17618ba80649",
+      "summary": "DET 19, DAL 20. 3 plays need review; no call-correctness judgment has been made. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "review_worthy",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "DAL",
+            "text": "Allowed 3 sacks, including 0 in overtime.",
+            "playIds": [
+              "1687",
+              "1941",
+              "3572"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "DAL",
+            "text": "Opponent DET was charged 6 penalties for 35 yards.",
+            "playIds": [
+              "787",
+              "1190",
+              "2801",
+              "2974",
+              "3423",
+              "4088"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "DET",
+            "text": "Allowed 1 sacks, including 0 in overtime.",
+            "playIds": [
+              "606"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "DET",
+            "text": "Opponent DAL was charged 5 penalties for 34 yards.",
+            "playIds": [
+              "885",
+              "1707",
+              "2024",
+              "3688",
+              "4119"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "3 plays need review; no call-correctness judgment has been made.",
+        "profiles": [
+          {
+            "team": "DAL",
+            "gameId": "2023_17_DET_DAL",
+            "season": 2023,
+            "opponent": "DET",
+            "penalties": 5,
+            "pointsFor": 20,
+            "totalYards": 384,
+            "penaltyYards": 34,
+            "opponentYards": 420,
+            "pointsAgainst": 19,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          },
+          {
+            "team": "DET",
+            "gameId": "2023_17_DET_DAL",
+            "season": 2023,
+            "opponent": "DAL",
+            "penalties": 6,
+            "pointsFor": 19,
+            "totalYards": 420,
+            "penaltyYards": 35,
+            "opponentYards": 384,
+            "pointsAgainst": 20,
+            "turnoverMargin": 0,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2022,
+          "teamGames": 12802,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2023_17_DET_DAL:4088:needs-review",
+            "team": "DET",
+            "clock": "00:23",
+            "playId": "4088",
+            "quarter": 4,
+            "reasons": [
+              "A touchdown or two-point play was explicitly nullified.",
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "high",
+            "description": "70-D.Skipper reported in as eligible. TWO-POINT CONVERSION ATTEMPT. 16-J.Goff pass to 68-T.Decker is complete. ATTEMPT SUCCEEDS. PENALTY on DET-68-T.Decker, Illegal Touch Pass, 5 yards, enforced at DAL 2 - No Play. Penalty on DET, Illegal Formation, declined.",
+            "existingEventId": "2023_17_DET_DAL:4088",
+            "observedWpSwing": 0
+          },
+          {
+            "id": "2023_17_DET_DAL:4119:needs-review",
+            "team": "DET",
+            "clock": "00:23",
+            "playId": "4119",
+            "quarter": 4,
+            "reasons": [
+              "A touchdown or two-point play was explicitly nullified.",
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "high",
+            "description": "TWO-POINT CONVERSION ATTEMPT. 16-J.Goff pass to 14-A.St. Brown is incomplete. ATTEMPT FAILS. PENALTY on DAL-11-M.Parsons, Defensive Offside, 4 yards, enforced at DAL 7 - No Play.",
+            "existingEventId": "2023_17_DET_DAL:4119",
+            "observedWpSwing": 0
+          },
+          {
+            "id": "2023_17_DET_DAL:3688:needs-review",
+            "team": "DAL",
+            "clock": "02:05",
+            "playId": "3688",
+            "quarter": 4,
+            "reasons": [
+              "Recorded penalty late in a one-score game; correctness and impact require review."
+            ],
+            "priority": "medium",
+            "description": "(2:05) 20-T.Pollard left tackle to DET 22 for 7 yards (31-K.Joseph; 96-I.Buggs). PENALTY on DAL-89-P.Hendershot, Tripping, 15 yards, enforced at DET 29 - No Play.",
+            "existingEventId": "2023_17_DET_DAL:3688",
+            "observedWpSwing": 0.011524617671965998
+          }
+        ]
+      },
+      "targetNeedsReview": true,
+      "targetReviewCandidates": [
+        {
+          "id": "2023_17_DET_DAL:4088:needs-review",
+          "team": "DET",
+          "clock": "00:23",
+          "playId": "4088",
+          "quarter": 4,
+          "reasons": [
+            "A touchdown or two-point play was explicitly nullified.",
+            "Recorded penalty late in a one-score game; correctness and impact require review."
+          ],
+          "priority": "high",
+          "description": "70-D.Skipper reported in as eligible. TWO-POINT CONVERSION ATTEMPT. 16-J.Goff pass to 68-T.Decker is complete. ATTEMPT SUCCEEDS. PENALTY on DET-68-T.Decker, Illegal Touch Pass, 5 yards, enforced at DAL 2 - No Play. Penalty on DET, Illegal Formation, declined.",
+          "existingEventId": "2023_17_DET_DAL:4088",
+          "observedWpSwing": 0
+        }
+      ],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2023_17_MIA_BAL",
+      "label": "Same-week comparison: Dolphins at Ravens",
+      "group": "comparison",
+      "score": {
+        "away": "MIA",
+        "awayScore": 19,
+        "home": "BAL",
+        "homeScore": 56
+      },
+      "elapsedSeconds": 33.168,
+      "revision": 2,
+      "inputHash": "0b669c96733810aad101e5def37b62898c8588639e244a765265804e10730595",
+      "summary": "MIA 19, BAL 56. No configured historical outlier flag found; officiating correctness remains unreviewed. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "no_flag_found",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "BAL",
+            "text": "Allowed 1 sacks, including 0 in overtime.",
+            "playIds": [
+              "826"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "BAL",
+            "text": "Opponent MIA was charged 5 penalties for 37 yards.",
+            "playIds": [
+              "873",
+              "2213",
+              "2544",
+              "3769",
+              "4121"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "MIA",
+            "text": "Allowed 3 sacks, including 0 in overtime.",
+            "playIds": [
+              "993",
+              "2517",
+              "3637"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "MIA",
+            "text": "Opponent BAL was charged 7 penalties for 45 yards.",
+            "playIds": [
+              "366",
+              "763",
+              "2626",
+              "2897",
+              "3015",
+              "3723",
+              "3930"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "No configured historical outlier flag found; officiating correctness remains unreviewed.",
+        "profiles": [
+          {
+            "team": "BAL",
+            "gameId": "2023_17_MIA_BAL",
+            "season": 2023,
+            "opponent": "MIA",
+            "penalties": 7,
+            "pointsFor": 56,
+            "totalYards": 491,
+            "penaltyYards": 45,
+            "opponentYards": 375,
+            "pointsAgainst": 19,
+            "turnoverMargin": 2,
+            "nonOffensiveTouchdowns": 0
+          },
+          {
+            "team": "MIA",
+            "gameId": "2023_17_MIA_BAL",
+            "season": 2023,
+            "opponent": "BAL",
+            "penalties": 5,
+            "pointsFor": 19,
+            "totalYards": 375,
+            "penaltyYards": 37,
+            "opponentYards": 491,
+            "pointsAgainst": 56,
+            "turnoverMargin": -2,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2022,
+          "teamGames": 12802,
+          "startSeason": 1999
+        },
+        "reviewCandidates": []
+      },
+      "targetNeedsReview": false,
+      "targetReviewCandidates": [],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [],
+      "httpStatus": 200
+    },
+    {
+      "gameId": "2024_22_KC_PHI",
+      "label": "Super Bowl LIX comparison",
+      "group": "comparison",
+      "score": {
+        "away": "KC",
+        "awayScore": 22,
+        "home": "PHI",
+        "homeScore": 40
+      },
+      "elapsedSeconds": 41.088,
+      "revision": 2,
+      "inputHash": "09d9e36f6ef4a0a3367886311784636da961b8452548898659e451f4426a82bb",
+      "summary": "KC 22, PHI 40. 3 plays need review; no call-correctness judgment has been made. Officiating correctness: not reviewed.",
+      "gameAudit": {
+        "flags": [],
+        "notes": [
+          "Descriptive after-game comparison of fixed conditions; this is not a pregame prediction, p-value, misconduct probability or proof of causation.",
+          "These exploratory product rules were motivated by known cases, then versioned and applied uniformly. This is not independent or held-out validation; definitions are frozen for later evaluations.",
+          "Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.",
+          "Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.",
+          "At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.",
+          "Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.",
+          "Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.",
+          "Descriptive historical team-game reference, not a trained fraud, integrity, or win-probability model.",
+          "Only 1999–2025 regular-season and postseason games with paired attributed team stats and schedule scores are eligible; listed exclusions remain absent.",
+          "Compare historical targets only with earlier seasons. Neither the target season nor future games belong in its comparison denominator.",
+          "Total net offense is rushing_yards + passing_yards + signed sack_yards_lost. Return yards are excluded.",
+          "Penalty counts/yards are provider accepted-penalty stat aggregates (stat_id 93), not a count of all flags or first-penalty PBP columns.",
+          "Turnover margin is opponent (passing_interceptions + fumbles_lost_total) minus own; fumbles cover all units. Turnovers on downs are excluded.",
+          "Non-offensive touchdowns combine def_tds and special_teams_tds only when fumble_recovery_tds is observed zero. Positive or missing fumble-recovery TD counts make this context null because offensive/defensive attribution and overlap are ambiguous. Missing inputs remain null, not zero.",
+          "Provider aggregates can differ from a PBP-derived target; reconcile material discrepancies before comparison. Complete means required fields are present, not independently gamebook-certified.",
+          "Modern provider aliases join historical schedule team codes; output preserves schedule codes and game IDs.",
+          "Data: nflverse / nflfastR, schedules additionally Lee Sharpe, CC BY 4.0. Transformations: joins, field selection, net totals, margins, exclusions and compression."
+        ],
+        "status": "review_worthy",
+        "context": [
+          {
+            "kind": "sacks_allowed",
+            "team": "PHI",
+            "text": "Allowed 2 sacks, including 0 in overtime.",
+            "playIds": [
+              "1701",
+              "3302"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "PHI",
+            "text": "Opponent KC was charged 7 penalties for 75 yards.",
+            "playIds": [
+              "480",
+              "949",
+              "1721",
+              "2002",
+              "2737",
+              "2901",
+              "3878"
+            ]
+          },
+          {
+            "kind": "non_offensive_touchdowns",
+            "team": "PHI",
+            "text": "Recorded 1 defensive or special-teams touchdowns.",
+            "playIds": [
+              "1468"
+            ]
+          },
+          {
+            "kind": "sacks_allowed",
+            "team": "KC",
+            "text": "Allowed 6 sacks, including 0 in overtime.",
+            "playIds": [
+              "1428",
+              "1448",
+              "1577",
+              "2253",
+              "2273",
+              "3395"
+            ]
+          },
+          {
+            "kind": "opponent_penalties",
+            "team": "KC",
+            "text": "Opponent PHI was charged 8 penalties for 59 yards.",
+            "playIds": [
+              "176",
+              "1346",
+              "1668",
+              "2616",
+              "3395",
+              "3510",
+              "3745",
+              "3958"
+            ]
+          }
+        ],
+        "version": "under-review-game-audit-v1",
+        "headline": "3 plays need review; no call-correctness judgment has been made.",
+        "profiles": [
+          {
+            "team": "PHI",
+            "gameId": "2024_22_KC_PHI",
+            "season": 2024,
+            "opponent": "KC",
+            "penalties": 8,
+            "pointsFor": 40,
+            "totalYards": 345,
+            "penaltyYards": 59,
+            "opponentYards": 275,
+            "pointsAgainst": 22,
+            "turnoverMargin": 2,
+            "nonOffensiveTouchdowns": 1
+          },
+          {
+            "team": "KC",
+            "gameId": "2024_22_KC_PHI",
+            "season": 2024,
+            "opponent": "PHI",
+            "penalties": 7,
+            "pointsFor": 22,
+            "totalYards": 275,
+            "penaltyYards": 75,
+            "opponentYards": 345,
+            "pointsAgainst": 40,
+            "turnoverMargin": -2,
+            "nonOffensiveTouchdowns": 0
+          }
+        ],
+        "reference": {
+          "version": "nflverse-team-game-profile-v1",
+          "checksum": "3d37b64650758d0b199dcf07eb5c2448a5b67d426020fbb5af351fb6cc965385",
+          "endSeason": 2023,
+          "teamGames": 13372,
+          "startSeason": 1999
+        },
+        "reviewCandidates": [
+          {
+            "id": "2024_22_KC_PHI:543:needs-review",
+            "team": "PHI",
+            "clock": "06:37",
+            "playId": "543",
+            "quarter": 1,
+            "reasons": [
+              "Replay reversed a catch or scoring ruling; review the correction and remaining effect separately."
+            ],
+            "priority": "high",
+            "description": "(6:37) (Shotgun) 1-J.Hurts pass deep right to 83-J.Dotson for 28 yards, TOUCHDOWN. The Replay Official reviewed the runner broke the plane ruling, and the play was REVERSED. (Shotgun) 1-J.Hurts pass deep right to 83-J.Dotson to KC 1 for 27 yards (35-J.Watson).",
+            "existingEventId": "2024_22_KC_PHI:543",
+            "observedWpSwing": 0.07952940464019798
+          },
+          {
+            "id": "2024_22_KC_PHI:3878:needs-review",
+            "team": "KC",
+            "clock": "03:48",
+            "playId": "3878",
+            "quarter": 4,
+            "reasons": [
+              "A touchdown or two-point play was explicitly nullified."
+            ],
+            "priority": "high",
+            "description": "(3:48) (Shotgun) 15-P.Mahomes pass short left to 5-M.Brown for 4 yards, TOUCHDOWN NULLIFIED by Penalty. PENALTY on KC-9-J.Smith-Schuster, Offensive Pass Interference, 10 yards, enforced at PHI 4 - No Play.",
+            "existingEventId": "2024_22_KC_PHI:3878",
+            "observedWpSwing": 0.0007121873786680721
+          },
+          {
+            "id": "2024_22_KC_PHI:3745:needs-review",
+            "team": "KC",
+            "clock": "05:26",
+            "playId": "3745",
+            "quarter": 4,
+            "reasons": [
+              "A touchdown or two-point play was explicitly nullified."
+            ],
+            "priority": "high",
+            "description": "(5:26) (Shotgun) 15-P.Mahomes pass deep left intended for 8-D.Hopkins INTERCEPTED by 8-C.Gardner-Johnson [58-J.Hunt] at PHI 2. 8-C.Gardner-Johnson for 98 yards, TOUCHDOWN NULLIFIED by Penalty. PENALTY on PHI-98-J.Carter, Defensive Offside, 4 yards, enforced at PHI 36 - No Play.",
+            "existingEventId": "2024_22_KC_PHI:3745",
+            "observedWpSwing": 0.000009052135283016405
+          }
+        ]
+      },
+      "targetNeedsReview": false,
+      "targetReviewCandidates": [],
+      "existingMetricsUnchanged": true,
+      "profileWarnings": [],
+      "httpStatus": 200
+    }
+  ]
+}
