@@ -48,6 +48,7 @@ The general report calibration command selects the latest numbered revision per 
 
 - R suite:48 assertions passed, including frozen-input upstream parity, possession and timeout ownership, halftime kickoff transitions, spread invariance for officiating WP, predecision outcome invariance, conservative penalty constructors, leakage guards and two real game analyses.
 - JSON contract regression passed for mixed numeric/string field-side values. Missing charting and zero labels remain distinct. Real2026 FTN denominators:57 nonsack passing opportunities and5 sacks.
+- Actual immutable historical raw snapshot rebuilt successfully with `decode=TRUE`:179 plays, final `END GAME`,8.4 seconds. Snapshot SHA256: `fe5f322f9260cc83b280194a120a06b254fce9fd9d425c97653e4e4847e2db13`.
 - Distinct-game/revision calibration, model matching, chronological reference use, incomplete coverage, minimum sample and tail-suppression tests passed.
 - Real fixtures:2023_01_DET_KC and2026_01_NE_SEA, with source/checksum/license manifest under `tests/fixtures/real`. Root TypeScript contract accepted the original R reports; rarity is an additional optional contract field.
 

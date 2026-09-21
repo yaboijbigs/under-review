@@ -38,7 +38,6 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  const snapshots=[...schedule.snapshots,...ingested.snapshots];
  const analysis=await runAnalytics({schemaVersion:1,action:'analyze',game,plays:ingested.plays,ftn:ingested.ftn,snapshots,config:{closeCallTolerance:config.closeCallTolerance,modelDirectory:process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),chartingCoverage:ingested.chartingCoverage}},{scriptPath:path.join(projectRoot,'analytics/run.R'),timeoutMs:config.analyticsTimeoutMs});
  analysis.warnings=[...new Set([...analysis.warnings,...ingested.warnings])];
- for(const row of (await query('SELECT data FROM events WHERE game_id=$1 AND manual=true',[gameId])).rows){const existing=analysis.events.find(e=>e.id===row.data.id);if(!existing)analysis.events.push(row.data);else existing.notes=row.data.notes;}
  const revision=await saveAnalysis(game,ingested.plays,snapshots,analysis,ingested.sourceKind);
  if(revision.created&&!backfill){
   await maybeAutomaticDraft(gameId);

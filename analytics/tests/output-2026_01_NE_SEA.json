@@ -65,7 +65,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:111:ruling_ep",
@@ -131,7 +141,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:200:coaching",
@@ -140,8 +160,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:200"
       ],
@@ -209,7 +229,17 @@
         "action": "punt",
         "expectedWp": 0.5396808022816439
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:320:ruling",
@@ -236,7 +266,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:430:coaching",
@@ -245,8 +285,8 @@
       "team": "NE",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:430"
       ],
@@ -314,7 +354,17 @@
         "action": "punt",
         "expectedWp": 0.4537350609502765
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:587:coaching",
@@ -323,8 +373,8 @@
       "team": "SEA",
       "value": 0.03457648419439441,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": null,
       "eventIds": [
         "2026_01_NE_SEA:587"
       ],
@@ -392,7 +442,17 @@
         "action": "go",
         "expectedWp": 0.5434429154303896
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:734:coaching",
@@ -401,8 +461,8 @@
       "team": "NE",
       "value": 0.009361136706791784,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:734"
       ],
@@ -470,7 +530,17 @@
         "action": "go",
         "expectedWp": 0.4504953085165244
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:878:coaching",
@@ -479,8 +549,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:878"
       ],
@@ -548,7 +618,17 @@
         "action": "punt",
         "expectedWp": 0.5188691924994895
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1118:ruling",
@@ -614,7 +694,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1118:ruling_ep",
@@ -680,7 +770,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1297:ruling",
@@ -746,7 +846,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1297:ruling_ep",
@@ -812,7 +922,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1346:ruling",
@@ -878,7 +998,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1346:ruling_ep",
@@ -944,7 +1074,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1395:ruling",
@@ -971,7 +1111,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1395:coaching",
@@ -1002,7 +1152,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1430:coaching",
@@ -1011,8 +1171,8 @@
       "team": "SEA",
       "value": 0.0254014619341153,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": null,
       "eventIds": [
         "2026_01_NE_SEA:1430"
       ],
@@ -1080,7 +1240,17 @@
         "action": "go",
         "expectedWp": 0.3104732532632881
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:1665:coaching",
@@ -1089,8 +1259,8 @@
       "team": "NE",
       "value": 0.008312999151153244,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:1665"
       ],
@@ -1158,7 +1328,17 @@
         "action": "go",
         "expectedWp": 0.7368093416551016
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2032:ruling",
@@ -1185,7 +1365,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2032:coaching",
@@ -1216,7 +1406,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2163:coaching",
@@ -1294,7 +1494,17 @@
         "action": "go",
         "expectedWp": 0.7216348193234252
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2283:ruling",
@@ -1360,7 +1570,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2283:ruling_ep",
@@ -1426,7 +1646,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2332:coaching",
@@ -1435,8 +1665,8 @@
       "team": "SEA",
       "value": 0.01773896677629516,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": null,
       "eventIds": [
         "2026_01_NE_SEA:2332"
       ],
@@ -1504,7 +1734,17 @@
         "action": "go",
         "expectedWp": 0.229776937107351
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2431:ruling",
@@ -1570,7 +1810,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2431:ruling_ep",
@@ -1636,7 +1886,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2431:coaching",
@@ -1667,7 +1927,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2455:coaching",
@@ -1698,7 +1968,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2619:ruling",
@@ -1725,7 +2005,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2679:coaching",
@@ -1734,8 +2024,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:2679"
       ],
@@ -1803,7 +2093,17 @@
         "action": "fg",
         "expectedWp": 0.2270461606912431
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2729:ruling",
@@ -1869,7 +2169,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2729:ruling_ep",
@@ -1935,7 +2245,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:2805:ruling",
@@ -1962,7 +2282,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3070:coaching",
@@ -1971,8 +2301,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3070"
       ],
@@ -2040,7 +2370,17 @@
         "action": "go",
         "expectedWp": 0.2655394210484301
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3111:ruling",
@@ -2067,7 +2407,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3385:ruling",
@@ -2133,7 +2483,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3385:ruling_ep",
@@ -2199,7 +2559,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3436:ruling",
@@ -2265,7 +2635,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3436:ruling_ep",
@@ -2331,7 +2711,17 @@
         "roof": "outdoors",
         "spread_line": 0
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3506:coaching",
@@ -2340,8 +2730,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3506"
       ],
@@ -2409,7 +2799,17 @@
         "action": "fg",
         "expectedWp": 0.6605918510800284
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3556:ruling",
@@ -2436,7 +2836,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3657:coaching",
@@ -2445,8 +2855,8 @@
       "team": "NE",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3657"
       ],
@@ -2514,7 +2924,17 @@
         "action": "go",
         "expectedWp": 0.259671636241538
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3706:ruling",
@@ -2541,7 +2961,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:3810:coaching",
@@ -2550,8 +2980,8 @@
       "team": "NE",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3810"
       ],
@@ -2619,7 +3049,17 @@
         "action": "go",
         "expectedWp": 0.2022669065737765
       },
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-nfl4th-2026-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:fumble:SEA",
@@ -2630,9 +3070,7 @@
       "unit": "recoveries",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.",
@@ -2646,7 +3084,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1-5d13bdb7c25f",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:fumble:NE",
@@ -2657,9 +3105,7 @@
       "unit": "recoveries",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.",
@@ -2673,7 +3119,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "incomplete_or_no_opportunities",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1-5d13bdb7c25f",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:fg:SEA",
@@ -2704,7 +3160,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "insufficient_tail_support",
+        "referencePeriod": "2024–2025",
+        "gameCount": 265,
+        "modelVersion": "under-review-contextual-baselines-v1-fc871868cb91",
+        "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:fg:NE",
@@ -2733,7 +3199,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": 22,
+        "status": "supported",
+        "reasonCode": null,
+        "referencePeriod": "2024–2025",
+        "gameCount": 265,
+        "modelVersion": "under-review-contextual-baselines-v1-fc871868cb91",
+        "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:xp:SEA",
@@ -2762,7 +3238,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "insufficient_reference_games",
+        "referencePeriod": "2024–2025",
+        "gameCount": 50,
+        "modelVersion": "under-review-contextual-baselines-v1-1b26bba80d09",
+        "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:xp:NE",
@@ -2791,7 +3277,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "insufficient_reference_games",
+        "referencePeriod": "2024–2025",
+        "gameCount": 50,
+        "modelVersion": "under-review-contextual-baselines-v1-1b26bba80d09",
+        "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:SEA:presnap",
@@ -2816,7 +3312,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:SEA:offensive_holding",
@@ -2841,7 +3347,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:SEA:defensive_holding",
@@ -2866,7 +3382,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:SEA:pass_interference",
@@ -2891,7 +3417,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:NE:presnap",
@@ -2916,7 +3452,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:NE:offensive_holding",
@@ -2941,7 +3487,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:NE:defensive_holding",
@@ -2966,7 +3522,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:penalty:NE:pass_interference",
@@ -2991,7 +3557,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "under-review-contextual-baselines-v1",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_drop:SEA",
@@ -3002,9 +3578,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3018,7 +3592,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_drop:NE",
@@ -3047,7 +3631,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_interception_worthy:SEA",
@@ -3076,7 +3670,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_interception_worthy:NE",
@@ -3109,7 +3713,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_qb_fault_sack:SEA",
@@ -3120,9 +3734,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3136,7 +3748,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_qb_fault_sack:NE",
@@ -3147,9 +3769,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3163,7 +3783,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_catchable_ball:SEA",
@@ -3224,7 +3854,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_catchable_ball:NE",
@@ -3299,7 +3939,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_contested_ball:SEA",
@@ -3332,7 +3982,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_contested_ball:NE",
@@ -3371,7 +4031,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_created_reception:SEA",
@@ -3400,7 +4070,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     },
     {
       "id": "2026_01_NE_SEA:is_created_reception:NE",
@@ -3411,9 +4091,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3427,7 +4105,17 @@
       },
       "actualState": null,
       "alternativeState": null,
-      "details": null
+      "details": null,
+      "rarity": {
+        "percentile": null,
+        "status": "unavailable",
+        "reasonCode": "comparable_reference_unavailable",
+        "referencePeriod": null,
+        "gameCount": 0,
+        "modelVersion": "FTN-charting",
+        "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
+        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+      }
     }
   ],
   "events": [
@@ -5482,7 +6170,7 @@
       "version": "under-review-nfl4th-2026-v1",
       "trainingWindow": null,
       "notes": "Rule-adapted experimental scenarios; recorded observed-action diagnostics do not identify unchosen counterfactual outcomes.",
-      "checksum": "faae6ad3afc60e034e619f892b2240046603ecad5287a1ce8e9f31a040be8811"
+      "checksum": "ad1f31b3f3b659ec82d696f45d3215f2b448f553df92a3eb09ec246a6dbc0fe2"
     },
     {
       "id": "fumble",
@@ -5516,6 +6204,6 @@
   "warnings": [
     "Overall percentile unavailable: no validated comparable-coverage aggregation.",
     "Officiating correctness: not reviewed. No statistical result establishes intent.",
-    "Coaching promotion gate is absent, stale or failed: values remain experimental."
+    "Coaching promotion gate passed for insensitive supported regulation states; upstream training cutoff and unchosen action outcomes remain unverified."
   ]
 }
