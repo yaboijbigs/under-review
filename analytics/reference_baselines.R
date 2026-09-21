@@ -14,11 +14,15 @@ for (kind in c("fumble", "fg", "xp")) {
   data$residual <- (data$y - predictions) * if (kind == "fg") 3 else 1
   data$team <- if (kind == "fumble") data$fumbled_1_team else data$posteam
   label <- switch(kind, fumble = "Fumble recoveries above expectation", fg = "Field-goal points above expectation", xp = "Extra-point points above expectation")
-  version <- paste0(BASELINE_VERSION, "-", substr(model_hash(model), 1, 12))
+  version <- paste0(BASELINE_VERSION, "-", substr(model_hash(model), 1, 12), if (kind == "fumble") "-team-recovery-v1" else "")
   template <- list(category = if (kind == "fumble") "fumble" else "kicking", name = label, unit = if (kind == "fumble") "recoveries" else "points", modelVersion = version)
   for (gid in unique(data$game_id)) {
     g <- data[data$game_id == gid, , drop = FALSE]
-    residuals <- tapply(g$residual, g$team, sum)
+    if (kind == "fumble") {
+      team <- g$home_team[[1]]
+      value <- sum(ifelse(g$fumbled_1_team == team, g$residual, -g$residual))
+      residuals <- c(value, -value)
+    } else residuals <- tapply(g$residual, g$team, sum)
     key <- paste(rarity_key(template), opportunity_stratum(nrow(g)), sep = "|")
     groups[[key]][[gid]] <- list(gameId = gid, value = max(abs(residuals)))
   }

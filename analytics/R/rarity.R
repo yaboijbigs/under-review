@@ -1,6 +1,10 @@
 RARITY_VERSION <- "under-review-category-reference-v1"
 opportunity_stratum <- function(n) if (n <= 0) "none" else if (n <= 2) as.character(n) else if (n <= 4) "3-4" else if (n <= 8) "5-8" else "9+"
 rarity_key <- function(m) paste(m$category, m$name, m$unit, m$modelVersion, "complete", sep = "|")
+rarity_opportunities <- function(peers) {
+  ids <- unique(unlist(lapply(peers, `[[`, "playIds"), use.names = FALSE))
+  if (length(ids) && peers[[1]]$category %in% c("fumble", "kicking")) length(ids) else sum(vapply(peers, function(x) x$coverage$eligible, numeric(1)))
+}
 reference_group <- function(key, records) {
   ids <- vapply(records, function(r) r$gameId, character(1)); n <- length(unique(ids))
   values <- vapply(records, function(r) r$value, numeric(1))
@@ -17,7 +21,7 @@ add_rarity <- function(metrics, game, model_dir) {
   keys <- vapply(metrics, rarity_key, character(1))
   for (i in seq_along(metrics)) {
     m <- metrics[[i]]; peers <- metrics[keys == keys[[i]]]
-    eligible <- sum(vapply(peers, function(x) x$coverage$eligible, numeric(1)))
+    eligible <- rarity_opportunities(peers)
     complete <- all(vapply(peers, function(x) x$status == "supported" && x$coverage$eligible == x$coverage$modeled, logical(1)))
     key <- paste(keys[[i]], opportunity_stratum(eligible), sep = "|")
     matches <- Filter(function(r) identical(r$key, key), reference$categories)

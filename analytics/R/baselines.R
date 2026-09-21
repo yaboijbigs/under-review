@@ -129,14 +129,20 @@ baseline_metrics <- function(pbp, game, model_dir) {
     path <- file.path(model_dir, paste0(kind, ".rds"))
     artifact <- if (file.exists(path)) readRDS(path) else NULL
     for (team in c(game$homeTeam, game$awayTeam)) {
-      data <- rows[which(if (kind == "fumble") rows$fumbled_1_team == team else rows$posteam == team), , drop = FALSE]
+      data <- rows[which(if (kind == "fumble") rows$fumbled_1_team %in% c(game$homeTeam, game$awayTeam) else rows$posteam == team), , drop = FALSE]
       assumptions <- if (kind == "fumble") c("Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.", "Recovery residual only; no unsupported recovery WP branches.") else c("Nullified/blocked attempts and returns excluded; blocked kicks are not automatically kicker errors.", "Distance, era and reported roof; no weather or kicker-history adjustment in this model.")
       if (is.null(artifact)) { results[[length(results) + 1L]] <- metric(paste0(game$id, ":", kind, ":", team), category, label, team, unit = if (kind == "fumble") "recoveries" else "points", status = "unavailable", reason = "baseline_not_trained", model = BASELINE_VERSION, assumptions = assumptions, eligible = nrow(data)); next }
       pred <- if (nrow(data)) safe_model(predict_baseline(artifact, data)) else numeric()
       if (is.list(pred) || any(!is.finite(pred))) { results[[length(results) + 1L]] <- metric(paste0(game$id, ":", kind, ":", team), category, label, team, unit = if (kind == "fumble") "recoveries" else "points", status = "unavailable", reason = "baseline_leakage_or_domain_guard", model = BASELINE_VERSION, assumptions = assumptions, eligible = nrow(data)); next }
       scale <- if (kind == "fg") 3 else 1
+      observed <- data$y
+      if (kind == "fumble") {
+        pred <- ifelse(data$fumbled_1_team == team, pred, 1 - pred)
+        observed <- as.integer(data$fumble_recovery_1_team == team)
+        assumptions <- c(assumptions, "Includes both own and opposing fumbles; two team views share the same events and sum to zero.")
+      }
       ids <- as.character(data$play_id)
-      results[[length(results) + 1L]] <- metric(paste0(game$id, ":", kind, ":", team), category, label, team, sum(scale * (data$y - pred)), if (kind == "fumble") "recoveries" else "points", event = if (length(ids)) paste0(game$id, ":", ids) else character(), play = ids, assumptions = c(assumptions, paste0("Chronological training: ", paste(artifact$trainingSeasons, collapse = ","), "; calibration: ", paste(artifact$calibrationSeasons, collapse = ","))), model = paste0(BASELINE_VERSION, "-", substr(model_hash(path), 1, 12)), eligible = nrow(data), modeled = nrow(data))
+      results[[length(results) + 1L]] <- metric(paste0(game$id, ":", kind, ":", team), category, label, team, sum(scale * (observed - pred)), if (kind == "fumble") "recoveries" else "points", event = if (length(ids)) paste0(game$id, ":", ids) else character(), play = ids, assumptions = c(assumptions, paste0("Chronological training: ", paste(artifact$trainingSeasons, collapse = ","), "; calibration: ", paste(artifact$calibrationSeasons, collapse = ","))), model = paste0(BASELINE_VERSION, "-", substr(model_hash(path), 1, 12), if (kind == "fumble") "-team-recovery-v1" else ""), eligible = nrow(data), modeled = nrow(data))
     }
   }
   counts <- penalty_game_rows(pbp)

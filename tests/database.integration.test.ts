@@ -129,14 +129,22 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
       gameId: game.id, eventId: `${game.id}:50`, status: 'supported', ruleSeason: 2099,
       ruleReference: 'Synthetic rule reference', evidenceUrl: 'https://example.invalid/synthetic-evidence',
       rationale: 'Explicitly synthetic review to test revision preservation.', confidence: 'medium',
-      scope: 'One synthetic test play; not a comprehensive review.', replayCorrected: false,
+      scope: 'One synthetic test play; not a comprehensive review.', scopeComplete: true, replayCorrected: false,
     }, session);
+    const pending = await repository.getReport(game.id);
+    expect(pending?.revision.reviewStatus).toBe('partially_reviewed');
+    expect(pending?.reviews.find((review) => review.id === reviewId)?.scopeComplete).toBe(true);
     await reviews.approveReview(reviewId, session);
     const before = await repository.getReport(game.id);
     expect(before?.reviews.find((review) => review.id === reviewId)?.stale).toBe(false);
+    expect(before?.revision.reviewStatus).toBe('reviewed_within_scope');
+    expect(before?.revision.summary).toContain('One synthetic test play; not a comprehensive review.');
+    expect((await repository.getReport(game.id, pending!.revision.number))?.revision.reviewStatus).toBe('partially_reviewed');
+    expect((await repository.getAdminOverview()).games.some((entry) => entry.id === game.id)).toBe(true);
     await repository.saveAnalysis({ ...game, homeScore: 20, providerData: { synthetic: true, result: 10 } }, [{ play_id: 50 }], [{ ...snapshot, id: 'synthetic-database-fixture-v3', checksum: 'c'.repeat(64) }], result(0.03), 'clean');
     const after = await repository.getReport(game.id);
     expect(after?.reviews.find((review) => review.id === reviewId)?.stale).toBe(false);
+    expect(after?.revision.reviewStatus).toBe('reviewed_within_scope');
     expect(after?.revision.analysis.events.find((event) => event.playId === '50')?.reviewStatus).toBe('supported');
   });
 

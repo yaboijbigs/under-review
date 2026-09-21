@@ -74,7 +74,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -150,7 +150,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -160,8 +160,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:200"
       ],
@@ -238,7 +238,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -275,7 +275,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -285,8 +285,8 @@
       "team": "NE",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:430"
       ],
@@ -363,7 +363,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -373,8 +373,8 @@
       "team": "SEA",
       "value": 0.03457648419439441,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": null,
       "eventIds": [
         "2026_01_NE_SEA:587"
       ],
@@ -451,7 +451,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -461,8 +461,8 @@
       "team": "NE",
       "value": 0.009361136706791784,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:734"
       ],
@@ -539,7 +539,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -549,8 +549,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:878"
       ],
@@ -627,7 +627,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -703,7 +703,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -779,7 +779,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -855,7 +855,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -931,7 +931,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1007,7 +1007,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1083,7 +1083,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1120,7 +1120,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1161,7 +1161,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1171,8 +1171,8 @@
       "team": "SEA",
       "value": 0.0254014619341153,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": null,
       "eventIds": [
         "2026_01_NE_SEA:1430"
       ],
@@ -1249,7 +1249,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1259,8 +1259,8 @@
       "team": "NE",
       "value": 0.008312999151153244,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:1665"
       ],
@@ -1337,7 +1337,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1374,7 +1374,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1415,7 +1415,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1503,7 +1503,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1579,7 +1579,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1655,7 +1655,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1665,8 +1665,8 @@
       "team": "SEA",
       "value": 0.01773896677629516,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": null,
       "eventIds": [
         "2026_01_NE_SEA:2332"
       ],
@@ -1743,7 +1743,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1819,7 +1819,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1895,7 +1895,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1936,7 +1936,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -1977,7 +1977,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2014,7 +2014,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2024,8 +2024,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:2679"
       ],
@@ -2102,7 +2102,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2178,7 +2178,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2254,7 +2254,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2291,7 +2291,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2301,8 +2301,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3070"
       ],
@@ -2379,7 +2379,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2416,7 +2416,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2492,7 +2492,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2568,7 +2568,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2644,7 +2644,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2720,7 +2720,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2730,8 +2730,8 @@
       "team": "SEA",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3506"
       ],
@@ -2808,7 +2808,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2845,7 +2845,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2855,8 +2855,8 @@
       "team": "NE",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3657"
       ],
@@ -2933,7 +2933,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2970,7 +2970,7 @@
         "gameCount": 0,
         "modelVersion": "nflfastR-6.0.0-fastrmodels-2.1.0-nonspread-regulation",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -2980,8 +2980,8 @@
       "team": "NE",
       "value": 0,
       "unit": "wp_delta",
-      "status": "experimental",
-      "reasonCode": "validation_gate_failed_or_stale:",
+      "status": "supported",
+      "reasonCode": "close_call",
       "eventIds": [
         "2026_01_NE_SEA:3810"
       ],
@@ -3058,7 +3058,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-nfl4th-2026-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3070,9 +3070,7 @@
       "unit": "recoveries",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.",
@@ -3095,7 +3093,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1-5d13bdb7c25f",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3107,9 +3105,7 @@
       "unit": "recoveries",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "Ordinary single in-bounds fumbles only; recovery creation separated from recovery outcome.",
@@ -3132,7 +3128,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1-5d13bdb7c25f",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3173,7 +3169,7 @@
         "gameCount": 265,
         "modelVersion": "under-review-contextual-baselines-v1-fc871868cb91",
         "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3212,7 +3208,7 @@
         "gameCount": 265,
         "modelVersion": "under-review-contextual-baselines-v1-fc871868cb91",
         "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3251,7 +3247,7 @@
         "gameCount": 50,
         "modelVersion": "under-review-contextual-baselines-v1-1b26bba80d09",
         "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3290,7 +3286,7 @@
         "gameCount": 50,
         "modelVersion": "under-review-contextual-baselines-v1-1b26bba80d09",
         "comparison": "This team's absolute residual versus each comparable game's largest absolute team residual; identical model, complete coverage and opportunity-count stratum. Direction remains in the signed metric; rarity is not intent.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3325,7 +3321,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3360,7 +3356,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3395,7 +3391,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3430,7 +3426,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3465,7 +3461,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3500,7 +3496,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3535,7 +3531,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3570,7 +3566,7 @@
         "gameCount": 0,
         "modelVersion": "under-review-contextual-baselines-v1",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3582,9 +3578,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3607,7 +3601,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3646,7 +3640,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3685,7 +3679,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3728,7 +3722,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3740,9 +3734,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3765,7 +3757,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3777,9 +3769,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -3802,7 +3792,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3873,7 +3863,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -3958,7 +3948,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -4001,7 +3991,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -4050,7 +4040,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -4089,7 +4079,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     },
     {
@@ -4101,9 +4091,7 @@
       "unit": "count",
       "status": "supported",
       "reasonCode": null,
-      "eventIds": [
-        "2026_01_NE_SEA:"
-      ],
+      "eventIds": [],
       "playIds": [],
       "assumptions": [
         "FTN charting labels, not calibrated outcome probabilities or error-attributable WPA.",
@@ -4126,7 +4114,7 @@
         "gameCount": 0,
         "modelVersion": "FTN-charting",
         "comparison": "No comparable historical category reference. Direction remains in the signed metric.",
-        "referenceChecksum": "9f765dd8b8f2d69932bfef903d6364a36659ea7646aab81ca36e93251cab9b39"
+        "referenceChecksum": "97e43120e789b47b70694be8fccd56e8e901fa22d8565c3dea8f0019f2479aa1"
       }
     }
   ],
@@ -6182,7 +6170,7 @@
       "version": "under-review-nfl4th-2026-v1",
       "trainingWindow": null,
       "notes": "Rule-adapted experimental scenarios; recorded observed-action diagnostics do not identify unchosen counterfactual outcomes.",
-      "checksum": "faae6ad3afc60e034e619f892b2240046603ecad5287a1ce8e9f31a040be8811"
+      "checksum": "ad1f31b3f3b659ec82d696f45d3215f2b448f553df92a3eb09ec246a6dbc0fe2"
     },
     {
       "id": "fumble",
@@ -6216,6 +6204,6 @@
   "warnings": [
     "Overall percentile unavailable: no validated comparable-coverage aggregation.",
     "Officiating correctness: not reviewed. No statistical result establishes intent.",
-    "Coaching promotion gate is absent, stale or failed: values remain experimental."
+    "Coaching promotion gate passed for insensitive supported regulation states; upstream training cutoff and unchosen action outcomes remain unverified."
   ]
 }

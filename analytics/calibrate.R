@@ -25,7 +25,7 @@ for (gid in names(games)) {
   for (base_key in unique(keys)) {
     peers <- metrics[keys == base_key]
     complete <- all(vapply(peers, function(m) m$status == "supported" && !is.null(m$value) && m$coverage$eligible == m$coverage$modeled, logical(1)))
-    eligible <- sum(vapply(peers, function(m) m$coverage$eligible, numeric(1)))
+    eligible <- rarity_opportunities(peers)
     if (!complete || eligible == 0) next
     key <- paste(base_key, opportunity_stratum(eligible), sep = "|")
     records[[key]][[gid]] <- list(gameId = gid, value = max(vapply(peers, function(m) abs(m$value), numeric(1))))

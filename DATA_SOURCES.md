@@ -44,7 +44,7 @@ Narrow CSV fixtures are in `tests/fixtures/real/`. Their manifest records exact 
 
 ## Established analytics and rule references
 
-The R runtime pins nflfastR **6.0.0**, nflreadr **1.5.0**, fastrmodels **2.1.0**, and nfl4th **1.0.7**. Consult the R dependency lock and artifact manifests for exact resolved dependencies and checksums.
+The R runtime pins nflfastR **6.0.0**, nflreadr **1.5.0**, fastrmodels **2.1.0**, nfl4th **1.0.7**, and raw-player-ID decoder gsisdecoder **0.0.1**. Consult the R dependency lock and artifact manifests for exact resolved dependencies and checksums. The actual cached `2023_01_DET_KC.rds` (SHA-256 `fe5f322f9260cc83b280194a120a06b254fce9fd9d425c97653e4e4847e2db13`) successfully built through `run.R` with `decode=TRUE`: 179 rows, terminal play 4226, `END GAME`. The immutable local tree is `<rawDirectory>/<season>/<game_id>.rds`.
 
 - State calculators: [calculate_win_probability](https://nflfastr.com/reference/calculate_win_probability.html), [calculate_expected_points](https://nflfastr.com/reference/calculate_expected_points.html). Officiating comparisons use the same named team and explicitly labeled, non-spread WP family. Immediate scoring and continuation value must be reconciled separately for EP.
 - [nflfastR model methodology](https://opensourcefootball.com/posts/2020-09-28-nflfastr-ep-wp-and-cp-models/) describes exclusions for tied final games/overtime and leave-one-season-out evaluation. Those are not evidence of leakage-free chronological evaluation of the currently distributed artifacts. A complete current training cutoff was not established; third-party-model provenance limitations remain visible. Ingesting a tied/OT game does not make a regulation counterfactual model valid there.

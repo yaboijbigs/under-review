@@ -14,7 +14,7 @@ Training:2015–2022. Calibration:2023. Held-out evaluation:2024–2025. No refi
 
 Called-penalty model:4,560 team/family/game observations; Poisson Pearson dispersion1.038. Before its2023 multiplicative calibration adjustment0.99186, held-out count RMSE1.001, mean observed0.934 and predicted0.840. The full ten-bin probability calibration tables and immutable derived input filenames are recorded in `models/evaluation.json`.
 
-Fumbles exclude multiple, out-of-bounds, touchback, aborted and nullified events. Kicking excludes blocked/nullified outcomes and uses distance, era and observed roof; it does not claim weather or kicker-history adjustment. Penalty models describe called/enforced fouls, not foul occurrence or correctness. Predicting games at or before the calibration cutoff is prohibited.
+Fumbles exclude multiple, out-of-bounds, touchback, aborted and nullified events. Team residuals include own and opposing fumbles: the fumbling team uses recovery probability p and the opponent1−p; their residuals are equal and opposite and share one evidence event. Kicking excludes blocked/nullified outcomes and uses distance, era and observed roof; it does not claim weather or kicker-history adjustment. Penalty models describe called/enforced fouls, not foul occurrence or correctness. Predicting games at or before the calibration cutoff is prohibited.
 
 ## Fourth-down observed-action diagnostics
 
@@ -31,7 +31,7 @@ All ten promotion checks passed: upstream parity, rule-transition tests, predeci
 
 ## Historical category references
 
-`reference_baselines.R` builds actual references offline from the frozen held-out2024–2025 inputs and model objects. Every game contributes at most one maximum absolute team residual per metric. Opportunity strata use total eligible events across both teams. Four strata pass the200-distinct-game gate:
+`reference_baselines.R` builds actual references offline from the frozen held-out2024–2025 inputs and model objects. Every game contributes at most one maximum absolute team residual per metric. Opportunity strata count distinct eligible plays across both teams; the opposing views of one fumble count once. Four strata pass the200-distinct-game gate:
 
 | Metric | Game opportunity stratum | Distinct games |
 | --- | --- | ---: |
@@ -46,7 +46,7 @@ The general report calibration command selects the latest numbered revision per 
 
 ## Executed checks and remaining coverage limits
 
-- R suite:48 assertions passed, including frozen-input upstream parity, possession and timeout ownership, halftime kickoff transitions, spread invariance for officiating WP, predecision outcome invariance, conservative penalty constructors, leakage guards and two real game analyses.
+- R suite:50 assertions passed, including frozen-input upstream parity, possession and timeout ownership, halftime kickoff transitions, spread invariance for officiating WP, predecision outcome invariance, conservative penalty constructors, leakage guards and two real game analyses. Separate tests exercise both fumble-recovery branches, equal-and-opposite team perspectives and shared-event deduplication.
 - JSON contract regression passed for mixed numeric/string field-side values. Missing charting and zero labels remain distinct. Real2026 FTN denominators:57 nonsack passing opportunities and5 sacks.
 - Actual immutable historical raw snapshot rebuilt successfully with `decode=TRUE`:179 plays, final `END GAME`,8.4 seconds. Snapshot SHA256: `fe5f322f9260cc83b280194a120a06b254fce9fd9d425c97653e4e4847e2db13`.
 - Distinct-game/revision calibration, model matching, chronological reference use, incomplete coverage, minimum sample and tail-suppression tests passed.
