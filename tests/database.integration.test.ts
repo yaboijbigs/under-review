@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import pg from 'pg';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it,vi } from 'vitest';
 import { config } from '../packages/core/src/config.js';
 import type { AnalysisResult, Game, SourceSnapshot } from '../packages/core/src/contracts.js';
 
@@ -187,5 +187,49 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     const rejected = saved.find(entry => entry.status === 'rejected') as PromiseRejectedResult;
     expect(rejected.reason).toMatchObject({ code: 'revision_conflict' });
     expect((await repository.getReport(guardedGame.id))?.history).toHaveLength(2);
+  });
+
+  it('reads complete latest and historical reports with one pool checkout each',async()=>{
+    const reportGame={...game,id:'2099_09_TST_DEMO',week:9};
+    const oldSource={...snapshot,id:'synthetic-report-old',checksum:'1'.repeat(64),metadata:{synthetic:true,nested:{original:true}}};
+    const newSource={...snapshot,id:'synthetic-report-new',checksum:'2'.repeat(64)};
+    const analysis={...result(),events:[],metrics:[]};
+    const first=await repository.saveAnalysis(reportGame,[],[oldSource],analysis,'clean');
+    const changed={...reportGame,homeScore:20,providerData:{synthetic:true,result:10}};
+    const second=await repository.saveAnalysis(changed,[],[newSource],{...analysis,warnings:['Synthetic changed report.']},'clean');
+    const firstDate='2099-09-10T21:00:00.123Z';const secondDate='2099-09-10T22:00:00.456Z';
+    const storedReview={id:'synthetic-stored-review',eventId:'synthetic-event',playId:'1',reviewer:'stored-reviewer',status:'supported',ruleSeason:2099,ruleReference:'Synthetic rule',evidenceUrl:'https://example.invalid/evidence',rationale:'Synthetic stored review.',confidence:'medium',scope:'Synthetic test only.',scopeComplete:true,approved:true,stale:false,createdAt:firstDate,replayCorrected:false};
+    await db.query("UPDATE analysis_revisions SET created_at=$2,reviews_json=$3,review_status='reviewed_within_scope' WHERE id=$1",[first.id,firstDate,JSON.stringify([storedReview])]);
+    await db.query("UPDATE analysis_revisions SET created_at=$2,reviews_json=$3,review_status='not_reviewed' WHERE id=$1",[second.id,secondDate,JSON.stringify([{...storedReview,stale:true}])]);
+    const draftIds=[randomUUID(),randomUUID()];
+    await db.query(`INSERT INTO publication_outbox(id,game_id,revision_id,kind,mode,status,text,evidence_ids,created_at,external_id,reason)
+      VALUES($1,$2,$3,'initial','dry_run','draft','Old draft','[]',$4,null,'Original preview'),
+      ($5,$2,$6,'correction','dry_run','approved','New draft','[]',$7,'synthetic-external','Changed preview')`,[draftIds[0],reportGame.id,first.id,firstDate,draftIds[1],second.id,secondDate]);
+    // Mutable schedule state must never replace the game saved in a revision.
+    await repository.saveGames([{...changed,homeScore:99}]);
+    const checkout=vi.spyOn(db.pool,'query');
+    try{
+      const latest=await repository.getReport(reportGame.id);
+      expect(checkout).toHaveBeenCalledTimes(1);checkout.mockClear();
+      const archived=await repository.getReport(reportGame.id,1);
+      expect(checkout).toHaveBeenCalledTimes(1);checkout.mockClear();
+      expect(latest?.game).toEqual(changed);expect(archived?.game).toEqual(reportGame);
+      expect(latest?.revision).toMatchObject({id:second.id,number:2,createdAt:secondDate,statisticalStatus:'corrected',reviewStatus:'not_reviewed',analysis:{warnings:['Synthetic changed report.']},sourceSnapshots:[newSource]});
+      expect(archived?.revision).toMatchObject({id:first.id,number:1,createdAt:firstDate,statisticalStatus:'reconciled',reviewStatus:'reviewed_within_scope',analysis,sourceSnapshots:[oldSource]});
+      expect(archived?.reviews).toEqual([storedReview]);expect(latest?.reviews).toEqual([{...storedReview,stale:true}]);
+      expect(latest?.history.map(row=>({id:row.id,number:row.number,createdAt:row.createdAt}))).toEqual([{id:second.id,number:2,createdAt:secondDate},{id:first.id,number:1,createdAt:firstDate}]);
+      expect(archived?.history).toEqual(latest?.history);
+      expect(latest?.drafts).toEqual([
+        {id:draftIds[1],gameId:reportGame.id,revisionId:second.id,text:'New draft',status:'approved',kind:'correction',mode:'dry_run',createdAt:secondDate,externalId:'synthetic-external',reason:'Changed preview'},
+        {id:draftIds[0],gameId:reportGame.id,revisionId:first.id,text:'Old draft',status:'draft',kind:'initial',mode:'dry_run',createdAt:firstDate,externalId:null,reason:'Original preview'},
+      ]);
+      expect(archived?.drafts).toEqual(latest?.drafts);
+      expect(await repository.getReport(reportGame.id,999)).toBeNull();expect(checkout).toHaveBeenCalledTimes(1);checkout.mockClear();
+      expect(await repository.getReport('missing-synthetic-game')).toBeNull();expect(checkout).toHaveBeenCalledTimes(1);
+    }finally{checkout.mockRestore();}
+    const emptyGame={...reportGame,id:'2099_10_TST_DEMO',week:10};
+    await repository.saveGames([emptyGame]);expect(await repository.getReport(emptyGame.id)).toBeNull();
+    await repository.saveAnalysis(emptyGame,[],[],analysis,'clean');
+    expect(await repository.getReport(emptyGame.id)).toMatchObject({revision:{sourceSnapshots:[]},drafts:[],reviews:[]});
   });
 });

@@ -173,17 +173,25 @@ export async function listGames(filters:{season?:number;week?:number;team?:strin
 }
 function mapDraft(r:Record<string,any>):Draft{return {id:r.id,gameId:r.game_id,revisionId:r.revision_id,text:r.text,status:r.status,kind:r.kind,mode:r.mode,createdAt:r.created_at.toISOString(),externalId:r.external_id,reason:r.reason};}
 export async function getReport(gameId:string,revision?:number):Promise<GameReport|null>{
- const currentGame=await getGame(gameId);if(!currentGame)return null;
- const row=(await query(`SELECT * FROM analysis_revisions WHERE game_id=$1 ${revision?'AND number=$2':''} ORDER BY number DESC LIMIT 1`,revision?[gameId,revision]:[gameId])).rows[0];
+ // One checkout and one database snapshot per report. Fan-out queries used to
+ // consume three pool slots after two earlier round trips during concurrent SSR.
+ const row=(await query(`WITH selected AS (
+  SELECT r.* FROM analysis_revisions r JOIN games g ON g.id=r.game_id
+  WHERE r.game_id=$1 ${revision?'AND r.number=$2':''} ORDER BY r.number DESC LIMIT 1
+ ) SELECT r.*,
+  COALESCE((SELECT jsonb_agg(s.snapshot_json) FROM source_snapshots s
+   WHERE s.id IN (SELECT jsonb_array_elements_text(r.snapshot_ids))),'[]'::jsonb) AS report_sources,
+  COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'number',h.number,'created_at',h.created_at,
+   'statistical_status',h.statistical_status,'change_summary',h.change_summary) ORDER BY h.number DESC)
+   FROM analysis_revisions h WHERE h.game_id=r.game_id),'[]'::jsonb) AS report_history,
+  COALESCE((SELECT jsonb_agg(to_jsonb(d) ORDER BY d.created_at DESC)
+   FROM publication_outbox d WHERE d.game_id=r.game_id),'[]'::jsonb) AS report_drafts
+  FROM selected r`,revision?[gameId,revision]:[gameId])).rows[0];
  if(!row)return null;
  const game:Game=row.game_json;
- const [sourceRows,history,draftRows]=await Promise.all([
-  query('SELECT snapshot_json FROM source_snapshots WHERE id=ANY($1::text[])',[row.snapshot_ids]),
-  query('SELECT id,number,created_at,statistical_status,change_summary FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC',[gameId]),
-  query('SELECT * FROM publication_outbox WHERE game_id=$1 ORDER BY created_at DESC',[gameId])
- ]);
- const rev:Revision={id:row.id,number:row.number,createdAt:row.created_at.toISOString(),statisticalStatus:row.statistical_status,chartingStatus:row.charting_status,reviewStatus:row.review_status,changeSummary:row.change_summary,analysis:row.analysis,inputHash:row.input_hash,sourceSnapshots:sourceRows.rows.map(r=>r.snapshot_json),summary:row.summary};
- return {game,revision:rev,history:history.rows.map(r=>({id:r.id,number:r.number,createdAt:r.created_at.toISOString(),statisticalStatus:r.statistical_status,changeSummary:r.change_summary})),reviews:row.reviews_json,drafts:draftRows.rows.map(mapDraft)};
+ const rev:Revision={id:row.id,number:row.number,createdAt:row.created_at.toISOString(),statisticalStatus:row.statistical_status,chartingStatus:row.charting_status,reviewStatus:row.review_status,changeSummary:row.change_summary,analysis:row.analysis,inputHash:row.input_hash,sourceSnapshots:row.report_sources,summary:row.summary};
+ return {game,revision:rev,history:row.report_history.map((r:Record<string,any>)=>({id:r.id,number:r.number,createdAt:new Date(r.created_at).toISOString(),statisticalStatus:r.statistical_status,changeSummary:r.change_summary})),reviews:row.reviews_json,
+  drafts:row.report_drafts.map((r:Record<string,any>)=>mapDraft({...r,created_at:new Date(r.created_at)}))};
 }
 export interface OperationalStatus {database:boolean;workerLastSeen:string|null;sources:{provider:string;retrievedAt:string}[];jobs:{status:string;count:number}[];staging:boolean;publishing:{mode:string;killSwitch:boolean};error?:string}
 export async function getOperationalStatus():Promise<OperationalStatus>{
