@@ -1,12 +1,12 @@
 # Under Review release record
 
-The MIT-licensed application source is public at [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). **The public website rollout below is prepared, not executed, pending approval for its dedicated tunnel.** Image publication and local checks do not establish a VPS deployment or DNS change. The executed private staging release of 2026-09-21 is retained separately below as historical evidence. Private environment files, administrator credentials, database exports, backups, and caches are excluded from Git and image build contexts; release files are scanned before publishing.
+The public website is **[underreview.jbigs.com](https://underreview.jbigs.com)**. Its public deployment and coverage upgrade succeeded on **2026-09-22 UTC** with user approval. The MIT-licensed source is public at [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). All **31 completed 2026 Week 1–2 games** have current game audits, verified by the server coverage gate and public browser checks. Giants–Rams awaits final data and automatic processing. Private environment files, administrator credentials, database exports, backups, and caches are excluded from Git and image build contexts; release files are scanned before publishing.
 
-## Prepared public release — 2026-09-22 UTC
+## Executed first public release — 2026-09-22 UTC
 
-The intended public origin is **https://underreview.jbigs.com**. [deploy/compose.public.yaml](deploy/compose.public.yaml) prepares a dedicated Cloudflare Tunnel route to **`http://web:3000`** on Under Review's private network. The `jbigs.com` apex, `www.jbigs.com`, unrelated routes/tunnels, and shared ports 80/443 remain outside the change. The application's existing loopback binding remains `127.0.0.1:4380`; PostgreSQL has no host binding. **No public-route, DNS, or VPS mutation is claimed by this prepared release.**
+Hostinger deployment action **115905298** succeeded at **01:15:15 UTC**. The dedicated Cloudflare Tunnel serves **https://underreview.jbigs.com** from **`http://web:3000`** on Under Review's private network. The `jbigs.com` apex, `www.jbigs.com`, unrelated routes/tunnels, and shared ports 80/443 were preserved. The application's existing loopback binding remains `127.0.0.1:4380`; PostgreSQL has no host binding.
 
-Both new images were published successfully and anonymously verified by manifest content checksum and immutable-digest resolution. [deploy/images.json](deploy/images.json), verified **2026-09-22 00:30:52.534 UTC**, records these candidates:
+Both first-launch images were published and anonymously verified by manifest content checksum and immutable-digest resolution at **00:30:52.534 UTC**, then deployed successfully. These exact digests identify the executed release, independently of later updates to [deploy/images.json](deploy/images.json):
 
 | Component | Source revision | Immutable image | Build |
 | --- | --- | --- | --- |
@@ -15,13 +15,58 @@ Both new images were published successfully and anonymously verified by manifest
 
 The worker job restored pinned R dependencies from a fresh CI environment, passed analytics tests, built the worker and published it in **13 minutes 26 seconds**. The separate web-only run incorporated the login fix without rebuilding the worker. The audit's 29 focused tests and TypeScript check passed locally. A read-only exploratory diagnostic surfaced all five selected historical target plays; the comparison games produced zero and three neutral review candidates. Those known cases motivated product rules and are not held-out classifier validation. No model fitting or dependency compilation is planned on the shared VPS.
 
-Local validation also passed the public manifest's isolation boundaries, both inline JavaScript commands, and the real GB report with a newly generated local dry-run draft. The staged preparation passed the secrets scan across 200 release files. These are local checks; tunnel approval remains the only pending rollout approval.
+Local preparation passed the manifest's isolation boundaries, inline JavaScript checks, and the real GB report with a dry-run draft. The release passed a secrets scan across 200 files. Deployment then produced this executed evidence:
 
-The prepared sequence stops **only `under-review`**, preserves its named volumes, and starts its dedicated database and backup job before bootstrap. That job captures a PostgreSQL custom dump and `/data/snapshots` archive under `/data/backups/<UTC timestamp>-public-launch/` on the project's existing **artifact volume**. It checks dump catalog readability, validates gzip integrity, and records SHA-256 checksums. This prepared same-host capture is **not an executed backup, restore test, or off-host backup**.
+| UTC time | Executed result |
+| --- | --- |
+| 01:06:36 | Project-only backup completed at `/data/backups/20260922T010533Z-public-launch`: PostgreSQL custom dump, readable dump catalog, gzip snapshot archive, and SHA-256 checksums. |
+| 01:07:06–01:14:23 | Clean-source `2026_02_GB_NYJ` analysis completed with **74 metric records and one dry-run draft**, under the configured VPS limits. |
+| 01:15:03 | Seed report gate passed; all eight ordinary web/readiness routes returned **200**. |
+| 01:15:06 | Dedicated public tunnel started after the gate. |
+| 01:15:15 | Hostinger action **115905298** completed successfully. |
+| 01:28 | Comparison of **nine unrelated projects / 30 containers** found unchanged IDs, images, published ports, and running/stopped states. |
 
-After backup, bootstrap syncs 2026 and queues a fresh, clean-source priority `2026_02_GB_NYJ` analysis with a release-specific job key, backfill semantics and a dry-run draft. The 30-minute readiness gate requires the current seed revision's complete aggregate winning profile, versioned game audit, checksummed historical reference and qualifying supported flag, at least one supported metric, a current-revision draft, and successful web checks. The tunnel depends on that gate succeeding. This expected seed result is a release fixture, not independent statistical validation.
+Only Under Review was stopped/replaced, retaining its named volumes. The backup is an executed **same-host capture on the artifact volume**, not an off-host backup or VPS restore test. The GB gate verified its complete aggregate winning profile, versioned audit, checksummed reference and historical-outlier flag, supported metrics, and current-revision draft. The expected seed result is a release fixture, not independent statistical validation. The unrelated-container comparison establishes container-level continuity, not end-user testing of every other application.
 
-Worker **0.25 CPU / 1536 MiB**, web **0.10 CPU / 512 MiB**, and database **0.15 CPU / 512 MiB** limits remain configured. The tunnel is capped at **0.05 CPU / 128 MiB**; bounded one-shot services, one analysis worker/R thread, a 15-minute analytics timeout, bounded logs/PIDs and the 5 GiB disk reserve remain in place. Public report access does not enable posting: live posting remains disabled, drafts remain dry-run, and the kill switch stays enabled. Record actual backup, deployment, readiness, public HTTPS and unrelated-project comparisons only after execution. [OPERATIONS.md](OPERATIONS.md) provides the sequence and recovery limits.
+Public HTTPS, `/api/health`, and `/api/ready` returned **200**. Desktop and mobile browser checks passed the GB profile/headline, five review candidates, full source-play links, layout, and absence of page/Next-asset errors. Authentication checks passed unauthenticated admin protection, admin noindex, same-origin login, a host-only `Secure; HttpOnly; SameSite=Lax` session cookie, rejected foreign-origin login, rejected invalid-CSRF logout, and successful logout/session removal. No admin content or publishing settings were changed. Private evidence is retained under ignored `deploy/private/public-browser-check-evidence/`; credentials and session values were not recorded.
+
+The first browser check found one public indexing defect: the sitemap omitted published early-week games because unprocessed schedules consumed the 400-row listing limit. The fix filters published reports before that limit; its isolated PostgreSQL regression and typecheck passed. **The second public verification confirmed the deployed fix includes all 31 scored Week 1–2 report URLs.**
+
+Worker **0.25 CPU / 1536 MiB**, web **0.10 CPU / 512 MiB**, and database **0.15 CPU / 512 MiB** limits remain configured. The tunnel is capped at **0.05 CPU / 128 MiB**; bounded one-shot services, one analysis worker/R thread, a 15-minute analytics timeout, bounded logs/PIDs and the 5 GiB disk reserve remain in place. Public access does not enable posting: live posting remains disabled, drafts remain dry-run, and the kill switch stays enabled. [OPERATIONS.md](OPERATIONS.md) records the sequence and recovery limits.
+
+## Weeks 1–2 coverage upgrade — deployed and verified
+
+The user confirmed **2026 regular-season Weeks 1 and 2**, including automatic analysis of `2026_02_NYG_LA` after final data is available. The fresh 32-game schedule contained **31 games with scores** and that one unscored game. The initial public observation found **20 reports, two computed game audits, 11 completed games without reports, and 18 reports without the new audit**. This was a snapshot during ongoing processing, not a final coverage result.
+
+The 11 missing reports were computed and exported locally as checksummed bundles of public source data and automated analysis. Import completed with ten new reports and preservation of the existing `2026_02_IND_KC` report. Seventeen older audits were refreshed, preserving their R findings. All 31 completed games now have current audits. The new worker includes bounded catch-up commands and schedule/new-game priority; the new web serves the sitemap fix. Tonight's Giants–Rams game remained unscored and correctly awaited final data at verification. TB–CIN's aggregate score conflict remains explicitly labeled, with unsupported team profiles withheld; its play-by-play analysis is available.
+
+Source **`9122aed3f2599ac8db5a7e4a0a0810aa83840837`** built successfully in [CI run 35676946141](https://github.com/yaboijbigs/under-review/actions/runs/35676946141). Local validation passed **169 tests across 17 files**, typechecking, a real bundle export/import round trip, and a source secrets scan of 213 files. The three resulting images were anonymously verified at **02:00:40.995 UTC** and recorded in [deploy/images.json](deploy/images.json):
+
+| Component | Verified immutable image |
+| --- | --- |
+| Web | `ghcr.io/yaboijbigs/under-review-web@sha256:f937699ae315d711ae6967e7c70293bf79788f9a466cde5431948d3bd97be32e` |
+| Worker | `ghcr.io/yaboijbigs/under-review-worker@sha256:2f75aba3b772c315d804eed41dc17caceba186c8707bbccdf96e04db45429dee` |
+| Public-source catch-up bundles and importer | `ghcr.io/yaboijbigs/under-review-catchup@sha256:2daa4f09115571fb45c5c108bf3009ec1374b062e2d0c33c599a51913516a86d` |
+
+Hostinger rejected the **9,775-character** full YAML because its limit is **8,192**; that rejected request applied no changes. [scripts/compact-hostinger-compose.mjs](scripts/compact-hostinger-compose.mjs) reproduces the accepted **8,187-character** manifest with JavaScript syntax and parsed-setting checks. The exact generation command is in [OPERATIONS.md](OPERATIONS.md).
+
+| UTC time | Executed replacement result |
+| --- | --- |
+| 02:03:26 | Project-only stop action **115908477** succeeded. |
+| 02:07:07 | Deployment action **115908663** was accepted. |
+| 02:10:03.586 | Backup completed at `/data/backups/20260922T020904Z-public-launch`. |
+| 02:11:11 | First bundle import, `2026_01_ATL_PIT`, succeeded. |
+| 02:16:20.055 | Import completed: ten new reports, existing IND–KC preserved, 17 audit refreshes queued. |
+| 02:17:12.448 | GB/web check passed all eight routes with HTTP 200; GB revision 2, 74 metric records, two dry-run drafts. Worker healthy; live posting disabled and kill switch enabled. |
+| 02:17:20 | Hostinger deployment action **115908663** succeeded. |
+| ~02:17:25 | Public tunnel route reopened. |
+| 02:18:41–02:19:23 | All eight public browser check groups passed, including desktop/mobile reports, evidence links, all 31 scored-game sitemap links, authentication, origin/CSRF rejection, secure cookies, and logout. |
+| 02:18:58.863 | All 17 audit refresh jobs finished successfully. |
+| 02:19:57.055 | Independent coverage gate: 32 scheduled, 31 completed, 31 current audits, no missing audits; only NYG–LA awaiting final data. Coverage container exited 0. |
+| 02:19–02:20 | Exact applied configuration/private environment verified; nine unrelated projects and 30 containers unchanged. Apex page remained byte-identical and www retained its 301 redirect. Database, web and worker healthy; all one-shot services exited 0. |
+| 02:25:16.568 | Public browser inventory passed: all 31 completed reports rendered current audits; NYG–LA correctly awaited data. One early streamed NE–SEA page observation passed an explicit rendered-content recheck. |
+
+The replacement sequence performed backup and idempotent bootstrap, ran `import` (**0.25 CPU / 1024 MiB**) before the worker, then passed both the ordinary GB/web `check` and separate `coverage` service (**0.05 CPU / 128 MiB**). The GB release-specific job key is reused, so an already successful seed need not rerun R. The tunnel depends on `check`; the independent coverage gate also passed before catch-up was declared complete. The public archive contains all 16 Week 1 and 15 completed Week 2 reports with current audits. Near games, the scheduler checks five-minute buckets between bounded analysis jobs and prioritizes newly completed games; final provider data remains required. Post-upgrade browser evidence is preserved separately under ignored `deploy/private/public-browser-check-upgrade-evidence/`. Existing worker, web, database and tunnel limits remain unchanged; live social posting remains disabled.
 
 ## Historical staging artifacts — deployed 2026-09-21
 
@@ -30,7 +75,7 @@ Worker **0.25 CPU / 1536 MiB**, web **0.10 CPU / 512 MiB**, and database **0.15 
 | Worker, R runtime, and model artifacts | `208bbf402b8ee2422dc0edb70676a718c8c236e3` | [Successful full runtime build](https://github.com/yaboijbigs/under-review/actions/runs/35639017767) |
 | Web, including runtime branding/indexing configuration | `03818639368b1e4d140d5d2334da0efb3dffd2bc` | [Successful web build](https://github.com/yaboijbigs/under-review/actions/runs/35640359367) |
 
-These older deployed staging digests are retained for rollback and must not be confused with the new candidates now in `deploy/images.json`:
+These older staging digests are retained for rollback and must not be confused with the first public deployment above or later image candidates:
 
 - Web: `ghcr.io/yaboijbigs/under-review-web@sha256:26e2939692079f85fc6e71c8a57e6a5683713da6ab9ec7730c43534635120784`.
 - Worker: `ghcr.io/yaboijbigs/under-review-worker@sha256:9bb5326dfe3cda816790cc8828552f056bcb76c5e0893abfe4dcaf7eaef03c31`.
@@ -71,13 +116,13 @@ The final before/after comparison at **19:15:48 UTC** covered **nine pre-existin
 
 ## Operator actions and explicit limits
 
-The last executed release verified here was private staging, independent of public source/images. Local private access instructions and the generated administrator password are in ignored `deploy/private/access.txt`. That release can be accessed with an SSH port forward; stop any local preview already occupying port 4380 first. The prepared `underreview.jbigs.com` rollout above has not been executed in this record; no completed hostname attachment is claimed.
+The first public release is accessible at **[underreview.jbigs.com](https://underreview.jbigs.com)**. Private credentials remain in ignored deployment files; do not copy them into release notes or command arguments. Loopback access through an SSH port forward remains available, but authenticated browser use should use the canonical HTTPS origin because its session cookies are Secure and origin checks are exact.
 
 Live X posting remains disabled, draft-only mode and the kill switch remain enabled, and no real social post was sent. Live OAuth/delivery needs the operator's X developer application, supported paid access, account authorization, and explicit authenticated activation. [DATA_SOURCES.md](DATA_SOURCES.md) and [OPERATIONS.md](OPERATIONS.md) document setup and ambiguous-outcome recovery.
 
 Overall anomaly percentile remains unavailable. Only compatible, adequately supported category comparisons are shown. Automatic call alternatives cover a limited allowlist; human review and approval establish call judgments. Unsupported overtime/complex counterfactuals, recovery/kicking WP effects, clock-management/two-point/onside models, comprehensive missed-call detection, and betting-integrity detection are not presented as implemented. Third-party model training cutoff provenance is incomplete, so retrospective coaching checks are not claimed to be leakage-free or causal validation of unchosen actions.
 
-Arrange encrypted off-host backups and retention before relying on long-term hosted data. The dedicated public tunnel is pending approval; live publishing remains a separate operator decision. No unrelated VPS project requires changes to run this application.
+Arrange encrypted off-host backups and retention before relying on long-term hosted data. The public tunnel is deployed; live publishing remains a separate operator decision. No unrelated VPS project requires changes to run this application.
 
 The backup subprocess deadline also covers stalled input/output streams. Focused checks verified an 8 MiB blocked input timed out in 1.59 seconds with a 1.5-second test deadline, terminated the parent and descendant processes, and reached the worker-resume cleanup. An 8 MiB binary round trip retained its SHA-256 hash, and a child failure did not expose its synthetic stderr secret. These tests used isolated helper processes and a mocked resume operation, without touching Docker projects.
 

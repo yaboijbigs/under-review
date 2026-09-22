@@ -1,13 +1,28 @@
 {
-  "verifiedAt": "2026-09-22T00:30:52.534Z",
+  "verifiedAt": "2026-09-22T02:00:40.995Z",
+  "workflowRun": {
+    "id": 35676946141,
+    "url": "https://github.com/yaboijbigs/under-review/actions/runs/35676946141",
+    "sourceCommit": "9122aed3f2599ac8db5a7e4a0a0810aa83840837",
+    "conclusion": "success"
+  },
   "web": {
-    "sourceCommit": "4bbc02dfb186e633f62f0e8cd83d34d18158d487",
-    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:05e1be47e8a4ba4036c3850be314a7f2b03e983f8b656d770ff6d9ce17b31bc8",
+    "sourceCommit": "9122aed3f2599ac8db5a7e4a0a0810aa83840837",
+    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:f937699ae315d711ae6967e7c70293bf79788f9a466cde5431948d3bd97be32e",
     "anonymousManifestVerified": true
   },
   "worker": {
-    "sourceCommit": "4d4da0ae0ef19bde46bec12c0298ae6bc3f3bff6",
-    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:889135ddf364911ba2d3568d12f4ea9c3aa87cb7fbf0dcd1baec2862b841376a",
+    "sourceCommit": "9122aed3f2599ac8db5a7e4a0a0810aa83840837",
+    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:2f75aba3b772c315d804eed41dc17caceba186c8707bbccdf96e04db45429dee",
+    "anonymousManifestVerified": true
+  },
+  "catchup": {
+    "sourceCommit": "9122aed3f2599ac8db5a7e4a0a0810aa83840837",
+    "image": "ghcr.io/yaboijbigs/under-review-catchup@sha256:2daa4f09115571fb45c5c108bf3009ec1374b062e2d0c33c599a51913516a86d",
+    "releaseTag": "catchup-2026-w01-w02-20260922",
+    "releaseUrl": "https://github.com/yaboijbigs/under-review/releases/tag/catchup-2026-w01-w02-20260922",
+    "bundleSha256": "a6451ad1226207cf183e39075ddc8b467ebfdf4f80d05653516fcf47a4d67e5a",
+    "bundleBytes": 46915903,
     "anonymousManifestVerified": true
   }
 }

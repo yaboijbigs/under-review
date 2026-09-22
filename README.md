@@ -2,6 +2,8 @@
 
 **What actually swung the game?** An NFL game-audit microsite with real nflverse ingestion, versioned evidence, R analytics, human officiating review, and a durable X publishing outbox. An unusual game is not evidence of intentional misconduct. The application never estimates a probability that a game was rigged. Public source: [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review).
 
+Public website: **[underreview.jbigs.com](https://underreview.jbigs.com)**. All **31 completed games from 2026 regular-season Weeks 1–2** have reports and current game audits, verified on the server and public pages on 2026-09-22 UTC. Giants–Rams awaits final data and will be processed automatically. Public browser/admin checks passed. See [RELEASE.md](RELEASE.md).
+
 Next.js serves reports and authenticated administration. A separate TypeScript worker owns scheduling and ingestion; PostgreSQL stores revisions, reviews, jobs, and publication state. Pinned R models run through a bounded JSON subprocess contract. Sources, missing coverage, assumptions, and actual freshness accompany reports.
 
 Reports lead with a **Game anomaly audit**: unusual winning profiles, the exact prior win/loss counts for those conditions, actual team totals, and observed context such as returns, sacks and opponent penalties. A separate **Needs review** queue surfaces late consequential penalties, reviewed scoring plays, reversals, nullified scores and high-leverage incompletions, including plays whose ruling impact cannot be modeled. Every candidate links to its full source play.
@@ -56,6 +58,10 @@ These settings and `PRIVATE_STAGING` are read when the web process starts, so an
 | `migrate` | Apply checksummed migrations using the configured database. |
 | `doctor` | Report database, source, worker, job, and publishing status. |
 | `sync-season --season 2026` | Discover regular/postseason games from provider schedules. |
+| `coverage --season 2026 --weeks 1,2` | Read stored schedule, latest report/audit status, and outstanding jobs for one or two regular-season weeks. |
+| `catch-up --season 2026 --weeks 1,2` | Refresh the schedule and queue missing reports or missing game audits within that explicit scope. |
+| `export-analysis --game GAME_ID --output bundle.json` | Export a verified clean-source automated report and its public source snapshots from the local build environment. |
+| `import-analysis --input bundle.json` | Validate a matching bundle and save it without rerunning R or enabling publication; reject conflicting existing reports. |
 | `analyze-game --game 2026_01_NE_SEA` | Validate and analyze one game; raw first for an initial report. |
 | `analyze-game --game 2026_01_NE_SEA --clean` | Request clean-source reconciliation for a game. |
 | `analyze-game --game 2023_01_DET_KC --backfill --clean` | Historical analysis without automatic posting. |
@@ -69,6 +75,10 @@ These settings and `PRIVATE_STAGING` are read when the web process starts, so an
 | `percentiles --input manifest.json --output result.json` | Build compatible category reference distributions from real report exports. |
 
 Use these inside the worker container for its pinned R runtime. Host commands use `.env` and require a compatible `Rscript` installation; `RSCRIPT_BIN` and `ANALYTICS_SCRIPT` can configure that runtime. Missing R produces a structured failure, never substitute statistics. Historical training and broad backfills belong on the development/build machine, not the shared VPS.
+
+The coverage/catch-up and analysis-transfer commands are included in the current upgrade; destination audit completion is still being verified. Bundles contain public source bytes and automated analysis, not an operational database, credentials, sessions, reviews, or publication state. Source/code/model checksums and final-data validation must match the destination. [OPERATIONS.md](OPERATIONS.md) describes the bounded transfer procedure.
+
+The deployment imports validated bundles before starting the worker, then checks full Week 1–2 audit coverage separately from website availability. Reusing the existing successful GB bootstrap job does not rerun R on every deployment.
 
 The worker runs one job at a time, renews durable leases, retries failed jobs with backoff, polls around game windows, and schedules clean statistical reconciliation. Source changes create new analysis revisions. Old revisions remain addressable by `?revision=N`; corrected findings and review scope remain visible. A new raw-source revision is preliminary even when its modeled values match an earlier clean report, because unmodeled fields may differ. Matching modeled values alone do not produce a corrected-finding label.
 
