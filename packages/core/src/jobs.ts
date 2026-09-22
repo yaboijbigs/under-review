@@ -11,8 +11,15 @@ export async function enqueue(kind:string,gameId:string|null,payload:Record<stri
 export async function enqueueAnalysisIfIdle(gameId:string,payload:Record<string,unknown>={},key?:string,runAfter=new Date()):Promise<string>{
  return transaction(async client=>{
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`job:${gameId}`]);
-  const existing=(await client.query("SELECT id FROM jobs WHERE game_id=$1 AND kind='analyze' AND status IN ('pending','running') ORDER BY run_after,created_at LIMIT 1",[gameId])).rows[0];
-  if(existing)return existing.id;
+  // Calls can acquire the lock out of invocation order. Compare with the actual
+  // time after acquiring it, so a concurrent due-now job is never mistaken for
+  // future reconciliation because its caller's timestamp is a millisecond newer.
+  const existing=(await client.query("SELECT id,status FROM jobs WHERE game_id=$1 AND kind='analyze' AND (status='running' OR (status='pending' AND run_after<=GREATEST($2::timestamptz,clock_timestamp()))) ORDER BY run_after,created_at LIMIT 1",[gameId,runAfter])).rows[0];
+  if(existing){
+   // Coalescing must never preserve a stale raw preference over reconciliation.
+   if(existing.status==='pending'&&payload.preferRaw===false)await client.query("UPDATE jobs SET payload=payload||'{\"preferRaw\":false}'::jsonb,updated_at=now() WHERE id=$1",[existing.id]);
+   return existing.id;
+  }
   const id=randomUUID();
   const result=await client.query(`INSERT INTO jobs(id,kind,game_id,job_key,payload,run_after) VALUES($1,'analyze',$2,$3,$4,$5)
    ON CONFLICT(job_key) DO UPDATE SET job_key=excluded.job_key RETURNING id`,[id,gameId,key??`analyze:${gameId}:${id}`,JSON.stringify(payload),runAfter]);

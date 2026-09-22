@@ -87,23 +87,8 @@ services:
       <<: *app-env
       UR_ADMIN_USERNAME: owner
       UR_ADMIN_PASSWORD: ${UR_ADMIN_PASSWORD:?required}
-      SEED_GAMES: 2026_02_GB_NYJ
-    command:
-      - node
-      - --import
-      - tsx
-      - --input-type=module
-      - -e
-      - |
-        const {spawnSync}=await import('node:child_process');
-        const bootstrap=spawnSync(process.execPath,['--import','tsx','scripts/bootstrap.ts'],{stdio:'inherit',env:{...process.env,SEED_GAMES:''}});
-        if(bootstrap.status!==0)process.exit(1);
-        const {pool}=await import('@under-review/core/db');
-        const {syncSeason}=await import('@under-review/core/pipeline');
-        const {enqueue}=await import('@under-review/core/jobs');
-        await syncSeason(2026,false);
-        await enqueue('analyze','2026_02_GB_NYJ',{backfill:true,preferRaw:false,prepareDraft:true},'release:game-audit-v1:2026_02_GB_NYJ',new Date('2000-01-01T00:00:00Z'));
-        await pool.end();
+      SEED_GAMES: ""
+    command: [node, --import, tsx, scripts/bootstrap.ts]
     read_only: true
     tmpfs: ["/tmp:size=128m,mode=1777"]
     volumes: ["artifacts:/data"]
@@ -126,19 +111,6 @@ services:
     mem_limit: 512m
     depends_on: {bootstrap: {condition: service_completed_successfully}}
     restart: unless-stopped
-  import:
-    <<: *guard
-    image: ${CATCHUP_IMAGE:?required}
-    environment: *app-env
-    command: [node, --import, tsx, scripts/import-catchup.ts, /imports]
-    read_only: true
-    tmpfs: ["/tmp:size=64m,mode=1777"]
-    volumes: ["artifacts:/data"]
-    networks: [private]
-    cpus: 0.25
-    mem_limit: 1024m
-    depends_on: {bootstrap: {condition: service_completed_successfully}}
-    restart: "no"
   worker:
     <<: *guard
     image: ${WORKER_IMAGE:?required}
@@ -151,35 +123,13 @@ services:
     cpus: 0.25
     mem_limit: 1536m
     stop_grace_period: 60s
-    depends_on: {bootstrap: {condition: service_completed_successfully}, import: {condition: service_completed_successfully}}
+    depends_on: {bootstrap: {condition: service_completed_successfully}}
     restart: unless-stopped
   coverage:
     <<: *guard
     image: ${WORKER_IMAGE:?required}
     environment: *app-env
-    command:
-      - node
-      - --import
-      - tsx
-      - --input-type=module
-      - -e
-      - |
-        const {getSeasonCoverage}=await import('@under-review/core/season-coverage');
-        const {GAME_AUDIT_VERSION}=await import('@under-review/core/game-audit');
-        const {pool}=await import('@under-review/core/db');
-        const deadline=Date.now()+3600000;
-        let ready=false;
-        while(Date.now()<deadline){
-          const games=await getSeasonCoverage(2026,[1,2]);
-          const completed=games.filter(g=>g.homeScore!==null&&g.awayScore!==null);
-          const missing=completed.filter(g=>g.auditVersion!==GAME_AUDIT_VERSION);
-          console.log(JSON.stringify({event:'coverage.progress',scheduled:games.length,completed:completed.length,audited:completed.length-missing.length,missing,awaiting:games.filter(g=>g.homeScore===null||g.awayScore===null).map(g=>g.id)}));
-          ready=games.length===32&&completed.length>=31&&missing.length===0;
-          if(ready)break;
-          await new Promise(resolve=>setTimeout(resolve,60000));
-        }
-        await pool.end();
-        if(!ready)process.exit(1);
+    command: [node, --import, tsx, scripts/public-coverage.ts]
     read_only: true
     tmpfs: ["/tmp:size=32m,mode=1777"]
     networks: [private]
@@ -193,39 +143,7 @@ services:
     environment:
       <<: *app-env
       SEED_GAMES: 2026_02_GB_NYJ
-    command:
-      - node
-      - --import
-      - tsx
-      - --input-type=module
-      - -e
-      - |
-        const {getReport}=await import('@under-review/core/repository');
-        const games=process.env.SEED_GAMES.split(',');
-        function readyReport(r){
-          if(!r)return false;
-          const audit=r.revision.analysis.gameAudit;
-          const winner=audit?.profiles.find(p=>p.team==='GB'&&p.gameId===r.game.id);
-          const fields=['pointsFor','pointsAgainst','totalYards','opponentYards','penalties','penaltyYards','turnoverMargin','nonOffensiveTouchdowns'];
-          return audit?.version==='under-review-game-audit-v1'&&audit.status==='historical_outlier'
-            &&winner?.opponent==='NYJ'&&fields.every(k=>Number.isFinite(winner[k]))&&winner.pointsFor>winner.pointsAgainst
-            &&/^[a-f0-9]{64}$/.test(audit.reference.checksum??'')&&audit.reference.teamGames>0
-            &&audit.flags.some(f=>f.team==='GB'&&f.status==='historical_outlier'&&f.reference.matchingGames>=20)
-            &&r.drafts.some(d=>d.revisionId===r.revision.id&&d.mode==='dry_run')
-            &&r.revision.analysis.metrics.some(m=>m.status==='supported');
-        }
-        const deadline=Date.now()+1800000;
-        let ready=false;
-        while(Date.now()<deadline){
-          const reports=await Promise.all(games.map(id=>getReport(id)));
-          ready=reports.every(readyReport);
-          if(ready)break;
-          console.log(JSON.stringify({event:'public.awaiting_reports',games:games.filter((id,i)=>!readyReport(reports[i]))}));
-          await new Promise(resolve=>setTimeout(resolve,30000));
-        }
-        if(!ready){console.error('Seed reports did not become ready within 30 minutes.');process.exit(1);}
-        for(const id of games){const r=await fetch('http://web:3000/games/'+id,{signal:AbortSignal.timeout(30000)});if(!r.ok)process.exit(1);}
-        await import('./scripts/staging-check.ts');
+    command: [node, --import, tsx, scripts/public-check.ts]
     read_only: true
     tmpfs: ["/tmp:size=32m,mode=1777"]
     networks: [private]

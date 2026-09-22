@@ -34,7 +34,10 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  if(!game)throw new Error('Game is not in the provider schedule.');
  await saveGames([game]);
  if(backfill)await query('UPDATE games SET publication_eligible=false WHERE id=$1',[gameId]);
- const ingested=await ingestGame(game,store(),{preferRaw,analytics:{scriptPath:path.join(projectRoot,'analytics/run.R'),timeoutMs:config.analyticsTimeoutMs}});
+ // The queue payload may predate an initial/clean report by hours. Re-evaluate
+ // at dispatch so an old raw job becomes a clean reconciliation automatically.
+ const existing=(await query('SELECT 1 FROM analysis_revisions WHERE game_id=$1 LIMIT 1',[gameId])).rowCount;
+ const ingested=await ingestGame(game,store(),{preferRaw:preferRaw&&!existing,analytics:{scriptPath:path.join(projectRoot,'analytics/run.R'),timeoutMs:config.analyticsTimeoutMs}});
  await saveSnapshots(ingested.snapshots);
  if(!ingested.validation.valid)throw new Error('Game awaits complete final data: '+ingested.validation.issues.join(', '));
  const snapshots=[...schedule.snapshots,...ingested.snapshots];

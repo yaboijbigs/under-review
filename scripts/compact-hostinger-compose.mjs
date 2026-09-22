@@ -40,6 +40,9 @@ try {
 
   for (const service of services) {
     const command = original.services?.[service]?.command;
+    // Current manifests keep programs in the tested worker image. Older public
+    // manifests with inline programs remain supported for reproducible rollback.
+    if (Array.isArray(command) && command.length === 4 && command.slice(0, 3).join(' ') === 'node --import tsx' && /^scripts\/[\w-]+\.ts$/.test(command[3])) continue;
     assert.ok(Array.isArray(command) && command.length === 6, `Expected one inline JavaScript command in ${service}.`);
     assert.deepEqual(command.slice(0, -1), commandPrefix, `Unexpected command prefix in ${service}.`);
     assert.equal(typeof command[5], 'string');
@@ -71,6 +74,7 @@ try {
   await writeFile(temporaryFile, content, { mode: 0o600 });
   const compact = parseCompose(temporaryFile, projectDirectory);
   for (const service of services) {
+    if (!compactCommands.has(service)) continue;
     assert.deepEqual(compact.services?.[service]?.command, [...commandPrefix, compactCommands.get(service)], `Compacted command changed during YAML parsing: ${service}.`);
     // Only these three code strings may differ; every other parsed value must match.
     compact.services[service].command[5] = original.services[service].command[5];
@@ -79,7 +83,7 @@ try {
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, content, { mode: 0o600 });
   console.log(JSON.stringify({ compacted: true, input, output, characters: content.length, limit,
-    syntaxChecked: services, configurationPreserved: true }));
+    syntaxChecked: [...compactCommands.keys()], configurationPreserved: true }));
 } catch (error) {
   // Assertion diagnostics can embed configuration objects; output only the message.
   console.error(error instanceof Error ? error.message.split('\n')[0] : 'Compose compaction failed.');

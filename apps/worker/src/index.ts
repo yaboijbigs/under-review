@@ -6,6 +6,7 @@ import { query,pool } from '@under-review/core/db';
 import { claimJob,enqueue,enqueueAnalysisIfIdle,finishJob,heartbeat,type Job } from '@under-review/core/jobs';
 import { analyzeGame,syncSeason } from '@under-review/core/pipeline';
 import { refreshGameAudit } from '@under-review/core/audit-refresh';
+import { repairSourceRegressions } from '@under-review/core/repository';
 import { createDraft,publishOutbox,recoverUnknownPublications } from '@under-review/core/publishing';
 
 const workerId=`${hostname()}:${randomUUID()}`;let stopping=false;let activeJob:Job|null=null;let lastSchedule=0;
@@ -13,6 +14,10 @@ process.on('SIGTERM',()=>{stopping=true;});process.on('SIGINT',()=>{stopping=tru
 const beat=setInterval(()=>{void heartbeat(workerId,activeJob?.id??null).catch(error=>log('heartbeat.failed',{error}));},15000);
 await heartbeat(workerId,null);
 log('worker.started',{workerId,concurrency:1,staging:config.staging});
+for(const repair of await repairSourceRegressions(config.season)){
+ log('report.source-repair',repair);
+ if(repair.status==='reconcile')await enqueueAnalysisIfIdle(repair.gameId,{preferRaw:false},`source-repair:${repair.gameId}:${repair.revisionId}`);
+}
 while(!stopping){
  try{
   if(Date.now()-lastSchedule>60000){
@@ -33,7 +38,7 @@ while(!stopping){
     case 'analyze':if(!activeJob.gameId)throw new Error('Game required');await analyzeGame(activeJob.gameId,{backfill:activeJob.payload.backfill===true,preferRaw:activeJob.payload.preferRaw!==false});if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);break;
     case 'refresh-audit':if(!activeJob.gameId)throw new Error('Game required');await refreshGameAudit(activeJob.gameId);if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);break;
     case 'publish':await publishOutbox(String(activeJob.payload.outboxId));break;
-    case 'reconcile-week':for(const r of (await query("SELECT id FROM games WHERE season=$1 AND kickoff_at>now()-interval '8 days' AND kickoff_at<now()",[config.season])).rows)await enqueueAnalysisIfIdle(r.id,{preferRaw:false},`thursday-game:${r.id}:${new Date().toISOString().slice(0,10)}`);break;
+    case 'reconcile-week':for(const r of (await query("SELECT id FROM games WHERE season=$1 AND kickoff_at>now()-interval '8 days' AND kickoff_at<now() AND game_json->>'homeScore' IS NOT NULL AND game_json->>'awayScore' IS NOT NULL",[Number(activeJob.payload.season??config.season)])).rows)await enqueueAnalysisIfIdle(r.id,{preferRaw:false},`thursday-game:${r.id}:${new Date().toISOString().slice(0,10)}`);break;
     default:throw new Error('Unknown job kind');
    }
    await finishJob(activeJob);log('job.completed',{id:activeJob.id});

@@ -1,13 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Job } from '../packages/core/src/jobs.js';
 
-const mocks = vi.hoisted(() => ({ claimJob: vi.fn(), enqueue: vi.fn(), enqueueAnalysisIfIdle: vi.fn(), heartbeat: vi.fn(), finishJob: vi.fn(), refreshGameAudit: vi.fn(), createDraft: vi.fn(), analyzeGame: vi.fn(), syncSeason: vi.fn(), query: vi.fn(), poolEnd: vi.fn(), recoverUnknownPublications: vi.fn() }));
+const mocks = vi.hoisted(() => ({ claimJob: vi.fn(), enqueue: vi.fn(), enqueueAnalysisIfIdle: vi.fn(), heartbeat: vi.fn(), finishJob: vi.fn(), refreshGameAudit: vi.fn(), createDraft: vi.fn(), analyzeGame: vi.fn(), syncSeason: vi.fn(), query: vi.fn(), poolEnd: vi.fn(), recoverUnknownPublications: vi.fn(), repairSourceRegressions: vi.fn() }));
 vi.mock('node:fs/promises', () => ({ statfs: vi.fn(async () => ({ bavail: 100000000, bsize: 4096 })) }));
 vi.mock('@under-review/core/config', () => ({ config: { dataDir: '/synthetic', season: 2026, staging: true, workerPollMs: 1 }, log: vi.fn() }));
 vi.mock('@under-review/core/db', () => ({ query: mocks.query, pool: { end: mocks.poolEnd } }));
 vi.mock('@under-review/core/jobs', () => ({ claimJob: mocks.claimJob, enqueue: mocks.enqueue, enqueueAnalysisIfIdle: mocks.enqueueAnalysisIfIdle, heartbeat: mocks.heartbeat, finishJob: mocks.finishJob }));
 vi.mock('@under-review/core/pipeline', () => ({ analyzeGame: mocks.analyzeGame, syncSeason: mocks.syncSeason }));
 vi.mock('@under-review/core/audit-refresh', () => ({ refreshGameAudit: mocks.refreshGameAudit }));
+vi.mock('@under-review/core/repository', () => ({ repairSourceRegressions: mocks.repairSourceRegressions }));
 vi.mock('@under-review/core/publishing', () => ({ createDraft: mocks.createDraft, publishOutbox: vi.fn(), recoverUnknownPublications: mocks.recoverUnknownPublications }));
 
 const job: Job = { id: 'synthetic-job', kind: 'refresh-audit', gameId: 'synthetic-game', payload: { prepareDraft: true }, attempts: 1, maxAttempts: 5, workerId: 'synthetic-worker' };
@@ -21,6 +22,7 @@ describe('single-worker audit refresh dispatch', () => {
     previousTerm = process.listeners('SIGTERM');
     previousInt = process.listeners('SIGINT');
     mocks.query.mockResolvedValue({ rowCount: 0, rows: [] });
+    mocks.repairSourceRegressions.mockResolvedValue([]);
     mocks.claimJob.mockResolvedValue(job);
     mocks.refreshGameAudit.mockImplementation(async () => { process.emit('SIGTERM'); });
   });
@@ -57,5 +59,15 @@ describe('single-worker audit refresh dispatch', () => {
     await import('../apps/worker/src/index.js');
     expect(mocks.refreshGameAudit).toHaveBeenCalledExactlyOnceWith('synthetic-game');
     expect(mocks.createDraft).not.toHaveBeenCalled();
+  });
+
+  it('repairs equivalent legacy regressions at startup and queues clean reconciliation for actual changes', async () => {
+    mocks.repairSourceRegressions.mockResolvedValue([
+      { gameId: 'restored', revisionId: 'restored-id', status: 'restored' },
+      { gameId: 'changed', revisionId: 'raw-id', status: 'reconcile', reason: 'Findings changed' },
+    ]);
+    await import('../apps/worker/src/index.js');
+    expect(mocks.repairSourceRegressions).toHaveBeenCalledExactlyOnceWith(2026);
+    expect(mocks.enqueueAnalysisIfIdle).toHaveBeenCalledExactlyOnceWith('changed', { preferRaw: false }, 'source-repair:changed:raw-id');
   });
 });

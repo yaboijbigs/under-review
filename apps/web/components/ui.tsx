@@ -1,15 +1,25 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { GameCard as CardData, Metric, EvidenceEvent, Review, AnalysisResult } from "@under-review/core/contracts";
-import { dateTime, first, gameView, human, num, record, records, safeLink, statusTone, str, type RecordValue } from "@/lib/presentation";
+import { getGameVerdict } from "@under-review/core/consumer-summary";
+import { dateTime, first, gameView, human, num, record, records, safeLink, statusTone, str, teamName, type RecordValue } from "@/lib/presentation";
 
 export function Status({value, label}: {value: unknown; label?: string}) { return <span className={`status ${statusTone(value)}`}><span aria-hidden="true" />{label || human(value)}</span>; }
 export function PageIntro({eyebrow, title, children}: {eyebrow: string; title: string; children?: ReactNode}) { return <div className="page-intro"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{children && <div className="intro-copy">{children}</div>}</div>; }
 export function EmptyState({title, children, compact = false}: {title: string; children: ReactNode; compact?: boolean}) { return <div className={`empty-state ${compact ? "compact" : ""}`}><span className="empty-mark" aria-hidden="true">∅</span><h2>{title}</h2><div>{children}</div></div>; }
 export function Unavailable({children}: {children?: ReactNode}) { return <div className="notice"><span className="notice-icon" aria-hidden="true">!</span><div><strong>Data connection unavailable</strong><p>{children || "The report archive is temporarily unavailable. No results have been substituted. Please try again shortly."}</p></div></div>; }
 export function GameCard({game}: {game: CardData}) {
-  const g = {id: game.id, home: game.homeTeam, away: game.awayTeam, homeScore: game.homeScore, awayScore: game.awayScore, week: game.week, season: game.season, statistical: game.statisticalStatus, review: game.reviewStatus, finding: game.finding};
-  return <article className="game-card"><div className="card-top"><span>WEEK {g.week || "—"} <span className="muted">/ {g.season}</span></span><Status value={g.statistical} /></div><Link className="scoreboard-link" href={`/games/${encodeURIComponent(g.id)}`} aria-label={`Read ${g.away} at ${g.home} report`}><div className="score-row"><span className="team-monogram">{g.away.slice(0, 1)}</span><span>{g.away}</span><strong>{g.awayScore ?? "—"}</strong></div><div className="score-row"><span className="team-monogram home">{g.home.slice(0, 1)}</span><span>{g.home}</span><strong>{g.homeScore ?? "—"}</strong></div></Link><div className="card-finding"><span className="eyebrow">IN THE RECORD</span><p>{g.finding || "Supported findings appear after the game data passes validation."}</p></div><div className="card-bottom"><span>{human(g.review)}</span><Link href={`/games/${encodeURIComponent(g.id)}`}>Open report <span aria-hidden="true">↗</span></Link></div></article>;
+  const verdict = getGameVerdict(game.gameAudit, game.revisionNumber !== null);
+  const href = `/games/${encodeURIComponent(game.id)}`;
+  return <article className={`game-card verdict-${verdict.tone}`} data-verdict={verdict.level}>
+    <div className="card-top"><span>WEEK {game.week} <span className="muted">/ {game.season}</span></span><span>{game.revisionNumber !== null ? "FINAL · ANALYZED" : "AWAITING ANALYSIS"}</span></div>
+    <div className="card-verdict"><span className="verdict-indicator" aria-hidden="true"/><h3><Link href={href}>{verdict.label}</Link></h3></div>
+    <Link className="scoreboard-link" href={href} aria-label={`Read ${teamName(game.awayTeam)} at ${teamName(game.homeTeam)} report`}>
+      {[{team:game.awayTeam,score:game.awayScore},{team:game.homeTeam,score:game.homeScore}].map(({team,score}) => <div className="score-row" key={team}><span className="team-monogram" aria-hidden="true">{team}</span><span className="team-full-name">{teamName(team)}</span><strong>{score ?? "—"}</strong></div>)}
+    </Link>
+    <div className="card-finding"><p>{verdict.reasons[0] || verdict.summary}</p>{verdict.comparison && verdict.comparison.matchingGames > 0 && <span className="card-comparison">{verdict.comparison.wins} of {verdict.comparison.matchingGames} similar past performances ended in a win.</span>}</div>
+    <div className="card-bottom"><span>{verdict.reviewCount ? `${verdict.reviewCount} key ${verdict.reviewCount === 1 ? "play" : "plays"} to inspect` : game.revisionNumber !== null ? "Automatic analysis complete" : "Runs after final data arrives"}</span><Link href={href}>See why <span aria-hidden="true">↗</span></Link></div>
+  </article>;
 }
 export function Freshness({value, label = "Last processed"}: {value: unknown; label?: string}) { return <span className="freshness">{label} <time>{dateTime(value)}</time></span>; }
 export function DefinitionRows({value}: {value: unknown}) {
@@ -21,8 +31,9 @@ export function Evidence({event, metrics, reviews}: {event: EvidenceEvent; metri
 }
 export function MetricValue({metric}: {metric: Metric}) {
   if (metric.value === null || metric.status === "unavailable") return <span className="metric-unavailable">Unavailable</span>;
-  const wp = ["wp", "probability", "wp_delta"].includes(metric.unit); const value = wp ? metric.value * 100 : metric.value;
-  return <span className="metric-value">{new Intl.NumberFormat("en-US", {maximumFractionDigits: Number.isInteger(value) ? 0 : 2, signDisplay: "auto"}).format(value)} <small>{wp ? "pp" : metric.unit.replace(/_/g, " ")}{metric.status === "experimental" ? " · experimental" : ""}</small></span>;
+  const probability = ["wp", "probability", "wp_delta"].includes(metric.unit); const value = probability ? metric.value * 100 : metric.value;
+  const unit = metric.unit === "wp_delta" ? "percentage points" : probability ? "%" : metric.unit.replace(/_/g, " ");
+  return <span className="metric-value">{new Intl.NumberFormat("en-US", {maximumFractionDigits: Number.isInteger(value) ? 0 : 2, signDisplay: "auto"}).format(value)} <small>{unit}{metric.status === "experimental" ? " · experimental" : ""}</small></span>;
 }
 export function MetricRarity({metric}: {metric: Metric}) {
   const rarity=metric.rarity;if(!rarity)return null;

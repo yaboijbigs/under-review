@@ -4,6 +4,7 @@ import { config } from './config.js';
 import { reportSummary } from './summaries.js';
 import { analysisSchema,type AnalysisResult,type Draft,type Game,type GameCard,type GameReport,type Revision,type Review,type SourceSnapshot } from './contracts.js';
 import type pg from 'pg';
+import { validateGameData,type ProviderRow } from './normalize.js';
 
 export function stableJson(value:unknown):string{
  if(value===undefined)return 'null';
@@ -57,16 +58,56 @@ export class RevisionConflictError extends Error {
  readonly code='revision_conflict';
  constructor(){super('The latest report changed during analysis; refresh from its new revision.');this.name='RevisionConflictError';}
 }
+export class SourceDowngradeError extends Error {
+ readonly code='source_downgrade';
+ constructor(){super('Clean play-by-play has already been analyzed. Reconcile with clean data instead of replacing it with raw data.');this.name='SourceDowngradeError';}
+}
+const meaningfulEvidence=(analysis:AnalysisResult)=>({metrics:analysis.metrics,timeline:analysis.timeline,coverage:analysis.coverage,
+ gameAudit:analysis.gameAudit??null,events:analysis.events.map(event=>sourceEvent(event))});
+/** Repair only a provably equivalent source regression; a real change needs fresh clean analysis. */
+export async function repairSourceRegressions(season:number):Promise<{gameId:string;revisionId:string;status:'restored'|'reconcile';reason?:string}[]>{
+ const candidates=(await query(`SELECT r.* FROM games g JOIN LATERAL(SELECT * FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true
+  WHERE g.season=$1 AND r.source_kind='raw' AND EXISTS(SELECT 1 FROM analysis_revisions c WHERE c.game_id=g.id AND c.source_kind='clean')`,[season])).rows;
+ const outcomes:{gameId:string;revisionId:string;status:'restored'|'reconcile';reason?:string}[]=[];
+ for(const current of candidates){
+  try{
+   const clean=(await query("SELECT * FROM analysis_revisions WHERE game_id=$1 AND source_kind='clean' ORDER BY number DESC LIMIT 1",[current.game_id])).rows[0];
+   const game=clean.game_json as Game;const currentGame=await getGame(game.id);
+   if(!currentGame||[current.game_json,currentGame].some(other=>other.homeScore!==game.homeScore||other.awayScore!==game.awayScore))throw new Error('Final scores changed; fresh clean reconciliation required.');
+   if(stableJson(meaningfulEvidence(clean.analysis))!==stableJson(meaningfulEvidence(current.analysis)))throw new Error('Reported findings changed; fresh clean reconciliation required.');
+   const snapshots:SourceSnapshot[]=(await query('SELECT snapshot_json FROM source_snapshots WHERE id=ANY($1::text[])',[clean.snapshot_ids])).rows.map(row=>row.snapshot_json);
+   const pbp=snapshots.filter(source=>['nflverse-pbp','nflverse-raw-pbp'].includes(source.provider));
+   if(snapshots.length!==clean.snapshot_ids.length||pbp.length!==1||pbp[0].provider!=='nflverse-pbp')throw new Error('Clean evidence provenance is incomplete.');
+   const rows=(await query('SELECT play_id,provider_order,data FROM plays WHERE game_id=$1 AND snapshot_id=$2 ORDER BY provider_order',[game.id,pbp[0].id])).rows;
+   if(!rows.length||rows.some((row,index)=>row.provider_order!==index||String(row.data?.play_id)!==row.play_id))throw new Error('Stored clean play order cannot be verified.');
+   const plays=rows.map(row=>row.data as ProviderRow);const validation=validateGameData(game,plays);
+   if(!validation.valid)throw new Error('Stored clean evidence is not a complete final game.');
+   const restored=await persistAnalysis(game,plays,snapshots,clean.analysis,'clean',{expectedBaseRevisionId:current.id},clean.id);
+   outcomes.push({gameId:game.id,revisionId:restored.id,status:'restored'});
+  }catch(error){outcomes.push({gameId:current.game_id,revisionId:current.id,status:'reconcile',reason:error instanceof Error?error.message:'Clean evidence could not be verified.'});}
+ }
+ return outcomes;
+}
 export async function saveAnalysis(game:Game,plays:Record<string,unknown>[],snapshots:SourceSnapshot[],result:AnalysisResult,sourceKind:'raw'|'clean',options:{expectedBaseRevisionId?:string|null;preventPublication?:boolean}={}):Promise<{id:string;number:number;created:boolean}>{
+ return persistAnalysis(game,plays,snapshots,result,sourceKind,options);
+}
+async function persistAnalysis(game:Game,plays:Record<string,unknown>[],snapshots:SourceSnapshot[],result:AnalysisResult,sourceKind:'raw'|'clean',options:{expectedBaseRevisionId?:string|null;preventPublication?:boolean}={},restoreFromRevisionId?:string):Promise<{id:string;number:number;created:boolean}>{
  const analysis=analysisSchema.parse(result);
- const inputHash=contentHash({game,snapshots:snapshots.map(s=>({provider:s.provider,checksum:s.checksum})).sort((a,b)=>a.provider.localeCompare(b.provider)||a.checksum.localeCompare(b.checksum)),analysis,closeCallTolerance:config.closeCallTolerance});
+ const knownPbp=snapshots.filter(source=>['nflverse-pbp','nflverse-raw-pbp'].includes(source.provider));
+ if(knownPbp.length&&(knownPbp.length!==1||(knownPbp[0].provider==='nflverse-pbp')!==(sourceKind==='clean')))throw new Error('PBP source provenance does not match its declared maturity.');
+ let inputHash=contentHash({game,snapshots:snapshots.map(s=>({provider:s.provider,checksum:s.checksum})).sort((a,b)=>a.provider.localeCompare(b.provider)||a.checksum.localeCompare(b.checksum)),analysis,closeCallTolerance:config.closeCallTolerance});
  return transaction(async client=>{
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`revision:${game.id}`]);
   const previous=(await client.query('SELECT * FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC LIMIT 1',[game.id])).rows[0];
   if(options.expectedBaseRevisionId!==undefined&&(previous?.id??null)!==options.expectedBaseRevisionId)throw new RevisionConflictError();
+  if(sourceKind==='raw'&&(await client.query("SELECT 1 FROM analysis_revisions WHERE game_id=$1 AND source_kind='clean' LIMIT 1",[game.id])).rowCount)throw new SourceDowngradeError();
   if(options.preventPublication)await client.query('UPDATE games SET publication_eligible=false WHERE id=$1',[game.id]);
-  const duplicate=await client.query('SELECT id,number FROM analysis_revisions WHERE game_id=$1 AND input_hash=$2',[game.id,inputHash]);
-  if(duplicate.rowCount)return {...duplicate.rows[0],created:false};
+  const duplicate=await client.query('SELECT id,number,source_kind FROM analysis_revisions WHERE game_id=$1 AND input_hash=$2',[game.id,inputHash]);
+  if(duplicate.rowCount&&!restoreFromRevisionId){
+   if(sourceKind==='clean'&&previous?.source_kind==='raw'&&duplicate.rows[0].source_kind==='clean')restoreFromRevisionId=duplicate.rows[0].id;
+   else return {id:previous.id,number:previous.number,created:false};
+  }
+  if(restoreFromRevisionId)inputHash=contentHash({inputHash,restoredFrom:restoreFromRevisionId,after:previous.id});
   // Guarded refreshes must not overwrite the current game or register stale sources
   // before checking their immutable base revision under the same transaction lock.
   await client.query(`INSERT INTO games(id,season,week,game_type,home_team,away_team,kickoff_at,game_json,publication_eligible)
@@ -95,10 +136,10 @@ export async function saveAnalysis(game:Game,plays:Record<string,unknown>[],snap
   const auditCorrection=gameAuditCorrection(previous?.analysis?.gameAudit,analysis.gameAudit);
   const status=previous&&(numericalChanges.length||scoreChanged||auditCorrection)?'corrected':sourceKind==='raw'?'preliminary':'reconciled';
   const auditChanged=previous&&stableJson(previous.analysis.gameAudit)!==stableJson(analysis.gameAudit);
-  const changeSummary=!previous?'Initial evidence-backed report.':`${changes.length} metric records changed; ${numericalChanges.length} previously reported category findings changed. ${scoreChanged?'Final score corrected. ':''}${chartingStatus!==previous.charting_status?'Charting coverage updated. ':''}${auditCorrection?'Previously reported game profile or historical comparison corrected.':auditChanged?'Game profile audit and review priorities updated.':''}`.trim();
+  const changeSummary=restoreFromRevisionId?`Restored verified clean-source evidence from revision ${restoreFromRevisionId} after a later raw-data report. Original reports remain available; stale human reviews still require reassessment.`:!previous?'Initial evidence-backed report.':`${changes.length} metric records changed; ${numericalChanges.length} previously reported category findings changed. ${scoreChanged?'Final score corrected. ':''}${chartingStatus!==previous.charting_status?'Charting coverage updated. ':''}${auditCorrection?'Previously reported game profile or historical comparison corrected.':auditChanged?'Game profile audit and review priorities updated.':''}`.trim();
   const snapshotIds=snapshots.map(s=>s.id);
-  await client.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json)
-  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,[id,game.id,number,inputHash,status,chartingStatus,changeSummary,reportSummary(game,analysis),JSON.stringify(analysis),JSON.stringify(snapshotIds),JSON.stringify(game)]);
+  await client.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json,source_kind)
+  VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,[id,game.id,number,inputHash,status,chartingStatus,changeSummary,reportSummary(game,analysis),JSON.stringify(analysis),JSON.stringify(snapshotIds),JSON.stringify(game),sourceKind]);
   await client.query('UPDATE games SET first_validated_at=COALESCE(first_validated_at,now()) WHERE id=$1',[game.id]);
   const pbpSnapshot=snapshots.find(s=>/pbp|play/i.test(s.provider))??snapshots[0];
   if(pbpSnapshot)for(let i=0;i<plays.length;i++)await client.query('INSERT INTO plays(game_id,snapshot_id,play_id,provider_order,data) VALUES($1,$2,$3,$4,$5) ON CONFLICT DO NOTHING',[game.id,pbpSnapshot.id,String(plays[i].play_id),i,JSON.stringify(plays[i])]);
@@ -127,8 +168,8 @@ export async function listGames(filters:{season?:number;week?:number;team?:strin
  if(filters.week){values.push(filters.week);clauses.push(`g.week=$${values.length}`);}
  if(filters.team){values.push(filters.team);clauses.push(`(g.home_team=$${values.length} OR g.away_team=$${values.length})`);}
  if(filters.publishedOnly)clauses.push('r.number IS NOT NULL');
- const rows=(await query(`SELECT g.game_json,r.* FROM games g LEFT JOIN LATERAL(SELECT number,statistical_status,charting_status,review_status,summary,created_at FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true ${clauses.length?'WHERE '+clauses.join(' AND '):''} ORDER BY g.week DESC,g.kickoff_at DESC NULLS LAST LIMIT 400`,values)).rows;
- return rows.map(r=>({...r.game_json,statisticalStatus:r.statistical_status??'awaiting_data',chartingStatus:r.charting_status??'unavailable',reviewStatus:r.review_status??'not_reviewed',finding:r.summary??null,updatedAt:r.created_at?.toISOString()??null,revisionNumber:r.number??null}));
+ const rows=(await query(`SELECT g.game_json,r.* FROM games g LEFT JOIN LATERAL(SELECT number,statistical_status,charting_status,review_status,summary,created_at,analysis->'gameAudit' AS game_audit FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true ${clauses.length?'WHERE '+clauses.join(' AND '):''} ORDER BY g.week DESC,g.kickoff_at DESC NULLS LAST LIMIT 400`,values)).rows;
+ return rows.map(r=>({...r.game_json,statisticalStatus:r.statistical_status??'awaiting_data',chartingStatus:r.charting_status??'unavailable',reviewStatus:r.review_status??'not_reviewed',finding:r.summary??null,updatedAt:r.created_at?.toISOString()??null,revisionNumber:r.number??null,gameAudit:r.game_audit??null}));
 }
 function mapDraft(r:Record<string,any>):Draft{return {id:r.id,gameId:r.game_id,revisionId:r.revision_id,text:r.text,status:r.status,kind:r.kind,mode:r.mode,createdAt:r.created_at.toISOString(),externalId:r.external_id,reason:r.reason};}
 export async function getReport(gameId:string,revision?:number):Promise<GameReport|null>{

@@ -102,6 +102,17 @@ describe.skipIf(!enabled)('scheduler priority and coalescing (isolated PostgreSQ
     expect((await db.query("SELECT count(*)::int AS count FROM jobs WHERE game_id='empty-game' AND status='pending'")).rows[0].count).toBe(1);
   });
 
+  it('coalesces due-now jobs when callers acquire the lock in the opposite timestamp order', async () => {
+    const olderCallerTime = new Date(Date.now() - 1000);
+    const winner = await jobs.enqueueAnalysisIfIdle('out-of-order', { preferRaw: true }, 'newer-caller', new Date());
+    // Deterministically models an older caller waiting while a newer caller wins
+    // the advisory lock, instead of relying on thread scheduling for the race.
+    const lateAcquirer = await jobs.enqueueAnalysisIfIdle('out-of-order', { preferRaw: false }, 'older-caller', olderCallerTime);
+    expect(lateAcquirer).toBe(winner);
+    expect((await db.query("SELECT count(*)::int AS count FROM jobs WHERE game_id='out-of-order' AND status='pending'")).rows[0].count).toBe(1);
+    expect((await claimAndFinish())?.payload.preferRaw).toBe(false);
+  });
+
   it('uses one per-game exclusion across refresh and analysis claims', async () => {
     await jobs.enqueue('refresh-audit', 'same-game', {}, 'refresh');
     await jobs.enqueue('analyze', 'same-game', {}, 'analysis');
@@ -120,13 +131,24 @@ describe.skipIf(!enabled)('scheduler priority and coalescing (isolated PostgreSQ
     const start = Date.now();
     const ids = [];
     for (const hours of [6, 24, 48]) ids.push(await jobs.enqueue('analyze', 'reconciled-game', { preferRaw: false, backfill: false }, `reconcile:initial:${hours}`, new Date(start + hours * 3600000)));
-    expect(await jobs.enqueueAnalysisIfIdle('reconciled-game', {}, 'scheduler-extra')).toBe(ids[0]);
-    expect((await db.query('SELECT run_after FROM jobs ORDER BY run_after')).rows.map(row => row.run_after.getTime() - start)).toEqual([6, 24, 48].map(hours => hours * 3600000));
+    const immediate = await jobs.enqueueAnalysisIfIdle('reconciled-game', { preferRaw: false }, 'scheduler-extra');
+    expect(ids).not.toContain(immediate);
+    expect((await claimAndFinish())?.id).toBe(immediate);
+    expect((await db.query("SELECT run_after FROM jobs WHERE status='pending' ORDER BY run_after")).rows.map(row => row.run_after.getTime() - start)).toEqual([6, 24, 48].map(hours => hours * 3600000));
     expect(await jobs.claimJob('early')).toBeNull();
     await db.query('UPDATE jobs SET run_after=$2 WHERE id=$1', [ids[0], due(1)]);
     expect((await claimAndFinish())?.id).toBe(ids[0]);
     expect(await jobs.claimJob('still-early')).toBeNull();
     expect((await db.query("SELECT count(*)::int AS count FROM jobs WHERE status='pending'")).rows[0].count).toBe(2);
+  });
+
+  it('upgrades queued raw work when clean reconciliation is coalesced, without changing due time or backfill', async () => {
+    const when = due(1);
+    const id = await jobs.enqueueAnalysisIfIdle('raw-queued', { preferRaw: true, backfill: true }, 'raw', when);
+    expect(await jobs.enqueueAnalysisIfIdle('raw-queued', { preferRaw: false }, 'clean')).toBe(id);
+    expect((await db.query('SELECT payload,run_after FROM jobs WHERE id=$1', [id])).rows[0]).toEqual({ payload: { preferRaw: false, backfill: true }, run_after: when });
+    expect(await jobs.enqueueAnalysisIfIdle('raw-queued', { preferRaw: true }, 'raw-again')).toBe(id);
+    expect((await claimAndFinish())?.payload.preferRaw).toBe(false);
   });
 
   it('retains refresh failures and normal retries rather than marking them successful', async () => {

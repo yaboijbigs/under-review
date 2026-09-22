@@ -50,7 +50,7 @@ export type AnalysisResult=z.infer<typeof analysisSchema>;
 export interface AnalysisRequest {schemaVersion:1;action:'analyze';game:Game;plays:Record<string,unknown>[];ftn?:Record<string,unknown>[];snapshots:SourceSnapshot[];config:Record<string,unknown>}
 export type StatisticalStatus='awaiting_data'|'preliminary'|'reconciled'|'corrected';
 export interface Revision {id:string;number:number;createdAt:string;statisticalStatus:StatisticalStatus;chartingStatus:'unavailable'|'partial'|'available';reviewStatus:'not_reviewed'|'partially_reviewed'|'reviewed_within_scope';changeSummary:string;analysis:AnalysisResult;inputHash:string;sourceSnapshots:SourceSnapshot[];summary:string}
-export interface GameCard extends Game {statisticalStatus:StatisticalStatus;chartingStatus:string;reviewStatus:string;finding:string|null;updatedAt:string|null;revisionNumber:number|null}
+export interface GameCard extends Game {statisticalStatus:StatisticalStatus;chartingStatus:string;reviewStatus:string;finding:string|null;updatedAt:string|null;revisionNumber:number|null;gameAudit?:GameAudit|null}
 export interface Review {id:string;eventId:string;playId:string;reviewer:string;status:string;ruleSeason:number;ruleReference:string;evidenceUrl:string;rationale:string;confidence:string;scope:string;scopeComplete?:boolean;approved:boolean;stale:boolean;createdAt:string;replayCorrected:boolean}
 export interface Draft {id:string;gameId:string;revisionId:string;text:string;status:string;kind:string;mode:string;createdAt:string;externalId:string|null;reason:string|null}
 export interface GameReport {game:Game;revision:Revision;history:Pick<Revision,'id'|'number'|'createdAt'|'statisticalStatus'|'changeSummary'>[];reviews:Review[];drafts:Draft[]}

@@ -17,11 +17,24 @@ export function referencePeriod(start: number | null, end: number | null): strin
   return start === end ? `${start} season` : `${start}–${end} seasons`;
 }
 export function auditLabel(status: string): string {
-  return ({historical_outlier:"Historical outlier",unusual_profile:"Unusual winning profile",review_worthy:"Needs review",no_flag_found:"No supported flag found",insufficient_data:"Insufficient historical coverage",rare_sample:"Small historical sample",context:"Historical context"} as Record<string,string>)[status] || human(status);
+  return ({historical_outlier:"Highly unusual win",unusual_profile:"Unusual win",review_worthy:"Key plays flagged",no_flag_found:"No unusual result detected",insufficient_data:"Not enough data",rare_sample:"Small historical sample",context:"Historical context"} as Record<string,string>)[status] || human(status);
 }
 export function safeLink(value: unknown): string | undefined { try { const url = new URL(str(value)); return ["https:", "http:"].includes(url.protocol) ? url.href : undefined; } catch { return undefined; } }
 export function statusTone(value: unknown): string { const text = str(value).toLowerCase(); return /failed|error|blocked|corrected/.test(text) ? "warning" : /reconciled|available|succeeded|completed|reviewed|approved/.test(text) && !/unavailable|not_reviewed|partially/.test(text) ? "positive" : "neutral"; }
-export const teams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LAC", "LAR", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS"];
+export const teamNames: Record<string, string> = {ARI:"Arizona Cardinals",ATL:"Atlanta Falcons",BAL:"Baltimore Ravens",BUF:"Buffalo Bills",CAR:"Carolina Panthers",CHI:"Chicago Bears",CIN:"Cincinnati Bengals",CLE:"Cleveland Browns",DAL:"Dallas Cowboys",DEN:"Denver Broncos",DET:"Detroit Lions",GB:"Green Bay Packers",HOU:"Houston Texans",IND:"Indianapolis Colts",JAX:"Jacksonville Jaguars",KC:"Kansas City Chiefs",LAC:"Los Angeles Chargers",LA:"Los Angeles Rams",LAR:"Los Angeles Rams",LV:"Las Vegas Raiders",MIA:"Miami Dolphins",MIN:"Minnesota Vikings",NE:"New England Patriots",NO:"New Orleans Saints",NYG:"New York Giants",NYJ:"New York Jets",PHI:"Philadelphia Eagles",PIT:"Pittsburgh Steelers",SEA:"Seattle Seahawks",SF:"San Francisco 49ers",TB:"Tampa Bay Buccaneers",TEN:"Tennessee Titans",WAS:"Washington Commanders",OAK:"Oakland Raiders",SD:"San Diego Chargers",STL:"St. Louis Rams"};
+export const teams = ["ARI", "ATL", "BAL", "BUF", "CAR", "CHI", "CIN", "CLE", "DAL", "DEN", "DET", "GB", "HOU", "IND", "JAX", "KC", "LAC", "LA", "LV", "MIA", "MIN", "NE", "NO", "NYG", "NYJ", "PHI", "PIT", "SEA", "SF", "TB", "TEN", "WAS"];
+export const teamName = (team: string) => teamNames[team] || team;
+export function dataMaturity(status: string) {
+  if (status === "reconciled") return {label:"Updated source data", detail:"This report uses the provider’s cleaned postgame data. Later corrections can still update the report."};
+  if (status === "corrected") return {label:"Updated after a correction", detail:"The source data changed after an earlier analysis. The report below includes that correction."};
+  if (status === "preliminary") return {label:"Early source data", detail:"The automated analysis is complete using the first available final-game data. It will update when cleaned data arrives."};
+  return {label:"Waiting for final data", detail:"Analysis starts automatically after the game ends and complete final-game data becomes available."};
+}
+export function humanReview(status: string) {
+  if (status === "reviewed_within_scope") return {label:"Selected plays reviewed", detail:"A person has reviewed the stated plays and evidence. This is not a judgment on every call in the game."};
+  if (status === "partially_reviewed") return {label:"Some plays reviewed", detail:"Human review is in progress for selected plays. Approved findings appear with the play evidence."};
+  return {label:"No human ruling assessment", detail:"The automatic scan is complete. A person has not yet assessed whether the selected officiating decisions were correct."};
+}
 export function gameView(raw: unknown) {
   const source = record(raw); const nested = record(source.game); const game = Object.keys(nested).length ? {...source, ...nested} : source;
   return {
@@ -37,13 +50,13 @@ export function gameView(raw: unknown) {
   };
 }
 export const categories = [
-  {id: "officiating", title: "Ruling impact", note: "The consequence of an observed ruling, separately from whether it was correct."},
-  {id: "reviewed_errors", title: "Reviewed errors", note: "Evidence-backed human judgments within an explicitly stated review scope."},
-  {id: "coaching", title: "Coaching decisions", note: "Fourth-down choices evaluated using information available before the outcome."},
-  {id: "fumble", title: "Fumble recovery", note: "Recovery results relative to a contextual baseline; fumble creation is separate."},
-  {id: "kicking", title: "Kicking", note: "Field goals and extra points relative to an expected-make baseline."},
-  {id: "execution", title: "Execution charting", note: "Charted opportunities and mistakes, with missing coverage made explicit."},
-  {id: "penalty_anomaly", title: "Called-penalty patterns", note: "Unusual calling rates do not establish whether a foul occurred or a call was wrong."},
+  {id: "officiating", title: "Impact of officiating decisions", note: "How a ruling changed the game state. Whether the ruling was correct is a separate question."},
+  {id: "reviewed_errors", title: "Human review of calls", note: "Findings from a person reviewing the play, evidence, and applicable rule."},
+  {id: "coaching", title: "Coaching decisions", note: "Fourth-down choices judged using what was known before the play."},
+  {id: "fumble", title: "Fumble recoveries", note: "Who recovered loose balls compared with what the model expected."},
+  {id: "kicking", title: "Kicking", note: "Field goals and extra points compared with the expected chance of making them."},
+  {id: "execution", title: "Player execution", note: "Recorded drops, catch opportunities, and other player mistakes when detailed data is available."},
+  {id: "penalty_anomaly", title: "Penalty patterns", note: "Whether the pattern of penalties looks unusual. The count alone cannot show that a call was wrong."},
 ];
 export function metricCategory(metric: RecordValue): string {
   const category = str(first(metric, "category", "module", "metricKey", "key", "name")).toLowerCase();
