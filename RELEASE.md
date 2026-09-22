@@ -1,6 +1,14 @@
 # Under Review release record
 
-The public website is **[underreview.jbigs.com](https://underreview.jbigs.com)**. Its public deployment and coverage upgrade succeeded on **2026-09-22 UTC** with user approval. The MIT-licensed source is public at [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). All **31 completed 2026 Week 1–2 games** have current game audits, verified by the server coverage gate and public browser checks. Giants–Rams awaits final data and automatic processing. Private environment files, administrator credentials, database exports, backups, and caches are excluded from Git and image build contexts; release files are scanned before publishing.
+The public website is **[underreview.jbigs.com](https://underreview.jbigs.com)**. Its public deployment and coverage upgrades succeeded on **2026-09-22 UTC** with user approval. The MIT-licensed source is public at [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). All **32 completed 2026 Week 1–2 games** have game audits. Giants–Rams was discovered and analyzed automatically; the coverage gate confirmed 32 of 32 at **03:41:15.466 UTC**. Private environment files, administrator credentials, database exports, backups, and caches are excluded from Git and image build contexts; release files are scanned before publishing.
+
+## Consumer verdicts and source recovery — deployed 2026-09-22 UTC
+
+Hostinger action **115913062** succeeded at **03:31:38 UTC**, after Under Review's own backup completed at `/data/backups/20260922T032922Z-public-launch` at **03:30:27.916 UTC**. Web source `c7ec00fbc721ba9e0cc6138d640074bf1e75ceb5` and worker source `a0c6350a512e5c9286d8b52d1120c70bac16ef58` delivered plain-language verdicts, full team names, working result/week/team filters, readable evidence links and separate automatic-analysis, source-data and human-review statuses. The share image uses the same verdict. The main page no longer treats an absent human review as an unfinished automatic report.
+
+Persistence now records source kind independently of report status and rejects raw-over-clean writes. Dispatch reevaluates source maturity, and startup repairs only provably equivalent regressions; changed findings require new clean analysis. Existing revisions and stale human-review records are retained. Future scheduled reconciliation no longer blocks work due immediately. All **207 tests across 21 files** passed before this deployment, including PostgreSQL regressions, typechecking and the production web build. The deployed seed check passed all eight routes. Nine unrelated projects / 30 containers retained their IDs, images, ports and states; `jbigs.com` remained byte-identical and `www.jbigs.com` retained its redirect.
+
+The worker automatically finished the Giants–Rams analysis at **03:40:58.291 UTC**. This is executed automatic processing, not a promise of later completion. At that point every Week 1–2 game had an audit. Source limitations remain visible; audit presence does not imply complete model coverage or an officiating-correctness finding.
 
 ## Executed first public release — 2026-09-22 UTC
 
