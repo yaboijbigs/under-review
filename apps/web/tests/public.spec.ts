@@ -5,7 +5,7 @@ test("archive is usable without fabricated results", async ({page},testInfo) => 
   await expect(page.getByRole("combobox",{name:"Season"})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Team"})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Week"})).toHaveValue("");
-  await expect(page.getByRole("combobox",{name:"Result"})).toBeVisible();
+  await expect(page.getByRole("combobox",{name:"Rating"})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Team"}).locator('option[value="LA"]')).toHaveText("Los Angeles Rams");
   await page.getByRole("combobox",{name:"Team"}).selectOption("SEA");
   await page.getByRole("button",{name:/Apply filters/}).click();
@@ -17,7 +17,8 @@ test("methodology preserves uncertainty and report links", async ({page}) => {
   await page.goto("/methodology");
   await expect(page.getByRole("heading",{name:"Why an unusual win gets flagged"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Why a play needs review"})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"Why there is no rigging score"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"What the game suspicion rating means"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Why the rating is not a probability of rigging"})).toBeVisible();
   await expect(page.getByRole("heading",{name:"Unavailable means unavailable"})).toBeVisible();
   await page.goto("/sources");
   await expect(page.getByRole("heading",{name:"FTN Data via nflverse"})).toBeVisible();

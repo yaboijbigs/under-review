@@ -7,6 +7,7 @@ import { LocalSnapshotStore } from './sources.js';
 import { getReport,saveAnalysis,stableJson } from './repository.js';
 import { buildGameAudit,GAME_AUDIT_VERSION } from './game-audit.js';
 import { ingestGameProfiles,loadGameProfileReference } from './game-profile-source.js';
+import { applyOvertimeTimeline,loadOvertimeReference } from './overtime-integration.js';
 
 export class AuditRefreshError extends Error {
  constructor(public readonly code:string,message:string){super(message);this.name='AuditRefreshError';}
@@ -43,16 +44,20 @@ export async function refreshGameAudit(gameId:string):Promise<{gameId:string;id:
  try{historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));}
  catch{throw new AuditRefreshError('audit_reference_unavailable','The fixed historical game-profile reference is unavailable or invalid.');}
  const current=revision.analysis.gameAudit;
+ const withOvertime=applyOvertimeTimeline(game,plays,revision.analysis,await loadOvertimeReference());
  const auditModels=revision.analysis.models.filter(model=>model.id==='game-profile-audit');
  const aggregateSources=revision.sourceSnapshots.filter(source=>source.provider==='nflverse-team-stats');
  // This command upgrades the audit only. Fresh statistical/source reconciliation
  // remains the normal analysis job, including updates to already complete audits.
  if(current?.version===GAME_AUDIT_VERSION&&current.reference.checksum===historical.checksum&&current.reference.version===historical.reference.version
   &&completeProfiles(game,current)&&auditModels.length===1&&auditModels[0].version===GAME_AUDIT_VERSION&&auditModels[0].checksum===historical.checksum&&aggregateSources.length===1){
-  return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:revision.analysis.warnings};
+  if(stableJson(withOvertime)===stableJson(revision.analysis))return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:revision.analysis.warnings};
+  // An OT-only upgrade of an already current, complete audit needs no source fetch.
+  const saved=await saveAnalysis(game,plays,revision.sourceSnapshots,withOvertime,sourceKind,{expectedBaseRevisionId:revision.id});
+  return {gameId,...saved,sourceKind,warnings:withOvertime.warnings};
  }
  const source=await ingestGameProfiles(game,new LocalSnapshotStore(path.join(config.dataDir,'snapshots')),plays);
- const analysis=structuredClone(revision.analysis);
+ const analysis=structuredClone(withOvertime);
  analysis.gameAudit=buildGameAudit({game,plays,profiles:source.profiles,reference:historical.reference,referenceChecksum:historical.checksum,events:analysis.events});
  analysis.models=[...analysis.models.filter(model=>model.id!=='game-profile-audit'),{id:'game-profile-audit',version:analysis.gameAudit.version,checksum:historical.checksum,
   trainingWindow:`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'}];

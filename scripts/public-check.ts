@@ -13,7 +13,7 @@ try {
   const pending=games.filter((_,i)=>{
    const r=reports[i];const audit=r?.revision.analysis.gameAudit;
    return !r||!audit||!r.revision.analysis.metrics.some(m=>m.status==='supported')
-    ||(r.game.id==='2026_02_GB_NYJ'&&getGameVerdict(audit).level!=='highly_unusual');
+    ||(r.game.id==='2026_02_GB_NYJ'&&getGameVerdict(audit).level!=='sus');
   });
   if(!pending.length){ready=true;break;}
   console.log(JSON.stringify({event:'public.awaiting_reports',games:pending}));

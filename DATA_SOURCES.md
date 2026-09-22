@@ -44,6 +44,10 @@ The team-game reference contains **14,512 rows from 7,256 games in 1999–2025**
 
 The separate `analytics/models/game-profile-validation.json` fixture verifies `2026_02_GB_NYJ` against the [official gamebook](https://static.clubs.nfl.com/image/upload/packers/zu3fdftopjkj8hkcwckc): Green Bay won 20–17 in overtime with 199 net offensive yards, 133 penalty yards and a −1 turnover margin. The fixture's 2026 rows are excluded from the historical comparison reference. The gamebook is linked rather than redistributed.
 
+### Experimental overtime reference
+
+The separate [overtime model](analytics/OVERTIME.md) transforms nflverse / nflfastR clean play-by-play into 2,136 eligible states from 131 regular-season games in 2017–2025. Its frozen reference embeds the original source URLs, SHA-256 hashes, attribution and CC BY 4.0 license. Transformations retain preplay state, derive possession-rule phases from already-observed events, and use final results only as historical outcome labels. The compact 2026 fixture is a prospective regression example, not training data. Estimates require at least 20 comparable, strictly prior-season games; unsupported rule phases remain unavailable. Recorded final outcomes are labeled separately from forecasts.
+
 ## Data licenses are separate from software licenses
 
 - nflverse-data and nflverse-pbp repositories publish a [CC BY 4.0 data notice](https://raw.githubusercontent.com/nflverse/nflverse-data/main/LICENSE.md). Attribute **nflverse / nflfastR**, link the source and license, preserve supplied notices, and indicate transformations. Schedules additionally credit **Lee Sharpe**. [nfldata](https://github.com/nflverse/nfldata) itself has no detected license file or repository-license metadata; the application uses the schedule release published by nflverse-data and records this provenance, rather than inventing an MIT data license.

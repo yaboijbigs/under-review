@@ -1,5 +1,7 @@
 # R analytics
 
+Overtime momentum uses a separate TypeScript estimator with a frozen historical reference; see [its methods, coverage and evaluation](OVERTIME.md). It does not change the regulation R model or enable overtime counterfactuals.
+
 The worker invokes `Rscript analytics/run.R request.json response.json`. Input uses `action: "analyze"` with the shared game, original nflverse plays, FTN rows, immutable snapshot references and config. `action: "build_pbp"` accepts `gameId` and a local `rawDirectory`. JSON is written only to the supplied response file. Errors return `error.code` and exit nonzero; unsupported individual metrics return null plus a reason.
 
 ## Local commands

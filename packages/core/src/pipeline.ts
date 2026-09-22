@@ -8,6 +8,7 @@ import { enqueue,enqueueAnalysisIfIdle } from './jobs.js';
 import { maybeAutomaticDraft } from './publishing.js';
 import { ingestGameProfiles,loadGameProfileReference } from './game-profile-source.js';
 import { buildGameAudit } from './game-audit.js';
+import { applyOvertimeTimeline,loadOvertimeReference } from './overtime-integration.js';
 
 const store=()=>new LocalSnapshotStore(path.join(config.dataDir,'snapshots'));
 export async function syncSeason(season:number,scheduleJobs=true){
@@ -41,7 +42,8 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  await saveSnapshots(ingested.snapshots);
  if(!ingested.validation.valid)throw new Error('Game awaits complete final data: '+ingested.validation.issues.join(', '));
  const snapshots=[...schedule.snapshots,...ingested.snapshots];
- const analysis=await runAnalytics({schemaVersion:1,action:'analyze',game,plays:ingested.plays,ftn:ingested.ftn,snapshots,config:{closeCallTolerance:config.closeCallTolerance,modelDirectory:process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),chartingCoverage:ingested.chartingCoverage}},{scriptPath:path.join(projectRoot,'analytics/run.R'),timeoutMs:config.analyticsTimeoutMs});
+ let analysis=await runAnalytics({schemaVersion:1,action:'analyze',game,plays:ingested.plays,ftn:ingested.ftn,snapshots,config:{closeCallTolerance:config.closeCallTolerance,modelDirectory:process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),chartingCoverage:ingested.chartingCoverage}},{scriptPath:path.join(projectRoot,'analytics/run.R'),timeoutMs:config.analyticsTimeoutMs});
+ analysis=applyOvertimeTimeline(game,ingested.plays,analysis,await loadOvertimeReference());
  const profileSource=await ingestGameProfiles(game,store(),ingested.plays);
  await saveSnapshots(profileSource.snapshots);snapshots.push(...profileSource.snapshots);
  let historical:Awaited<ReturnType<typeof loadGameProfileReference>>|undefined;

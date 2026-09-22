@@ -33,7 +33,7 @@ test("browsing game cards does not eagerly request every report",async({page})=>
   expect(prefetchedReports).toEqual([]);
 });
 
-test("all weeks keeps every published report and result filters stay honest", async ({page},testInfo)=>{
+test("all weeks keeps every published report and rating filters stay honest", async ({page},testInfo)=>{
   await page.goto("/");
   await archiveReady(page);
   await expect(page.getByRole("combobox",{name:"Week",exact:true})).toHaveValue("");
@@ -48,14 +48,18 @@ test("all weeks keeps every published report and result filters stay honest", as
     await expect(page.locator('.card-verdict').first()).toBeVisible();
     await expect(page.locator('.game-card .card-top .status')).toHaveCount(0);
     await expect(page.locator('.game-card .card-bottom').first()).not.toContainText(/Not reviewed|Preliminary/i);
+    await expect(page.locator('.card-rating-label').first()).toContainText('GAME SUSPICION RATING');
+    await expect(page.locator('.card-rating-boundary').first()).toContainText('Not a finding of manipulation');
   }
   await page.screenshot({path:testInfo.outputPath('consumer-home.png'),fullPage:true});
-  await page.getByRole("combobox",{name:"Result",exact:true}).selectOption("unusual");
+  const ratingFilter=page.getByRole("combobox",{name:"Rating",exact:true});
+  await expect(ratingFilter.locator('option')).toHaveText(['All ratings','RIGGED? · 5/5','Sus · 4/5','Hmm · 3/5','Debatable · 2/5','Fair · 1/5','Unrated · Not enough data']);
+  await ratingFilter.selectOption("sus");
   await page.getByRole("button",{name:/Apply filters/}).click();
-  await expect(page).toHaveURL(url=>url.searchParams.get('result')==='unusual');
+  await expect(page).toHaveURL(url=>url.searchParams.get('result')==='sus');
   await archiveReady(page);
   const verdicts=await page.locator('.game-card').evaluateAll(cards=>cards.map(card=>card.getAttribute('data-verdict')));
-  expect(verdicts.every(level=>level==='highly_unusual'||level==='unusual')).toBe(true);
+  expect(verdicts.every(level=>level==='sus')).toBe(true);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 
@@ -74,6 +78,14 @@ test("report verdict and completed automation are separate from human review",as
   await page.goto(`/games/${gameId}`);
   await reportReady(page);
   await expect(page.locator('#verdict-title')).not.toBeEmpty();
+  await expect(page.locator('.rating-scale > li')).toHaveCount(5);
+  await expect(page.locator('.rating-boundary')).toHaveText('Automatic screening · Not a finding of manipulation');
+  await expect(page.locator('.rating-version')).toContainText('game-suspicion-v1');
+  const rating=await page.locator('.game-verdict').getAttribute('data-rating');
+  const selected=page.locator('.rating-scale [aria-current="step"]');
+  if(rating==='unrated')await expect(selected).toHaveCount(0);
+  else {await expect(selected).toHaveCount(1);await expect(selected).toHaveAttribute('data-level',rating!);await expect(page.locator('.rating-number')).toHaveAttribute('aria-label',`Level ${rating} of 5`);}
+  await page.screenshot({path:testInfo.outputPath('consumer-rating.png'),fullPage:false});
   await expect(page.locator('#provenance > details')).not.toHaveAttribute('open');
   await page.getByRole('link',{name:'Data & updates',exact:true}).click();
   await expect(page.locator('#provenance > details')).toHaveAttribute('open','');
@@ -97,11 +109,11 @@ test("report verdict and completed automation are separate from human review",as
 test("different outcomes are not all presented as suspicious or clean",async({page})=>{
   test.skip(process.env.SMOKE_CONSUMER_CASES!=='true','Use the real local reports named in this regression check.');
   for(const item of [
-    {id:'2026_02_GB_NYJ',level:'highly_unusual',title:'Highly unusual win'},
-    {id:'2026_01_CLE_JAX',level:'no_flag',title:'No unusual result detected'},
-    {id:'2026_01_TB_CIN',level:'limited',title:'Not enough data for a verdict'},
-    {id:'2026_01_NE_SEA',level:'limited',title:'Game verdict not available yet'},
-    {id:'2026_02_IND_KC',level:'key_plays',title:'Key plays flagged'},
+    {id:'2026_02_GB_NYJ',level:'sus',title:'Sus'},
+    {id:'2026_01_CLE_JAX',level:'fair',title:'Fair'},
+    {id:'2026_01_TB_CIN',level:'limited',title:'Unrated'},
+    {id:'2026_01_NE_SEA',level:'limited',title:'Unrated'},
+    {id:'2026_02_IND_KC',level:'debatable',title:'Debatable'},
   ]){
     await page.goto(`/games/${item.id}`);
     await expect(page.locator('.game-verdict')).toHaveAttribute('data-verdict',item.level);
@@ -114,36 +126,50 @@ test("different outcomes are not all presented as suspicious or clean",async({pa
   await expect(page.locator('.game-verdict')).toHaveCount(0);
 });
 
-test("momentum connects supported estimates without inventing overtime values",async({page},testInfo)=>{
+test("momentum connects estimates and distinguishes experimental overtime from recorded results",async({page},testInfo)=>{
   const gameId=process.env.SMOKE_MOMENTUM_GAME_ID;
   test.skip(!gameId,'Set SMOKE_MOMENTUM_GAME_ID to a real overtime report.');
   await page.goto(`/games/${gameId}`);
   await reportReady(page);
   const chart=page.locator('.wp-chart');
-  await expect(chart.locator('.chart-legend')).toContainText('before each play');
-  await expect(chart.locator('.chart-coverage')).toContainText('supported estimates');
-  await expect(chart.locator('.chart-overtime-note')).toHaveText('Overtime is shaded. This model covers regulation only.');
+  await expect(chart.locator('.chart-legend')).toContainText('Before-play estimates');
+  await expect(chart.locator('.chart-coverage')).toContainText('model estimates');
+  await expect(chart.locator('.chart-overtime-note')).toContainText('Overtime is shaded.');
   await expect(chart.locator('.chart-overtime-region rect').first()).toBeVisible();
   await expect(chart.locator('.chart-preplay-note')).toContainText('not elapsed game time');
-  await expect(chart.locator('.chart-interpolation-note')).toHaveText('Line connects available estimates; intermediate values are not calculated.');
+  await expect(chart.locator('.chart-interpolation-note')).toHaveText('Line connects available values; intermediate values are not calculated.');
   await chart.locator('.chart-table > summary').click();
   const rows=chart.locator('tbody tr'),unavailable=chart.locator('.chart-estimate-unavailable');
   expect(await unavailable.count()).toBeGreaterThan(0);
-  const noOvertimeEstimate=rows.filter({hasText:'Not modeled (overtime)'});
-  expect(await noOvertimeEstimate.count()).toBeGreaterThan(0);
+  const experimental=rows.filter({hasText:'Experimental overtime'});
+  const outcomes=rows.filter({hasText:'Recorded final outcome'});
+  expect(await experimental.count()).toBeGreaterThan(0);
+  await expect(outcomes).toHaveCount(1);
+  await expect(chart.locator('.chart-observed-result')).toHaveCount(1);
+  await expect(chart.locator('.chart-overtime-estimates')).toHaveCount(1);
+  for(const source of await experimental.locator('td:last-child').allTextContents()) {
+    const games=source.match(/(\d+) comparable prior games/);
+    expect(games).not.toBeNull();expect(Number(games![1])).toBeGreaterThanOrEqual(20);
+  }
+  for(const row of await experimental.all()) {
+    const win=Number((await row.locator('td').nth(3).innerText()).replace('%',''));
+    const tie=Number((await row.locator('td').nth(4).innerText()).replace('%',''));
+    expect(win).toBeGreaterThanOrEqual(0);expect(tie).toBeGreaterThanOrEqual(0);
+    expect(win+tie).toBeLessThanOrEqual(100.1);
+  }
   const coverage=await chart.locator('.chart-coverage').innerText();
-  const match=coverage.match(/(\d+) supported estimates across (\d+) recorded game entries/);
+  const match=coverage.match(/(\d+) model estimates across (\d+) recorded game entries/);
   expect(match).not.toBeNull();
   expect(await rows.count()).toBe(Number(match![2]));
-  expect(await unavailable.count()).toBe(Number(match![2])-Number(match![1]));
-  const line=await chart.locator('svg > path').getAttribute('d');
+  expect(await unavailable.count()).toBe(Number(match![2])-Number(match![1])-1);
+  const line=await chart.locator('svg > path').first().getAttribute('d');
   expect((line?.match(/M/g)||[]).length).toBe(1);
-  expect((line?.match(/L/g)||[]).length).toBe(Number(match![1])-1);
+  expect((line?.match(/L/g)||[]).length).toBe(Number(match![1]));
   const lastEstimatedIndex=await rows.evaluateAll(items=>items.reduce((last,row,index)=>row.classList.contains('chart-estimate-unavailable') ? last : index,-1));
   const finalX=Number(line!.trim().split(' ').at(-1)!.slice(1).split(',')[0]);
   expect(finalX).toBeCloseTo(44+lastEstimatedIndex/Math.max(Number(match![2])-1,1)*892,5);
-  expect(finalX).toBeLessThan(936);
-  await noOvertimeEstimate.first().getByRole('link').click();
+  expect(finalX).toBeCloseTo(936,5);
+  await experimental.first().getByRole('link').click();
   await expect(page.locator('.source-play-archive')).toHaveAttribute('open','');
   await expect(page.locator('.source-play[open] .source-play-body')).toBeVisible();
   await page.locator('#timeline').scrollIntoViewIfNeeded();
@@ -157,10 +183,15 @@ test("a sequence of drive-extending penalties stays grouped and inspectable",asy
   test.skip(!gameId,'Set SMOKE_DRIVE_SEQUENCE_GAME_ID to the real GB-MIN drive-sequence report.');
   await page.goto(`/games/${gameId}`);
   await reportReady(page);
+  await expect(page.locator('.game-verdict')).toHaveAttribute('data-rating','4');
+  await expect(page.locator('#verdict-title')).toHaveText('Sus');
+  await expect(page.locator('.verdict-reasons')).toContainText('Minnesota Vikings received 3 first downs');
+  await expect(page.locator('.rating-play-links a')).toHaveCount(3);
   const group=page.locator('.audit-context-grid article').filter({hasText:'Drive extending penalties'});
   await expect(group).toBeVisible();
   await expect(group).toContainText('MIN received 3 first downs from GB penalties');
   for(const playId of ['3411','3489','3592']){
+    await expect(page.locator(`.rating-play-links a[href="#play-${playId}"]`)).toBeVisible();
     await expect(group.locator(`a[href="#play-${playId}"]`)).toBeVisible();
     const candidate=page.locator(`.review-candidate[data-play-id="${playId}"]`);
     await expect(candidate).toHaveCount(1);

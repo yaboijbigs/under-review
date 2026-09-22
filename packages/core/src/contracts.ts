@@ -41,7 +41,10 @@ export const gameAuditSchema=z.object({
 export type GameAudit=z.infer<typeof gameAuditSchema>;
 export const analysisSchema=z.object({
   schemaVersion:z.literal(1),metrics:z.array(metricSchema),events:z.array(eventSchema),
-  timeline:z.array(z.object({playId:z.string(),quarter:z.number().nullable(),clock:z.string().nullable(),homeWp:z.number().min(0).max(1).nullable(),description:z.string()})),
+  timeline:z.array(z.object({playId:z.string(),quarter:z.number().nullable(),clock:z.string().nullable(),homeWp:z.number().min(0).max(1).nullable(),description:z.string(),
+    awayWp:z.number().min(0).max(1).nullable().optional(),tieProbability:z.number().min(0).max(1).nullable().optional(),
+    status:z.enum(['experimental','unavailable','observed']).optional(),reasonCode:z.string().nullable().optional(),
+    modelVersion:z.string().optional(),supportGames:z.number().int().min(0).optional(),phase:z.string().optional()})),
   coverage:z.array(z.object({category:z.string(),status:z.string(),eligible:z.number(),modeled:z.number(),reason:z.string().nullable().optional()})),
   models:z.array(z.object({id:z.string(),version:z.string(),trainingWindow:z.string().nullable().optional(),checksum:z.string().optional(),notes:z.string().optional()}).passthrough()),
   warnings:z.array(z.string()),gameAudit:gameAuditSchema.optional()

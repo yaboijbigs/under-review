@@ -9,6 +9,7 @@ import { normalizePlays,normalizeSchedule,parseCsv } from '../packages/core/src/
 import { buildGameAudit } from '../packages/core/src/game-audit.js';
 import { loadGameProfileReference,normalizeGameProfiles } from '../packages/core/src/game-profile-source.js';
 import { sourceUrls,SOURCE_LICENSES } from '../packages/core/src/sources.js';
+import { applyOvertimeTimeline,loadOvertimeReference,type LoadedOvertimeReference } from '../packages/core/src/overtime-integration.js';
 
 const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn()}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query,transaction:vi.fn()}));
@@ -24,7 +25,7 @@ const game=normalizeSchedule(parseCsv(csv([sourceSchedule]))[0]);
 const rawPlays=Array.from({length:5},(_,index)=>({game_id:game.id,home_team:game.homeTeam,away_team:game.awayTeam,season:game.season,play_id:index,qtr:Math.max(1,index),total_home_score:0,total_away_score:0,desc:index===0?'GAME':index===4?'END GAME':'Synthetic play',play_type:index===1||index===2?'run':'no_play',yards_gained:0,posteam:index===1?'TST':index===2?'DMO':null,defteam:index===1?'DMO':index===2?'TST':null}));
 const plays=normalizePlays(parseCsv(csv(rawPlays)),game.id);
 const rawProfiles=[game.awayTeam,game.homeTeam].map(team=>({game_id:game.id,season:game.season,week:1,team,opponent_team:team===game.homeTeam?game.awayTeam:game.homeTeam,passing_yards:0,rushing_yards:0,sack_yards_lost:0,passing_interceptions:0,fumbles_lost_total:0,penalties:0,penalty_yards:0,passing_tds:0,rushing_tds:0,def_tds:0,special_teams_tds:0,fumble_recovery_tds:0,fg_made:0,pat_made:0,passing_2pt_conversions:0,rushing_2pt_conversions:0,def_2pt_made:0,def_safeties:0}));
-let producer:AnalysisBundleProducer,historical:Awaited<ReturnType<typeof loadGameProfileReference>>;
+let producer:AnalysisBundleProducer,historical:Awaited<ReturnType<typeof loadGameProfileReference>>,overtime:LoadedOvertimeReference;
 let directory:string,report:GameReport;
 const originalDataDir=config.dataDir;
 
@@ -33,7 +34,7 @@ async function saveSource(provider:string,url:string,text:string):Promise<Source
  await mkdir(path.dirname(destination),{recursive:true});await writeFile(destination,text);
  return {id:hash(`${url}\n${checksum}`),provider,url,checksum,path:destination,retrievedAt:'2099-09-02T00:00:00.000Z',license:provider==='ftn-via-nflverse'?SOURCE_LICENSES.ftn:SOURCE_LICENSES.nflverse,metadata:{attribution:'Synthetic test fixture'}};
 }
-beforeAll(async()=>{producer=await analysisBundleProducer();historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));});
+beforeAll(async()=>{producer=await analysisBundleProducer();historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));overtime=await loadOvertimeReference();});
 beforeEach(async()=>{
  vi.clearAllMocks();directory=await mkdtemp(path.join(tmpdir(),'under-review-bundle-test-'));config.dataDir=path.join(directory,'export');
  const snapshots=await Promise.all([
@@ -42,6 +43,7 @@ beforeEach(async()=>{
   saveSource('nflverse-team-stats',`https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_${game.season}.csv`,csv(rawProfiles))]);
  const analysis:AnalysisResult={schemaVersion:1,metrics:[{id:`${game.id}:synthetic`,category:'coaching',name:'Synthetic result',team:'TST',value:0.02,unit:'wp_delta',status:'supported',eventIds:[`${game.id}:2`],playIds:['2'],assumptions:['Synthetic test only'],modelVersion:producer.models['nfl4th-adapted'].version,coverage:{eligible:1,modeled:1}}],events:[{id:`${game.id}:2`,playId:'2',quarter:2,clock:'12:00',description:'Synthetic play',kind:'coaching',team:'DMO',reviewStatus:'not_reviewed'}],timeline:[],coverage:[],models:Object.entries(producer.models).map(([id,model])=>({id,...model})),warnings:[]};
  analysis.gameAudit=buildGameAudit({game,plays,profiles:normalizeGameProfiles(game,rawProfiles),reference:historical.reference,referenceChecksum:historical.checksum,events:analysis.events});
+ Object.assign(analysis,applyOvertimeTimeline(game,plays,analysis,overtime));
  report={game,revision:{id:'local-revision',number:1,createdAt:'2099-09-02T00:00:00Z',statisticalStatus:'reconciled',chartingStatus:'unavailable',reviewStatus:'not_reviewed',changeSummary:'Synthetic',summary:'Synthetic',inputHash:'synthetic',analysis,sourceSnapshots:snapshots},reviews:[],drafts:[],history:[]};
  mocks.getReport.mockImplementation(async()=>structuredClone(report));
  mocks.query.mockImplementation(async(sql:string)=>sql.startsWith('SELECT 1 FROM events')?{rows:[],rowCount:0}:sql.startsWith('SELECT snapshot_id')?{rows:plays.map((data,index)=>({snapshot_id:snapshots[1].id,play_id:String(data.play_id),provider_order:index,data})),rowCount:plays.length}:{rows:[],rowCount:0});
@@ -109,6 +111,25 @@ describe('bounded clean analysis evidence bundles',()=>{
   await expect(importAnalysisBundle(changed)).rejects.toMatchObject({code:'bundle_producer_mismatch'});
   bundle.analysis.models[0].version='unmatched-version';resign(bundle);
   await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:'bundle_model_mismatch'});
+ });
+ it('rejects altered OT probabilities after recomputing the transport checksum',async()=>{
+  const overtimeRows=rawPlays.map(row=>({...row,desc:row.play_id===4?'End of regulation':row.desc}));
+  overtimeRows.push({...rawPlays.at(-1)!,play_id:5,qtr:5,desc:'END GAME'});
+  const overtimePlays=normalizePlays(parseCsv(csv(overtimeRows)),game.id);
+  const source=await saveSource('nflverse-pbp',sourceUrls.clean(game.season),csv(overtimeRows));
+  report.revision.sourceSnapshots[1]=source;
+  report.revision.analysis=applyOvertimeTimeline(game,overtimePlays,report.revision.analysis,overtime);
+  report.revision.analysis.gameAudit=buildGameAudit({game,plays:overtimePlays,profiles:normalizeGameProfiles(game,rawProfiles),reference:historical.reference,referenceChecksum:historical.checksum,events:report.revision.analysis.events});
+  mocks.query.mockImplementation(async(sql:string)=>sql.startsWith('SELECT snapshot_id')?{rows:overtimePlays.map((data,index)=>({snapshot_id:source.id,play_id:String(data.play_id),provider_order:index,data}))}:{rows:[],rowCount:0});
+  const bundle=await bundleForImport();
+  expect(bundle.analysis.timeline.at(-1)).toMatchObject({status:'observed',homeWp:0,awayWp:0,tieProbability:1});
+  bundle.analysis.timeline.at(-1)!.homeWp=1;bundle.analysis.timeline.at(-1)!.tieProbability=0;resign(bundle);
+  await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:'bundle_overtime_mismatch'});
+  expect(mocks.saveAnalysis).not.toHaveBeenCalled();
+ });
+ it('requires the current OT artifact and code fingerprint for old producer envelopes',async()=>{
+  const bundle=await bundleForImport();delete bundle.producer.files['models/overtime-reference.json'];resign(bundle);
+  await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:'bundle_producer_mismatch'});
  });
  it('rejects played-row, schedule and audit claims which do not match bundled source bytes',async()=>{
   const bundle=await bundleForImport();const changedPlays=structuredClone(bundle);changedPlays.plays[1].yards_gained=100;resign(changedPlays);

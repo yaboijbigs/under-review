@@ -1,0 +1,338 @@
+{
+  "schemaVersion": 1,
+  "modelVersion": "under-review-overtime-empirical-v1",
+  "referenceChecksum": "4618b6f2e583c76bf22d8d936a555ac8f11260d272542a205074b24c8c261b80",
+  "design": "Fixed comparable-state empirical estimator; no parameters selected using 2026 games. Chronological evaluation, one-game-one-weight Brier on estimated states; baseline uses same test states and one earliest phase-compatible state per prior game. Brier sums squared error across win/loss/tie (range 0–2). Not calibrated or promoted.",
+  "parameters": {
+    "minimumGames": 20,
+    "maximumGames": 40,
+    "maximumDistance": 3,
+    "maximumClockDifference": 300,
+    "maximumFieldDifference": 35,
+    "maximumDownDifference": 1,
+    "dirichletPriorPerOutcome": 0.5
+  },
+  "parserCounts": {
+    "non_scrimmage_overtime_entry": 159,
+    "opening_possession_legacy": 841,
+    "sudden_death": 1010,
+    "terminal": 132,
+    "missing_overtime_possession": 142,
+    "ambiguous_overtime_scoring_phase": 77,
+    "reply_to_field_goal": 201,
+    "invalid_overtime_clock": 1,
+    "unsupported_overtime_possession_exception": 39,
+    "opening_possession_both": 84,
+    "unsupported_overtime_try": 7,
+    "unsupported_touchdown_response_phase": 57
+  },
+  "referenceGames": 131,
+  "referenceStates": 2136,
+  "phases": {
+    "opening_possession_legacy": {
+      "games": 117,
+      "states": 841
+    },
+    "sudden_death": {
+      "games": 82,
+      "states": 1010
+    },
+    "reply_to_field_goal": {
+      "games": 23,
+      "states": 201
+    },
+    "opening_possession_both": {
+      "games": 14,
+      "states": 84
+    }
+  },
+  "chronological": [
+    {
+      "year": 2024,
+      "trainingThrough": 2023,
+      "games": 16,
+      "gamesWithEstimates": 15,
+      "eligibleStates": 200,
+      "estimatedStates": 180,
+      "coverage": 0.9,
+      "gameWeightedThreeClassBrier": 0.3473714923997335,
+      "gameWeightedPhaseBaselineBrier": 0.4412951455446398,
+      "phases": {
+        "opening_possession_legacy": {
+          "eligible": 104,
+          "estimates": 104,
+          "games": 15
+        },
+        "sudden_death": {
+          "eligible": 76,
+          "estimates": 76,
+          "games": 8
+        },
+        "unknown": {
+          "eligible": 16,
+          "estimates": 0,
+          "games": 0
+        },
+        "reply_to_field_goal": {
+          "eligible": 4,
+          "estimates": 0,
+          "games": 0
+        }
+      },
+      "perGame": [
+        {
+          "gameId": "2024_01_LA_DET",
+          "eligible": 8,
+          "estimates": 8,
+          "modelBrier": 0.1420380316446509,
+          "phaseBaselineBrier": 0.3734509556815794
+        },
+        {
+          "gameId": "2024_02_SEA_NE",
+          "eligible": 13,
+          "estimates": 13,
+          "modelBrier": 0.42781692106702995,
+          "phaseBaselineBrier": 0.5143265521341267
+        },
+        {
+          "gameId": "2024_05_BAL_CIN",
+          "eligible": 13,
+          "estimates": 13,
+          "modelBrier": 0.49262480878099973,
+          "phaseBaselineBrier": 0.45218284370958084
+        },
+        {
+          "gameId": "2024_05_TB_ATL",
+          "eligible": 4,
+          "estimates": 4,
+          "modelBrier": 0.3341559007112788,
+          "phaseBaselineBrier": 0.37345095568157943
+        },
+        {
+          "gameId": "2024_09_LA_SEA",
+          "eligible": 11,
+          "estimates": 11,
+          "modelBrier": 0.7586534528035472,
+          "phaseBaselineBrier": 0.5850541821596559
+        },
+        {
+          "gameId": "2024_09_NE_TEN",
+          "eligible": 16,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2024_09_TB_KC",
+          "eligible": 10,
+          "estimates": 10,
+          "modelBrier": 0.18388735665553785,
+          "phaseBaselineBrier": 0.3734509556815794
+        },
+        {
+          "gameId": "2024_10_NYG_CAR",
+          "eligible": 5,
+          "estimates": 5,
+          "modelBrier": 0.30835180593861383,
+          "phaseBaselineBrier": 0.4911519669768259
+        },
+        {
+          "gameId": "2024_12_MIN_CHI",
+          "eligible": 17,
+          "estimates": 17,
+          "modelBrier": 0.3986064740891277,
+          "phaseBaselineBrier": 0.5114053859378284
+        },
+        {
+          "gameId": "2024_13_TB_CAR",
+          "eligible": 15,
+          "estimates": 15,
+          "modelBrier": 0.40921275463298984,
+          "phaseBaselineBrier": 0.4566177578398038
+        },
+        {
+          "gameId": "2024_14_NYJ_MIA",
+          "eligible": 8,
+          "estimates": 8,
+          "modelBrier": 0.1841341268689215,
+          "phaseBaselineBrier": 0.3734509556815794
+        },
+        {
+          "gameId": "2024_16_ARI_CAR",
+          "eligible": 16,
+          "estimates": 16,
+          "modelBrier": 0.5643463643490645,
+          "phaseBaselineBrier": 0.5193758852378731
+        },
+        {
+          "gameId": "2024_17_ATL_WAS",
+          "eligible": 13,
+          "estimates": 13,
+          "modelBrier": 0.2037808323190817,
+          "phaseBaselineBrier": 0.3734509556815793
+        },
+        {
+          "gameId": "2024_17_DEN_CIN",
+          "eligible": 26,
+          "estimates": 26,
+          "modelBrier": 0.38922697276594803,
+          "phaseBaselineBrier": 0.4751559194028474
+        },
+        {
+          "gameId": "2024_18_CAR_ATL",
+          "eligible": 10,
+          "estimates": 10,
+          "modelBrier": 0.1988749462401919,
+          "phaseBaselineBrier": 0.3734509556815794
+        },
+        {
+          "gameId": "2024_18_JAX_IND",
+          "eligible": 15,
+          "estimates": 11,
+          "modelBrier": 0.2148616371290199,
+          "phaseBaselineBrier": 0.3734509556815793
+        }
+      ]
+    },
+    {
+      "year": 2025,
+      "trainingThrough": 2024,
+      "games": 14,
+      "gamesWithEstimates": 6,
+      "eligibleStates": 216,
+      "estimatedStates": 50,
+      "coverage": 0.23148148148148148,
+      "gameWeightedThreeClassBrier": 0.29042917307243216,
+      "gameWeightedPhaseBaselineBrier": 0.4604680581910183,
+      "phases": {
+        "opening_possession_both": {
+          "eligible": 84,
+          "estimates": 0,
+          "games": 0
+        },
+        "sudden_death": {
+          "eligible": 50,
+          "estimates": 50,
+          "games": 6
+        },
+        "reply_to_field_goal": {
+          "eligible": 38,
+          "estimates": 0,
+          "games": 0
+        },
+        "reply_to_touchdown": {
+          "eligible": 44,
+          "estimates": 0,
+          "games": 0
+        }
+      },
+      "perGame": [
+        {
+          "gameId": "2025_02_NYG_DAL",
+          "eligible": 24,
+          "estimates": 17,
+          "modelBrier": 0.5045212743247973,
+          "phaseBaselineBrier": 0.5047438330170776
+        },
+        {
+          "gameId": "2025_04_GB_DAL",
+          "eligible": 23,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_05_SF_LA",
+          "eligible": 14,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_09_JAX_LV",
+          "eligible": 19,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_10_ATL_IND",
+          "eligible": 14,
+          "estimates": 7,
+          "modelBrier": 0.217779897559256,
+          "phaseBaselineBrier": 0.45161290322580644
+        },
+        {
+          "gameId": "2025_11_CAR_ATL",
+          "eligible": 11,
+          "estimates": 6,
+          "modelBrier": 0.20457734552668508,
+          "phaseBaselineBrier": 0.45161290322580644
+        },
+        {
+          "gameId": "2025_11_WAS_MIA",
+          "eligible": 5,
+          "estimates": 4,
+          "modelBrier": 0.16635215561039338,
+          "phaseBaselineBrier": 0.45161290322580644
+        },
+        {
+          "gameId": "2025_12_IND_KC",
+          "eligible": 16,
+          "estimates": 12,
+          "modelBrier": 0.2884792180771278,
+          "phaseBaselineBrier": 0.45161290322580633
+        },
+        {
+          "gameId": "2025_12_JAX_ARI",
+          "eligible": 13,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_12_NYG_DET",
+          "eligible": 13,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_13_DEN_WAS",
+          "eligible": 18,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_14_PHI_LAC",
+          "eligible": 17,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        },
+        {
+          "gameId": "2025_16_GB_CHI",
+          "eligible": 10,
+          "estimates": 4,
+          "modelBrier": 0.3608651473363333,
+          "phaseBaselineBrier": 0.45161290322580644
+        },
+        {
+          "gameId": "2025_16_LA_SEA",
+          "eligible": 19,
+          "estimates": 0,
+          "modelBrier": null,
+          "phaseBaselineBrier": null
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Only 14 regular-season overtime games in the new 2025 rules: opening-possession estimates remain below the 20-game minimum.",
+    "Neighbor probabilities have not been independently calibrated; game-weighted diagnostics are descriptive and have limited precision.",
+    "Regular-season only; postseason continuation, touchdown responses/tries and possession exceptions withheld.",
+    "Observed terminal results are excluded from evaluation.",
+    "No 2026 labels or states enter training or parameter selection."
+  ]
+}

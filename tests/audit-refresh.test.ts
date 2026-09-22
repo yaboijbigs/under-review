@@ -37,7 +37,7 @@ describe('audit-only immutable report refresh',()=>{
   expect(savedGame).toEqual(game);expect(savedPlays).toEqual(plays);expect(sourceKind).toBe('clean');
   expect(options).toEqual({expectedBaseRevisionId:'base-revision'});
   for(const key of ['metrics','events','timeline','coverage'] as const)expect(analysis[key]).toEqual(baseAnalysis[key]);
-  expect(analysis.models[0]).toEqual(baseAnalysis.models[0]);expect(analysis.models).toHaveLength(2);
+  expect(analysis.models[0]).toEqual(baseAnalysis.models[0]);expect(analysis.models).toHaveLength(3);
   expect(analysis.gameAudit.version).toBe(GAME_AUDIT_VERSION);
   expect(snapshots).toEqual([schedule,pbp,ftn,aggregate]);
   expect(analysis.warnings).toEqual(['R source warning preserved']);
@@ -57,6 +57,21 @@ describe('audit-only immutable report refresh',()=>{
   expect(await refreshGameAudit(game.id)).toMatchObject({sourceKind:'raw',created:true});
   expect(mocks.query.mock.calls[0][1]).toEqual([game.id,raw.id]);
   expect(mocks.runAnalytics).not.toHaveBeenCalled();
+ });
+ it('adds OT terminal results without rerunning R, and detects a stale OT artifact checksum',async()=>{
+  const rows=dbRows();rows.at(-1)!.data.desc='End of regulation';
+  rows.push({...rows.at(-1)!,play_id:'5',provider_order:5,data:{...rows.at(-1)!.data,play_id:5,source_order:5,qtr:5,desc:'END GAME'}});
+  mocks.query.mockResolvedValue({rows});
+  await refreshGameAudit(game.id);
+  const refreshed=mocks.saveAnalysis.mock.calls[0][3] as AnalysisResult;
+  expect(refreshed.metrics).toEqual(baseAnalysis.metrics);expect(refreshed.timeline[0]).toEqual(baseAnalysis.timeline[0]);
+  expect(refreshed.timeline.at(-1)).toMatchObject({playId:'5',status:'observed',homeWp:0,awayWp:0,tieProbability:1});
+  report.revision={...report.revision,id:'new-revision',number:2,analysis:structuredClone(refreshed),sourceSnapshots:mocks.saveAnalysis.mock.calls[0][2]};
+  expect(await refreshGameAudit(game.id)).toMatchObject({created:false});
+  report.revision.analysis.models.find(model=>model.id==='overtime-empirical')!.checksum='0'.repeat(64);
+  await refreshGameAudit(game.id);
+  expect(mocks.saveAnalysis).toHaveBeenCalledTimes(2);expect(mocks.runAnalytics).not.toHaveBeenCalled();
+  expect(mocks.saveAnalysis.mock.calls[1][5]).toEqual({expectedBaseRevisionId:'new-revision'});
  });
  it('rejects ambiguous PBP provenance instead of mixing raw and clean inputs',async()=>{
   report.revision.sourceSnapshots.push({...pbp,id:'raw-source',provider:'nflverse-raw-pbp'});

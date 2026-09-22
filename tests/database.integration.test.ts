@@ -189,6 +189,37 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     expect((await repository.getReport(guardedGame.id))?.history).toHaveLength(2);
   });
 
+  it('refreshes OT in an isolated real database without R or a source fetch, retaining metrics and old revisions',async()=>{
+    const {loadGameProfileReference}=await import('../packages/core/src/game-profile-source.js');
+    const {buildGameAudit,GAME_AUDIT_VERSION}=await import('../packages/core/src/game-audit.js');
+    const {refreshGameAudit}=await import('../packages/core/src/audit-refresh.js');
+    const {projectRoot}=await import('../packages/core/src/config.js');
+    const path=await import('node:path');
+    const historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));
+    const otGame={...game,id:'2099_11_TST_DMO',homeTeam:'DMO',week:11,homeScore:0,awayScore:0,providerData:{synthetic:true,result:0}};
+    const plays=Array.from({length:6},(_,index)=>({game_id:otGame.id,home_team:otGame.homeTeam,away_team:otGame.awayTeam,season:otGame.season,
+      play_id:index,qtr:Math.max(1,index),time:'00:00',total_home_score:0,total_away_score:0,desc:index===0?'GAME':index===5?'END GAME':'Synthetic test row',play_type:'no_play'}));
+    const profiles=[otGame.homeTeam,otGame.awayTeam].map(team=>({gameId:otGame.id,season:otGame.season,team,opponent:team===otGame.homeTeam?otGame.awayTeam:otGame.homeTeam,
+      pointsFor:0,pointsAgainst:0,totalYards:0,opponentYards:0,penalties:0,penaltyYards:0,turnoverMargin:0,nonOffensiveTouchdowns:0}));
+    const audit=buildGameAudit({game:otGame,plays,profiles,reference:historical.reference,referenceChecksum:historical.checksum});
+    const sources=[{...snapshot,id:'synthetic-ot-pbp',provider:'nflverse-pbp'},{...snapshot,id:'synthetic-ot-aggregate',provider:'nflverse-team-stats'}];
+    const original:AnalysisResult={...result(),events:[],gameAudit:audit,
+      timeline:[{playId:'2',quarter:2,clock:'12:00',homeWp:0.42,description:'Stored regulation point'},{playId:'5',quarter:5,clock:'00:00',homeWp:null,description:'END GAME'}],
+      models:[{id:'game-profile-audit',version:GAME_AUDIT_VERSION,checksum:historical.checksum}],warnings:[]};
+    const first=await repository.saveAnalysis(otGame,plays,sources,original,'clean');
+    const refreshed=await refreshGameAudit(otGame.id);
+    expect(refreshed).toMatchObject({created:true,number:2});
+    const latest=await repository.getReport(otGame.id);
+    expect(latest?.revision.analysis.metrics).toEqual(original.metrics);
+    expect(latest?.revision.analysis.timeline[0]).toEqual(original.timeline[0]);
+    expect(latest?.revision.analysis.timeline.at(-1)).toMatchObject({status:'observed',homeWp:0,awayWp:0,tieProbability:1,reasonCode:'observed_terminal_result'});
+    expect(latest?.revision.sourceSnapshots.map(source=>source.id).sort()).toEqual(sources.map(source=>source.id).sort());
+    expect((await repository.getReport(otGame.id,1))?.revision).toMatchObject({id:first.id,analysis:original});
+    expect(await refreshGameAudit(otGame.id)).toMatchObject({created:false,id:refreshed.id,number:2});
+    expect((await repository.getReport(otGame.id))?.history).toHaveLength(2);
+    expect((await db.query('SELECT 1 FROM publication_outbox WHERE game_id=$1',[otGame.id])).rowCount).toBe(0);
+  });
+
   it('reads complete latest and historical reports with one pool checkout each',async()=>{
     const reportGame={...game,id:'2099_09_TST_DEMO',week:9};
     const oldSource={...snapshot,id:'synthetic-report-old',checksum:'1'.repeat(64),metadata:{synthetic:true,nested:{original:true}}};

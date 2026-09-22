@@ -1,15 +1,17 @@
 import Link from "next/link";
 import type { Game, GameAudit, GameAuditFlag, GameProfile, ReviewCandidate } from "@under-review/core/contracts";
-import { getGameVerdict } from "@under-review/core/consumer-summary";
+import { getGameVerdict, SUSPICION_SCALE } from "@under-review/core/consumer-summary";
 import { auditLabel, human, referencePeriod, teamName } from "@/lib/presentation";
 
 export function GameVerdict({audit}: {audit: GameAudit | undefined}) {
   const verdict = getGameVerdict(audit);
   const comparison = verdict.comparison;
-  return <section className={`game-verdict verdict-${verdict.tone}`} aria-labelledby="verdict-title" data-verdict={verdict.level}>
-    <div className="verdict-main"><p className="eyebrow"><span className="verdict-indicator" aria-hidden="true"/>THE VERDICT</p><h2 id="verdict-title">{verdict.label}</h2><p className="verdict-summary">{verdict.summary}</p>{verdict.reasons.length>0 && <ul className="verdict-reasons">{verdict.reasons.slice(0,3).map((reason,index)=><li key={index}>{reason}</li>)}</ul>}</div>
+  return <section className={`game-verdict verdict-${verdict.tone}`} aria-labelledby="verdict-title" data-verdict={verdict.level} data-rating={verdict.rating ?? "unrated"}>
+    <div className="verdict-main"><p className="eyebrow"><span className="verdict-indicator" aria-hidden="true"/>GAME SUSPICION RATING</p><div className="rating-headline"><h2 id="verdict-title">{verdict.label}</h2>{verdict.rating && <span className="rating-number" aria-label={`Level ${verdict.rating} of 5`}>{verdict.rating}<small> / 5</small></span>}</div><p className="rating-definition">{verdict.definition}</p><p className="rating-boundary">Automatic screening · Not a finding of manipulation</p>
+      <ol className="rating-scale" aria-label="Game suspicion rating scale">{SUSPICION_SCALE.map(tier=><li key={tier.level} data-level={tier.rating} data-selected={tier.rating===verdict.rating} aria-current={tier.rating===verdict.rating ? "step" : undefined}><span className="rating-tick" aria-hidden="true"/><span>{tier.label}</span></li>)}</ol>
+      <p className="verdict-summary">{verdict.summary}</p>{verdict.reasons.length>0 && <ul className="verdict-reasons">{verdict.reasons.slice(0,3).map((reason,index)=><li key={index}>{reason}</li>)}</ul>}{verdict.cluster && <div className="event-links rating-play-links" aria-label="Penalty sequence behind the rating">{verdict.cluster.playIds.map(id=><a key={id} href={`#play-${encodeURIComponent(id)}`}>Inspect play {id} ↗</a>)}</div>}</div>
     {comparison && comparison.matchingGames>0 && <aside className="verdict-comparison"><span className="eyebrow">THE HISTORICAL COMPARISON</span><strong>{comparison.wins}<span> / {comparison.matchingGames}</span></strong><p>similar past team performances ended in a win</p><span className="comparison-period">{referencePeriod(comparison.startSeason,comparison.endSeason)}</span><a href="#game-audit">See the comparison →</a></aside>}
-    <div className="verdict-note"><span>{verdict.evidenceNote}</span><a href="/methodology#game-audit-method">How we decide ↗</a></div>
+    <div className="verdict-note"><span>{verdict.evidenceNote} <span className="rating-version">Rules: {verdict.rulesVersion}</span></span><a href="/methodology#verdicts">How we rate games ↗</a></div>
   </section>;
 }
 

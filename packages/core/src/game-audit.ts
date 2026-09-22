@@ -1,7 +1,7 @@
 import type { EvidenceEvent, Game, GameAudit, GameAuditFlag, GameProfile, GameProfileReference, ReviewCandidate } from './contracts.js';
 import type { ProviderRow } from './normalize.js';
 
-export const GAME_AUDIT_VERSION = 'under-review-game-audit-v2';
+export const GAME_AUDIT_VERSION = 'under-review-game-audit-v3';
 
 const finite = (value: unknown): number | null => value === null || value === undefined || value === '' || typeof value === 'boolean' || !Number.isFinite(Number(value)) ? null : Number(value);
 const yes = (value: unknown): boolean => value === true || value === 1;
@@ -175,7 +175,7 @@ export function buildGameAudit({ game, plays = [], profiles: supplied = [], refe
     'Seven overlapping patterns are checked. They are correlated and are not combined into an overall anomaly score; multiple-pattern searching can find apparent outliers.',
     'Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.',
     'At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.',
-    'Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.',
+    'Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost. Review priorities use regulation WP only; separate experimental overtime estimates do not determine call correctness or coaching costs.',
     'Defensive penalties awarding first downs on third or fourth down are checked throughout the game. At least two distinct qualifying plays sharing an explicit provider drive and offensive team form a drive review cluster; this is not a claim that every penalty erased a stop. Declined, offsetting, ambiguous and independently converted plays are excluded from this check.',
     'Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.',
   ];

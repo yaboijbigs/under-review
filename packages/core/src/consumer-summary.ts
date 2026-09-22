@@ -1,8 +1,18 @@
 import type { GameAudit, GameAuditFlag, GameProfile } from './contracts.js';
 
-export type VerdictLevel = 'highly_unusual'|'unusual'|'key_plays'|'no_flag'|'limited'|'awaiting';
+export const SUSPICION_RULES_VERSION = 'game-suspicion-v1';
+export const SUSPICION_SCALE = [
+ {level:'fair',rating:1,label:'Fair',definition:'No flags within the checks we can run.'},
+ {level:'debatable',rating:2,label:'Debatable',definition:'Individual plays deserve a closer look.'},
+ {level:'hmm',rating:3,label:'Hmm',definition:'An unusual win pattern or a repeated penalty sequence.'},
+ {level:'sus',rating:4,label:'Sus',definition:'A strong statistical flag or three-plus drive-extending penalties.'},
+ {level:'extreme',rating:5,label:'RIGGED?',definition:'A strong statistical flag and a three-plus penalty sequence favored the winner.'},
+] as const;
+export type VerdictLevel = typeof SUSPICION_SCALE[number]['level']|'limited'|'awaiting';
 export interface GameVerdict {
  level:VerdictLevel;label:string;shortLabel:string;summary:string;reasons:string[];
+ rating:1|2|3|4|5|null;definition:string;rulesVersion:typeof SUSPICION_RULES_VERSION;
+ cluster:{team:string;playIds:string[]}|null;
  comparison:{wins:number;matchingGames:number;winRate:number|null;startSeason:number|null;endSeason:number|null}|null;
  reviewCount:number;evidenceNote:string;tone:'high'|'elevated'|'neutral'|'limited'|'waiting';
 }
@@ -45,32 +55,56 @@ function supportedFlag(audit:GameAudit,flag:GameAuditFlag):boolean{
 }
 const comparison=(flag:GameAuditFlag):GameVerdict['comparison']=>({wins:flag.reference.wins,matchingGames:flag.reference.matchingGames,winRate:flag.reference.matchingGames>=20?flag.reference.winRate:null,startSeason:flag.reference.startSeason,endSeason:flag.reference.endSeason});
 
-/** Plain-language presentation of the existing fixed checks. No new score or fitted threshold. */
+function driveClusters(audit:GameAudit):NonNullable<GameVerdict['cluster']>[] {
+ const clusters:NonNullable<GameVerdict['cluster']>[]=[];
+ for(const context of audit.context){
+  if(context.kind!=='drive_extending_penalties'||!context.team||!names[context.team])continue;
+  const profile=audit.profiles.find(p=>p.team===context.team);
+  const playIds=[...new Set(context.playIds)];
+  if(!profile||playIds.length<2||playIds.some(id=>!id.trim()))continue;
+  let drive:string|undefined;
+  const valid=playIds.every(playId=>{
+   const candidates=audit.reviewCandidates.filter(candidate=>candidate.playId===playId);
+   if(!candidates.length)return false;
+   return candidates.every(candidate=>{
+    if(candidate.team!==context.team||!candidate.reasons.some(reason=>reason===`Defensive penalty on ${profile.opponent} awarded ${context.team} a first down on third down; call correctness requires review.`||reason===`Defensive penalty on ${profile.opponent} awarded ${context.team} a first down on fourth down; call correctness requires review.`))return false;
+    const grouped=candidate.reasons.map(reason=>/^(\d+) defensive-penalty first downs on third or fourth down occurred on ([A-Z]+) drive ([1-9]\d*); review the sequence together\.$/.exec(reason)).filter(match=>match!==null);
+    if(grouped.length!==1)return false;
+    const match=grouped[0];
+    if(Number(match[1])!==playIds.length||match[2]!==context.team||(drive!==undefined&&drive!==match[3]))return false;
+    drive=match[3];return true;
+   });
+  });
+  if(valid)clusters.push({team:context.team,playIds});
+ }
+ return clusters.sort((a,b)=>b.playIds.length-a.playIds.length);
+}
+
+/** Versioned editorial screening rules, not a probability or finding of manipulation. */
 export function getGameVerdict(audit:GameAudit|null|undefined,hasAnalysis=true):GameVerdict{
- const base={comparison:null,reviewCount:audit?.reviewCandidates.length??0,evidenceNote:'Statistical rarity and flagged plays do not establish why a game happened.'};
+ const base={comparison:null,rating:null,cluster:null,rulesVersion:SUSPICION_RULES_VERSION,definition:'Outside the five-level scale until the evidence is sufficient.',reviewCount:audit?.reviewCandidates.length??0,evidenceNote:'Automatic screening. Not a finding of manipulation.'} as const;
  if(!hasAnalysis)return {...base,level:'awaiting',label:'Waiting for game data',shortLabel:'Awaiting data',summary:'The report will appear automatically after the game ends and its data passes validation.',reasons:[],tone:'waiting'};
- if(!audit)return {...base,level:'limited',label:'Game verdict not available yet',shortLabel:'Verdict pending',summary:'The statistical analysis is complete, but this saved report does not yet include the game-level comparison.',reasons:[],tone:'limited'};
+ if(!audit)return {...base,level:'limited',label:'Unrated',shortLabel:'Unrated',summary:'The statistical analysis is complete, but this saved report does not yet include the game-level comparison.',reasons:[],tone:'limited'};
  const invalidFlag=audit.flags.some(flag=>!validFlag(audit,flag));
  const supported=invalidFlag?[]:audit.flags.filter(flag=>supportedFlag(audit,flag));
  const strongest=supported.find(flag=>flag.status==='historical_outlier')??supported.find(flag=>flag.status==='unusual_profile');
- if(strongest){
-  const p=audit.profiles.find(p=>p.team===strongest.team)!;
-  const high=strongest.status==='historical_outlier';
-  const r=strongest.reference;
-  const conditions=strongest.conditions.map(condition=>conditionLabels[condition]);
-  return {...base,level:high?'highly_unusual':'unusual',label:high?'Highly unusual win':'Unusual win',shortLabel:high?'Highly unusual':'Unusual',
-   summary:`${teamName(p.team)} won despite ${conditions.join(' and ')}. Teams with that combination won ${count(r.wins)} of ${count(r.matchingGames)} matching games in the historical reference.`,
-   reasons:profileFacts(p),comparison:comparison(strongest),tone:high?'high':'elevated',
-   evidenceNote:`The comparison covers ${r.startSeason}–${r.endSeason}. It describes past results, not the odds that this game was rigged.`};
- }
  const profiles=audit.profiles;
- const compatible=profiles.length===2&&profiles.every(complete)&&profiles[0].team===profiles[1].opponent&&profiles[1].team===profiles[0].opponent&&profiles[0].gameId===profiles[1].gameId&&profiles[0].pointsFor===profiles[1].pointsAgainst&&profiles[1].pointsFor===profiles[0].pointsAgainst;
+ const compatible=profiles.length===2&&profiles.every(complete)&&profiles[0].team===profiles[1].opponent&&profiles[1].team===profiles[0].opponent&&profiles[0].gameId===profiles[1].gameId&&profiles[0].season===profiles[1].season&&profiles[0].pointsFor===profiles[1].pointsAgainst&&profiles[1].pointsFor===profiles[0].pointsAgainst&&profiles[0].totalYards===profiles[1].opponentYards&&profiles[1].totalYards===profiles[0].opponentYards&&profiles[0].turnoverMargin===-profiles[1].turnoverMargin!;
  const winner=profiles.find(p=>finite(p.pointsFor)&&finite(p.pointsAgainst)&&p.pointsFor>p.pointsAgainst);
  const sparse=audit.flags.find(flag=>flag.status==='rare_sample'&&validCounts(flag));
- if(!compatible||!hasReference(audit)||invalidFlag||sparse||!winner){
+ if(!compatible||!hasReference(audit)||invalidFlag||(sparse&&!strongest)||!winner){
   const summary=!compatible?'Some team totals are missing or conflict with the final score, so we cannot reliably grade how unusual the result was.':!hasReference(audit)||invalidFlag?'The historical comparison is unavailable or inconsistent, so we cannot reliably grade this result.':!winner?'This game ended in a tie. The current historical checks grade winning profiles, so they do not rate this result.':`This combination has only ${count(sparse!.reference.matchingGames)} matching games in the historical reference—too few for a reliable unusual-win label.`;
-  return {...base,level:'limited',label:'Not enough data for a verdict',shortLabel:'Limited data',summary,reasons:winner?profileFacts(winner):[],comparison:sparse&&hasReference(audit)&&!invalidFlag?comparison(sparse):null,tone:'limited',evidenceNote:base.reviewCount?`${base.reviewCount} ${base.reviewCount===1?'play was':'plays were'} still flagged for a closer look. Missing evidence is not a clean bill of health.`:'The available statistical analysis remains below; missing evidence is not a clean bill of health.'};
+  return {...base,level:'limited',label:'Unrated',shortLabel:'Unrated',summary,reasons:winner?profileFacts(winner):[],comparison:sparse&&hasReference(audit)&&!invalidFlag?comparison(sparse):null,tone:'limited',evidenceNote:base.reviewCount?`${base.reviewCount} ${base.reviewCount===1?'play was':'plays were'} still flagged for a closer look. Missing evidence is not a clean bill of health.`:'The available statistical analysis remains below; missing evidence is not a clean bill of health.'};
  }
- if(base.reviewCount)return {...base,level:'key_plays',label:'Key plays flagged',shortLabel:'Key plays flagged',summary:`No unusual winning pattern was found in the checks we ran. ${base.reviewCount} ${base.reviewCount===1?'play deserves':'plays deserve'} a closer look.`,reasons:profileFacts(winner),tone:'neutral',evidenceNote:'These plays were selected for review by the automated scan. A flag alone does not mean the call was wrong.'};
- return {...base,level:'no_flag',label:'No unusual result detected',shortLabel:'No major flag',summary:'The winning team did not trigger our unusual-win checks, and the play scan found no key review candidates.',reasons:profileFacts(winner),tone:'neutral',evidenceNote:'This is the result of the checks we can run on the available data, not a review of every officiating decision.'};
+ const clusters=driveClusters(audit);
+ const winningCluster=clusters.find(cluster=>cluster.team===winner.team&&cluster.playIds.length>=3);
+ const outlier=strongest?.status==='historical_outlier';
+ const top=outlier&&strongest.team===winner.team&&!!winningCluster;
+ const cluster=top?winningCluster!:clusters[0]??null;
+ const rating=top?5:outlier||(cluster&&cluster.playIds.length>=3)?4:strongest||(cluster&&cluster.playIds.length>=2)?3:base.reviewCount?2:1;
+ const tier=SUSPICION_SCALE[rating-1];
+ const clusterReason=cluster?`${teamName(cluster.team)} received ${cluster.playIds.length} first downs from defensive penalties on third or fourth down during one drive.`:null;
+ const historicalReason=strongest?`${teamName(winner.team)} won despite ${strongest.conditions.map(condition=>conditionLabels[condition]).join(' and ')}. Matching past performances produced ${count(strongest.reference.wins)} wins in ${count(strongest.reference.matchingGames)} games.`:null;
+ const summary=top?'A rare winning profile and a repeated drive-extending penalty sequence both favored the winning team. This is our strongest screening flag; it does not establish that the calls were wrong or the game was fixed.':rating===4?'A strong flag deserves scrutiny. The evidence below explains whether it comes from the winning performance or a repeated penalty sequence.':rating===3?'There is a specific pattern worth questioning beyond individual key plays. The evidence below explains it.':rating===2?`${base.reviewCount} ${base.reviewCount===1?'play deserves':'plays deserve'} a closer look, but no stronger pattern met this rating’s rules. More routine flags alone do not raise the rating.`:'No unusual winning pattern or key review candidates were found within the checks we can run. Fair here does not mean every call was correct.';
+ return {...base,...tier,shortLabel:tier.label,summary,cluster,comparison:strongest?comparison(strongest):null,reasons:[historicalReason,clusterReason,...profileFacts(winner)].filter((reason):reason is string=>!!reason),tone:rating>=4?'high':rating===3?'elevated':'neutral',evidenceNote:'Automatic screening. Not a finding of manipulation. These signals may overlap; the level is not the odds that a game was rigged.'};
 }
