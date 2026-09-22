@@ -9,6 +9,7 @@ const originalDatabaseUrl = config.databaseUrl;
 let admin: pg.Client;
 let db: typeof import('../packages/core/src/db.js');
 let jobs: typeof import('../packages/core/src/jobs.js');
+let coverage:typeof import('../packages/core/src/season-coverage.js');
 const due = (hours: number) => new Date(Date.now() - hours * 3600000);
 
 async function game(id: string, hoursAgo: number, analyzed = false) {
@@ -33,6 +34,7 @@ describe.skipIf(!enabled)('scheduler priority and coalescing (isolated PostgreSQ
     db = await import('../packages/core/src/db.js');
     await db.migrate();
     jobs = await import('../packages/core/src/jobs.js');
+    coverage = await import('../packages/core/src/season-coverage.js');
   }, 60000);
   beforeEach(async () => { await db.query('TRUNCATE jobs, games CASCADE'); });
   afterAll(async () => {
@@ -161,5 +163,26 @@ describe.skipIf(!enabled)('scheduler priority and coalescing (isolated PostgreSQ
     const second = await jobs.claimJob('second');
     await jobs.finishJob(second!, new Error('Synthetic source still unavailable'));
     expect((await db.query('SELECT status,attempts FROM jobs WHERE id=$1', [id])).rows[0]).toEqual({ status: 'failed', attempts: 2 });
+  });
+
+  it('queues catch-up after an exhausted abandoned job without changing active leases',async()=>{
+    await game('older-completed-game',240,true);
+    await db.query("UPDATE games SET game_json='{\"homeScore\":20,\"awayScore\":17}'::jsonb WHERE id='older-completed-game'");
+    const expired=await jobs.enqueue('analyze','older-completed-game',{},'exhausted-before-restart');
+    const active=await jobs.enqueue('analyze','active-game',{},'active-lease');
+    const retry=await jobs.enqueue('analyze','retry-game',{},'retry-lease');
+    await db.query("UPDATE jobs SET status='running',attempts=max_attempts,worker_id='old-worker',lease_until=now()-interval '1 minute' WHERE id=$1",[expired]);
+    await db.query("UPDATE jobs SET status='running',attempts=1,worker_id='live-worker',lease_until=now()+interval '1 minute' WHERE id=$1",[active]);
+    await db.query("UPDATE jobs SET status='running',attempts=1,worker_id='old-worker',lease_until=now()-interval '1 minute' WHERE id=$1",[retry]);
+    expect((await coverage.queueSeasonCatchup(2026,[2])).queued).toEqual([]);
+    const activeBefore=(await db.query('SELECT * FROM jobs WHERE id=$1',[active])).rows[0];
+    await jobs.recoverExpiredJobs();
+    expect((await db.query('SELECT status,worker_id,lease_until FROM jobs WHERE id=$1',[expired])).rows[0]).toEqual({status:'failed',worker_id:null,lease_until:null});
+    expect((await db.query('SELECT status FROM jobs WHERE id=$1',[retry])).rows[0].status).toBe('pending');
+    expect((await db.query('SELECT * FROM jobs WHERE id=$1',[active])).rows[0]).toEqual(activeBefore);
+    const catchup=await coverage.queueSeasonCatchup(2026,[2]);
+    expect(catchup.queued).toEqual([{gameId:'older-completed-game',kind:'refresh-audit',jobId:expect.any(String)}]);
+    expect((await coverage.queueSeasonCatchup(2026,[2])).queued).toEqual([]);
+    expect((await claimAndFinish())?.id).toBe(catchup.queued[0].jobId);
   });
 });

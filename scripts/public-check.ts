@@ -1,6 +1,5 @@
 import { getReport } from '@under-review/core/repository';
 import { getGameVerdict } from '@under-review/core/consumer-summary';
-import { GAME_AUDIT_VERSION } from '@under-review/core/game-audit';
 import { pool } from '@under-review/core/db';
 import { safeError } from '@under-review/core/config';
 
@@ -13,7 +12,7 @@ try {
   const reports=await Promise.all(games.map(id=>getReport(id)));
   const pending=games.filter((_,i)=>{
    const r=reports[i];const audit=r?.revision.analysis.gameAudit;
-   return !r||audit?.version!==GAME_AUDIT_VERSION||!r.revision.analysis.metrics.some(m=>m.status==='supported')
+   return !r||!audit||!r.revision.analysis.metrics.some(m=>m.status==='supported')
     ||(r.game.id==='2026_02_GB_NYJ'&&getGameVerdict(audit).level!=='highly_unusual');
   });
   if(!pending.length){ready=true;break;}
@@ -25,6 +24,8 @@ try {
   const response=await fetch(`http://web:3000/games/${id}`,{signal:AbortSignal.timeout(30000)});
   if(!response.ok)throw new Error(`Seed report returned ${response.status}.`);
  }
+ // Existing schema-validated reports remain readable while audit upgrades run.
+ // The separate coverage service requires the current audit version on all games.
  // Website readiness is independent of social drafts and manual officiating reviews.
  // The existing check still verifies that live social publication is disabled.
  await import('./staging-check.js');

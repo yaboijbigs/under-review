@@ -1,6 +1,6 @@
 import { migrate,pool,query } from '@under-review/core/db';
 import { createUser } from '@under-review/core/auth';
-import { enqueue } from '@under-review/core/jobs';
+import { enqueue,recoverExpiredJobs } from '@under-review/core/jobs';
 import { syncSeason } from '@under-review/core/pipeline';
 import { config,safeError } from '@under-review/core/config';
 import { queueSeasonCatchup,validateCoverageScope } from '@under-review/core/season-coverage';
@@ -21,6 +21,7 @@ try {
     await enqueue('analyze',id,{backfill:true,preferRaw:true,prepareDraft:true},`bootstrap:${id}`);
   }
   if(auditWeeks.length){
+    await recoverExpiredJobs();
     const catchup=await queueSeasonCatchup(config.season,auditWeeks);
     console.log(JSON.stringify({event:'bootstrap.audit-catchup',season:config.season,weeks:auditWeeks,queued:catchup.queued}));
   }

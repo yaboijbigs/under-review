@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { query,transaction } from './db.js';
 import { safeError } from './config.js';
+import type pg from 'pg';
 
 export interface Job {id:string;kind:string;gameId:string|null;payload:Record<string,unknown>;attempts:number;maxAttempts:number;workerId:string}
 export async function enqueue(kind:string,gameId:string|null,payload:Record<string,unknown>={},key?:string,runAfter=new Date()):Promise<string>{
@@ -26,10 +27,15 @@ export async function enqueueAnalysisIfIdle(gameId:string,payload:Record<string,
   return result.rows[0].id;
  });
 }
+/** Recover abandoned work before queue planning as well as before claiming it. */
+export async function recoverExpiredJobs(client?:pg.PoolClient){
+ const sql="UPDATE jobs SET status=CASE WHEN attempts>=max_attempts THEN 'failed' ELSE 'pending' END,worker_id=null,lease_until=null,error='Worker lease expired',updated_at=now() WHERE status='running' AND lease_until<now()";
+ return client?client.query(sql):query(sql);
+}
 export async function claimJob(workerId:string):Promise<Job|null>{
  return transaction(async client=>{
   // Sending posts are reconciled separately and never replayed by job recovery.
-  await client.query("UPDATE jobs SET status=CASE WHEN attempts>=max_attempts THEN 'failed' ELSE 'pending' END,worker_id=null,lease_until=null,error='Worker lease expired',updated_at=now() WHERE status='running' AND lease_until<now()");
+  await recoverExpiredJobs(client);
   const row=(await client.query(`SELECT * FROM jobs j WHERE status='pending' AND run_after<=now()
   AND (game_id IS NULL OR NOT EXISTS(SELECT 1 FROM jobs busy WHERE busy.game_id=j.game_id AND busy.status='running'))
   ORDER BY CASE
