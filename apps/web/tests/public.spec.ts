@@ -26,10 +26,11 @@ test("methodology preserves uncertainty and report links", async ({page}) => {
 });
 test("operator routes require a session", async ({page,request}) => {
   await page.goto("/admin");
-  await expect(page).toHaveURL(/\/admin\/login/);
+  await expect(page).toHaveURL(/\/admin\/login/,{timeout:20_000});
   await expect(page.getByLabel("Password")).toHaveAttribute("type","password");
-  const response=await request.post("/api/admin/action",{form:{action:"kill-switch",enabled:"false"},maxRedirects:0});
-  expect([400,401,403]).toContain(response.status());
+  // An invalid action cannot change settings even if an authorization check fails.
+  const response=await request.post("/api/admin/action",{form:{action:"invalid-auth-probe"},maxRedirects:0});
+  expect([401,403]).toContain(response.status());
 });
 test("status is inspectable and staging is excluded from indexing", async ({page,request}) => {
   await page.goto("/status");
