@@ -11,7 +11,7 @@ try {
   const completed=games.filter(g=>g.homeScore!==null&&g.awayScore!==null);
   const missing=completed.filter(g=>g.auditVersion!==GAME_AUDIT_VERSION);
   console.log(JSON.stringify({event:'coverage.progress',scheduled:games.length,completed:completed.length,audited:completed.length-missing.length,missing,awaiting:games.filter(g=>g.homeScore===null||g.awayScore===null).map(g=>g.id)}));
-  ready=games.length===32&&completed.length>=31&&missing.length===0;
+  ready=games.length===32&&completed.length===32&&missing.length===0;
   if(ready)break;
   await new Promise(resolve=>setTimeout(resolve,60000));
  }

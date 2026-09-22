@@ -8,7 +8,9 @@ The five-tier game rating uses Fair, Debatable, Hmm, Sus and RIGGED?. The highes
 
 The separate overtime estimator uses 2,136 eligible states from 131 prior regular-season games, distinguishes win/loss/tie, and requires at least 20 comparable prior games. New-rule opening possessions currently have only 14 reference games; touchdown responses, complex possession changes and postseason phases remain unavailable. Local stored GB–NYJ and IND–KC reports respectively contain five and eight experimental OT estimates, with their observed final results shown separately. Audit v3 refreshes stored reports without rerunning unchanged R metrics. The reference SHA-256 is `b53e6bc3fd9719ffc73efa899dd84aa115eb829126d972a2f9c6e595005d9824`; [method and chronological diagnostics](analytics/OVERTIME.md) document the limited coverage and uncalibrated status.
 
-All 295 unit/integration tests across 24 files passed, including real PostgreSQL checks. Typechecking and the production build passed. Six focused rating browser checks and two overtime chart checks passed across desktop/mobile. Publication and live deployment are recorded below only after verification.
+Audit upgrades reconstruct game profiles from their original checksum-verified aggregate snapshot and retain the original source metadata. They make no live aggregate request; missing or corrupt evidence preserves an existing complete report by failing the upgrade. Source reconciliation remains the normal analysis job. The release coverage gate now requires all 32 games to have completed current audits.
+
+All 299 unit/integration tests across 24 files passed, including real PostgreSQL checks. The first full run after the snapshot-preservation fix had one transient lease-claim failure; the isolated database suite and one full rerun passed. Typechecking and the production build passed. Six focused rating browser checks and two overtime chart checks passed across desktop/mobile. Publication and live deployment are recorded below only after verification.
 
 ## Warm database connections — deployed and verified 2026-09-22 UTC
 
