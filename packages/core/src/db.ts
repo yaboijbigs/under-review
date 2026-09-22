@@ -5,7 +5,10 @@ import path from 'node:path';
 import { config,projectRoot } from './config.js';
 
 const globalDb=globalThis as typeof globalThis & {urPool?:pg.Pool};
-export const pool=globalDb.urPool??new pg.Pool({connectionString:config.databaseUrl,max:5,connectionTimeoutMillis:5000,idleTimeoutMillis:30000});
+// Keep a warm connection and allow bounded handshake/checkout time on the
+// resource-capped host. This changes neither the five-client limit nor retries.
+export const databasePoolOptions=Object.freeze({max:5,min:1,connectionTimeoutMillis:15000,idleTimeoutMillis:300000});
+export const pool=globalDb.urPool??new pg.Pool({connectionString:config.databaseUrl,...databasePoolOptions});
 globalDb.urPool=pool;
 export async function query<T extends pg.QueryResultRow=pg.QueryResultRow>(text:string,params:unknown[]=[]):Promise<pg.QueryResult<T>> {return pool.query<T>(text,params);}
 export async function transaction<T>(fn:(client:pg.PoolClient)=>Promise<T>):Promise<T> {
