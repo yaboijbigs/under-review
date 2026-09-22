@@ -1,4 +1,6 @@
 export type RecordValue = Record<string, unknown>;
+// Keep the previous NFL season selected through its playoffs and the offseason.
+export function defaultNflSeason(now = new Date()): number { return now.getUTCFullYear() - (now.getUTCMonth() < 6 ? 1 : 0); }
 export const record = (value: unknown): RecordValue => value && typeof value === "object" && !Array.isArray(value) ? value as RecordValue : {};
 export const records = (value: unknown): RecordValue[] => Array.isArray(value) ? value.map(record) : [];
 export function first(value: RecordValue, ...keys: string[]): unknown {

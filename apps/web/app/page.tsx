@@ -1,10 +1,10 @@
 import { listGames } from "@under-review/core/repository";
 import { EmptyState, GameCard, Unavailable } from "@/components/ui";
 import { getGameVerdict } from "@under-review/core/consumer-summary";
-import { teams, teamName } from "@/lib/presentation";
+import { teams, teamName, defaultNflSeason } from "@/lib/presentation";
 export const dynamic = "force-dynamic";
 export default async function Home({searchParams}: {searchParams: Promise<Record<string, string | string[] | undefined>>}) {
-  const query = await searchParams; const currentSeason = new Date().getUTCFullYear(); const seasonValue = Number(query.season); const season = Number.isInteger(seasonValue) && seasonValue >= 1999 && seasonValue <= 2100 ? seasonValue : currentSeason;
+  const query = await searchParams; const currentSeason = defaultNflSeason(); const seasonValue = Number(query.season); const season = Number.isInteger(seasonValue) && seasonValue >= 1999 && seasonValue <= 2100 ? seasonValue : currentSeason;
   const weekValue = Number(query.week); const week = Number.isInteger(weekValue) && weekValue >= 1 && weekValue <= 22 ? weekValue : undefined;
   const requestedTeam = query.team === "LAR" ? "LA" : query.team;
   const team = typeof requestedTeam === "string" && teams.includes(requestedTeam) ? requestedTeam : undefined;

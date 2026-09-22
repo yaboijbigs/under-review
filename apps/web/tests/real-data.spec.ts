@@ -6,12 +6,16 @@ test("real report exposes revision, coverage, timeline, and evidence", async ({p
   const gameId=process.env.SMOKE_GAME_ID;
   test.skip(!gameId,"Set SMOKE_GAME_ID to a real ingested game; no demo report is substituted.");
   await page.goto(`/games/${encodeURIComponent(gameId!)}`);
-  await expect(page.getByRole("heading",{name:"Game anomaly audit",exact:true})).toBeVisible();
-  await expect(page.getByRole("heading",{name:/^Needs review/})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"The category record"})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"Win-probability timeline"})).toBeVisible();
+  await expect(page.locator('#verdict-title')).toBeVisible();
+  await expect(page.getByRole("heading",{name:/^Key plays to inspect/})).toBeVisible();
+  await expect(page.locator('#categories > details > summary')).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Game momentum"})).toBeVisible();
   await expect(page.locator('.audit-footer')).toContainText('Historical comparisons');
-  await expect(page.getByRole("heading",{name:"Revision history"})).toBeVisible();
+  await page.locator('#provenance > details > summary').click();
+  await expect(page.getByRole("heading",{name:"Report updates"})).toBeVisible();
+  await expect(page.getByRole('heading',{name:'Automatic analysis',exact:true})).toBeVisible();
+  await page.locator('#provenance > details > summary').click();
+  await page.locator('#evidence > details > summary').click();
   const evidence=page.locator("details.evidence").first();
   if(await evidence.count()) {await evidence.locator("summary").click(); await expect(evidence).toHaveAttribute("open","");}
   const archived=page.locator('.more-evidence details.evidence').first();

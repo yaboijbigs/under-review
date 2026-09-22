@@ -1,9 +1,12 @@
 import { test, expect } from "@playwright/test";
 test("archive is usable without fabricated results", async ({page},testInfo) => {
   await page.goto("/");
-  await expect(page.getByRole("heading",{name:/Beyond the final score/i})).toBeVisible();
+  await expect(page.getByRole("heading",{name:/Was that win unusual/i})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Season"})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Team"})).toBeVisible();
+  await expect(page.getByRole("combobox",{name:"Week"})).toHaveValue("");
+  await expect(page.getByRole("combobox",{name:"Result"})).toBeVisible();
+  await expect(page.getByRole("combobox",{name:"Team"}).locator('option[value="LA"]')).toHaveText("Los Angeles Rams");
   await page.getByRole("combobox",{name:"Team"}).selectOption("SEA");
   await page.getByRole("button",{name:/Apply filters/}).click();
   await expect(page).toHaveURL(/team=SEA/);
@@ -29,8 +32,10 @@ test("operator routes require a session", async ({page,request}) => {
 });
 test("status is inspectable and staging is excluded from indexing", async ({page,request}) => {
   await page.goto("/status");
-  await expect(page.getByRole("heading",{name:"The state of the pipeline."})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"Source freshness"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Are automatic reports running?"})).toBeVisible();
+  await expect(page.getByRole("heading",{name:"Latest data updates"})).toBeVisible();
+  await page.locator('.report-disclosure > summary').click();
+  await expect(page.getByText(/does not pause automatic game analysis/)).toBeVisible();
   if(await page.getByText(/STAGING PREVIEW/).count()) {
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content",/noindex/);
     const robots=await request.get("/robots.txt"); expect(await robots.text()).toMatch(/Disallow: \/\s/);
