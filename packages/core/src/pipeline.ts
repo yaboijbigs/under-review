@@ -4,7 +4,7 @@ import { query } from './db.js';
 import { LocalSnapshotStore,syncSchedule,ingestGame } from './ingest.js';
 import { runAnalytics } from './analytics-bridge.js';
 import { getGame,saveGames,saveSnapshots,saveAnalysis } from './repository.js';
-import { enqueue } from './jobs.js';
+import { enqueue,enqueueAnalysisIfIdle } from './jobs.js';
 import { maybeAutomaticDraft } from './publishing.js';
 import { ingestGameProfiles,loadGameProfileReference } from './game-profile-source.js';
 import { buildGameAudit } from './game-audit.js';
@@ -22,7 +22,7 @@ export async function syncSeason(season:number,scheduleJobs=true){
    if(kickoff&&now-kickoff>8*86400000)continue;
    const latest=(await query('SELECT created_at FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC LIMIT 1',[game.id])).rows[0];
    const bucket=Math.floor(now/(latest?6*3600000:15*60000));
-   await enqueue('analyze',game.id,{backfill:false,preferRaw:!latest},`scheduled-analysis:${game.id}:${latest?'reconcile':'initial'}:${bucket}`);
+   await enqueueAnalysisIfIdle(game.id,{backfill:false,preferRaw:!latest},`scheduled-analysis:${game.id}:${latest?'reconcile':'initial'}:${bucket}`);
   }
  }
  return {games:result.games.length,snapshots:result.snapshots.map(s=>s.id)};

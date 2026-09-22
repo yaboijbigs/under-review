@@ -7,6 +7,10 @@ on:
         type: choice
         options: [all, web, worker]
         default: all
+      catchup_release:
+        description: Optional release tag containing validated public report bundles
+        type: string
+        default: ''
 permissions:
   contents: read
   packages: write
@@ -53,3 +57,31 @@ jobs:
         run: |
           printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker push ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }}
+  catchup:
+    needs: worker
+    if: inputs.catchup_release != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out the exact requested revision
+        run: |
+          git init .
+          git remote add origin "https://github.com/$GITHUB_REPOSITORY.git"
+          git fetch --depth 1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+      - name: Download and verify public source bundles
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CATCHUP_RELEASE: ${{ inputs.catchup_release }}
+        run: |
+          gh release download "$CATCHUP_RELEASE" --repo "$GITHUB_REPOSITORY" --pattern under-review-catchup.tar.gz --pattern under-review-catchup.sha256
+          sha256sum --check under-review-catchup.sha256
+          python3 -c "import tarfile; tarfile.open('under-review-catchup.tar.gz').extractall('catchup-bundles', filter='data')"
+      - name: Build catch-up image with the tested worker
+        run: docker build -f Dockerfile.catchup --build-arg WORKER_IMAGE=ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }} -t ghcr.io/${{ github.repository_owner }}/under-review-catchup:${{ github.sha }} .
+      - name: Publish catch-up image
+        env:
+          REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+          docker push ghcr.io/${{ github.repository_owner }}/under-review-catchup:${{ github.sha }}

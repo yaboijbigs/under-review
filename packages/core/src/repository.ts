@@ -53,15 +53,25 @@ export function reviewSummary(reviews:Review[]):string{
  const coverage=scopes.length?`Reviewed within these explicitly completed, approved scopes: ${scopes.map(scope=>JSON.stringify(scope)).join('; ')}.`:'Selected events partially reviewed; no completed scope has administrator approval.';
  return `${coverage} ${remaining} events have approved likely-incorrect findings whose effects remained; ${corrected} were corrected by replay. Review disagreements and reviewer counts are shown with the evidence. This is not whole-game coverage or a comprehensive error count.`;
 }
-export async function saveAnalysis(game:Game,plays:Record<string,unknown>[],snapshots:SourceSnapshot[],result:AnalysisResult,sourceKind:'raw'|'clean'):Promise<{id:string;number:number;created:boolean}>{
+export class RevisionConflictError extends Error {
+ readonly code='revision_conflict';
+ constructor(){super('The latest report changed during analysis; refresh from its new revision.');this.name='RevisionConflictError';}
+}
+export async function saveAnalysis(game:Game,plays:Record<string,unknown>[],snapshots:SourceSnapshot[],result:AnalysisResult,sourceKind:'raw'|'clean',options:{expectedBaseRevisionId?:string|null;preventPublication?:boolean}={}):Promise<{id:string;number:number;created:boolean}>{
  const analysis=analysisSchema.parse(result);
  const inputHash=contentHash({game,snapshots:snapshots.map(s=>({provider:s.provider,checksum:s.checksum})).sort((a,b)=>a.provider.localeCompare(b.provider)||a.checksum.localeCompare(b.checksum)),analysis,closeCallTolerance:config.closeCallTolerance});
- await saveGames([game]);await saveSnapshots(snapshots);
  return transaction(async client=>{
   await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`revision:${game.id}`]);
+  const previous=(await client.query('SELECT * FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC LIMIT 1',[game.id])).rows[0];
+  if(options.expectedBaseRevisionId!==undefined&&(previous?.id??null)!==options.expectedBaseRevisionId)throw new RevisionConflictError();
+  if(options.preventPublication)await client.query('UPDATE games SET publication_eligible=false WHERE id=$1',[game.id]);
   const duplicate=await client.query('SELECT id,number FROM analysis_revisions WHERE game_id=$1 AND input_hash=$2',[game.id,inputHash]);
   if(duplicate.rowCount)return {...duplicate.rows[0],created:false};
-  const previous=(await client.query('SELECT * FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC LIMIT 1',[game.id])).rows[0];
+  // Guarded refreshes must not overwrite the current game or register stale sources
+  // before checking their immutable base revision under the same transaction lock.
+  await client.query(`INSERT INTO games(id,season,week,game_type,home_team,away_team,kickoff_at,game_json,publication_eligible)
+  VALUES($1,$2,$3,$4,$5,$6,$7,$8,false) ON CONFLICT(id) DO UPDATE SET game_json=excluded.game_json,kickoff_at=excluded.kickoff_at,updated_at=now()`,[game.id,game.season,game.week,game.gameType,game.homeTeam,game.awayTeam,game.kickoffAt,JSON.stringify(game)]);
+  for(const s of snapshots)await client.query('INSERT INTO source_snapshots(id,provider,url,checksum,retrieved_at,snapshot_json) VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT DO NOTHING',[s.id,s.provider,s.url,s.checksum,s.retrievedAt,JSON.stringify(s)]);
   // Human descriptions belong to the canonical play and survive routine source refreshes.
   // R only emits modeled candidates, so absence from R's event list is not deletion of a manual candidate.
   const currentPlays=new Map(plays.map(play=>[String(play.play_id),play]));
@@ -111,11 +121,12 @@ export async function saveAnalysis(game:Game,plays:Record<string,unknown>[],snap
   return {id,number,created:true};
  });
 }
-export async function listGames(filters:{season?:number;week?:number;team?:string}={}):Promise<GameCard[]>{
+export async function listGames(filters:{season?:number;week?:number;team?:string;publishedOnly?:boolean}={}):Promise<GameCard[]>{
  const values:unknown[]=[];const clauses:string[]=[];
  if(filters.season){values.push(filters.season);clauses.push(`g.season=$${values.length}`);}
  if(filters.week){values.push(filters.week);clauses.push(`g.week=$${values.length}`);}
  if(filters.team){values.push(filters.team);clauses.push(`(g.home_team=$${values.length} OR g.away_team=$${values.length})`);}
+ if(filters.publishedOnly)clauses.push('r.number IS NOT NULL');
  const rows=(await query(`SELECT g.game_json,r.* FROM games g LEFT JOIN LATERAL(SELECT number,statistical_status,charting_status,review_status,summary,created_at FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true ${clauses.length?'WHERE '+clauses.join(' AND '):''} ORDER BY g.week DESC,g.kickoff_at DESC NULLS LAST LIMIT 400`,values)).rows;
  return rows.map(r=>({...r.game_json,statisticalStatus:r.statistical_status??'awaiting_data',chartingStatus:r.charting_status??'unavailable',reviewStatus:r.review_status??'not_reviewed',finding:r.summary??null,updatedAt:r.created_at?.toISOString()??null,revisionNumber:r.number??null}));
 }

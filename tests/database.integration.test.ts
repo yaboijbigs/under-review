@@ -164,4 +164,28 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     expect(retained?.playId).toBe('99');
     expect(retained?.notes).toHaveLength(2);
   });
+
+  it('checks the expected base under the revision lock before changing games or registering sources', async () => {
+    const guardedGame = { ...game, id: '2099_02_TST_DEMO', week: 2 };
+    const first = await repository.saveAnalysis(guardedGame, [], [snapshot], { ...result(), events: [] }, 'clean');
+    const corrected = { ...guardedGame, homeScore: 24 };
+    const latest = await repository.saveAnalysis(corrected, [], [snapshot], { ...result(0.06), events: [] }, 'clean');
+    const rejectedSource = { ...snapshot, id: 'synthetic-rejected-stale-source', checksum: 'f'.repeat(64) };
+    await expect(repository.saveAnalysis(guardedGame, [], [rejectedSource], { ...result(), events: [] }, 'clean', { expectedBaseRevisionId: first.id })).rejects.toMatchObject({ code: 'revision_conflict' });
+    expect((await repository.getGame(guardedGame.id))?.homeScore).toBe(24);
+    expect((await repository.getReport(guardedGame.id))?.revision.id).toBe(latest.id);
+    expect((await db.query('SELECT 1 FROM source_snapshots WHERE id=$1', [rejectedSource.id])).rowCount).toBe(0);
+    // Even an existing historical input hash cannot bypass the expected-base check.
+    await expect(repository.saveAnalysis(guardedGame, [], [snapshot], { ...result(), events: [] }, 'clean', { expectedBaseRevisionId: first.id })).rejects.toMatchObject({ code: 'revision_conflict' });
+  });
+
+  it('allows only one concurrent refresh to append against the same expected base', async () => {
+    const guardedGame = { ...game, id: '2099_03_TST_DEMO', week: 3 };
+    const first = await repository.saveAnalysis(guardedGame, [], [snapshot], { ...result(), events: [] }, 'clean');
+    const saved = await Promise.allSettled([0.07, 0.08].map(value => repository.saveAnalysis(guardedGame, [], [snapshot], { ...result(value), events: [] }, 'clean', { expectedBaseRevisionId: first.id })));
+    expect(saved.filter(entry => entry.status === 'fulfilled')).toHaveLength(1);
+    const rejected = saved.find(entry => entry.status === 'rejected') as PromiseRejectedResult;
+    expect(rejected.reason).toMatchObject({ code: 'revision_conflict' });
+    expect((await repository.getReport(guardedGame.id))?.history).toHaveLength(2);
+  });
 });

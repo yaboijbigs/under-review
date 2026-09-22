@@ -3,8 +3,9 @@ import { hostname } from 'node:os';
 import { statfs } from 'node:fs/promises';
 import { config,log } from '@under-review/core/config';
 import { query,pool } from '@under-review/core/db';
-import { claimJob,enqueue,finishJob,heartbeat,type Job } from '@under-review/core/jobs';
+import { claimJob,enqueue,enqueueAnalysisIfIdle,finishJob,heartbeat,type Job } from '@under-review/core/jobs';
 import { analyzeGame,syncSeason } from '@under-review/core/pipeline';
+import { refreshGameAudit } from '@under-review/core/audit-refresh';
 import { createDraft,publishOutbox,recoverUnknownPublications } from '@under-review/core/publishing';
 
 const workerId=`${hostname()}:${randomUUID()}`;let stopping=false;let activeJob:Job|null=null;let lastSchedule=0;
@@ -30,8 +31,9 @@ while(!stopping){
    switch(activeJob.kind){
     case 'sync-season':await syncSeason(Number(activeJob.payload.season??config.season));break;
     case 'analyze':if(!activeJob.gameId)throw new Error('Game required');await analyzeGame(activeJob.gameId,{backfill:activeJob.payload.backfill===true,preferRaw:activeJob.payload.preferRaw!==false});if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);break;
+    case 'refresh-audit':if(!activeJob.gameId)throw new Error('Game required');await refreshGameAudit(activeJob.gameId);if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);break;
     case 'publish':await publishOutbox(String(activeJob.payload.outboxId));break;
-    case 'reconcile-week':for(const r of (await query("SELECT id FROM games WHERE season=$1 AND kickoff_at>now()-interval '8 days' AND kickoff_at<now()",[config.season])).rows)await enqueue('analyze',r.id,{preferRaw:false},`thursday-game:${r.id}:${new Date().toISOString().slice(0,10)}`);break;
+    case 'reconcile-week':for(const r of (await query("SELECT id FROM games WHERE season=$1 AND kickoff_at>now()-interval '8 days' AND kickoff_at<now()",[config.season])).rows)await enqueueAnalysisIfIdle(r.id,{preferRaw:false},`thursday-game:${r.id}:${new Date().toISOString().slice(0,10)}`);break;
     default:throw new Error('Unknown job kind');
    }
    await finishJob(activeJob);log('job.completed',{id:activeJob.id});

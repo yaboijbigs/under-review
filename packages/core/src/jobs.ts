@@ -7,13 +7,31 @@ export async function enqueue(kind:string,gameId:string|null,payload:Record<stri
  const id=randomUUID();const result=await query(`INSERT INTO jobs(id,kind,game_id,job_key,payload,run_after) VALUES($1,$2,$3,$4,$5,$6)
  ON CONFLICT(job_key) DO UPDATE SET job_key=excluded.job_key RETURNING id`,[id,kind,gameId,key??`${kind}:${gameId}:${id}`,JSON.stringify(payload),runAfter]);return result.rows[0].id;
 }
+/** Scheduler/catchup coalescing; explicit future reconciliation jobs still use enqueue. */
+export async function enqueueAnalysisIfIdle(gameId:string,payload:Record<string,unknown>={},key?:string,runAfter=new Date()):Promise<string>{
+ return transaction(async client=>{
+  await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`job:${gameId}`]);
+  const existing=(await client.query("SELECT id FROM jobs WHERE game_id=$1 AND kind='analyze' AND status IN ('pending','running') ORDER BY run_after,created_at LIMIT 1",[gameId])).rows[0];
+  if(existing)return existing.id;
+  const id=randomUUID();
+  const result=await client.query(`INSERT INTO jobs(id,kind,game_id,job_key,payload,run_after) VALUES($1,'analyze',$2,$3,$4,$5)
+   ON CONFLICT(job_key) DO UPDATE SET job_key=excluded.job_key RETURNING id`,[id,gameId,key??`analyze:${gameId}:${id}`,JSON.stringify(payload),runAfter]);
+  return result.rows[0].id;
+ });
+}
 export async function claimJob(workerId:string):Promise<Job|null>{
  return transaction(async client=>{
   // Sending posts are reconciled separately and never replayed by job recovery.
   await client.query("UPDATE jobs SET status=CASE WHEN attempts>=max_attempts THEN 'failed' ELSE 'pending' END,worker_id=null,lease_until=null,error='Worker lease expired',updated_at=now() WHERE status='running' AND lease_until<now()");
   const row=(await client.query(`SELECT * FROM jobs j WHERE status='pending' AND run_after<=now()
   AND (game_id IS NULL OR NOT EXISTS(SELECT 1 FROM jobs busy WHERE busy.game_id=j.game_id AND busy.status='running'))
-  ORDER BY run_after,created_at FOR UPDATE SKIP LOCKED LIMIT 1`)).rows[0];
+  ORDER BY CASE
+   WHEN j.kind IN ('sync-season','reconcile-week') THEN 0
+   WHEN j.kind='analyze' AND EXISTS(
+    SELECT 1 FROM games g WHERE g.id=j.game_id AND g.kickoff_at BETWEEN now()-interval '36 hours' AND now()
+     AND NOT EXISTS(SELECT 1 FROM analysis_revisions r WHERE r.game_id=g.id)
+   ) THEN 1
+   ELSE 2 END,j.run_after,j.created_at FOR UPDATE OF j SKIP LOCKED LIMIT 1`)).rows[0];
   if(!row)return null;
   if(row.game_id){const lock=(await client.query('SELECT pg_try_advisory_xact_lock(hashtext($1)) AS acquired',[`job:${row.game_id}`])).rows[0];if(!lock.acquired)return null;
    if((await client.query("SELECT 1 FROM jobs WHERE game_id=$1 AND status='running'",[row.game_id])).rowCount)return null;
