@@ -4,7 +4,7 @@ import { readFileSync,existsSync } from 'node:fs';
 const files=execFileSync('git',['ls-files','-z'],{encoding:'utf8'}).split('\0').filter(Boolean);
 if(!files.length)throw new Error('Stage the intended source files before scanning.');
 const secrets=[];
-for(const file of ['.env','deploy/private/staging.env','deploy/private/local-admin.json']){
+for(const file of ['.env','deploy/private/staging.env','deploy/private/public.env','deploy/private/public-tunnel.env','deploy/private/local-admin.json']){
  if(!existsSync(file))continue;
  const raw=readFileSync(file,'utf8');
  if(file.endsWith('.json')){const value=JSON.parse(raw).password;if(value)secrets.push(value);}

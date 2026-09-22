@@ -1,15 +1,41 @@
-# Under Review release — 2026-09-21
+# Under Review release record
 
-The MIT-licensed application source is public at [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). The web and worker images are public, and anonymous registry manifest requests verified both immutable digests before deployment. Private environment files, administrator credentials, database exports, backups, and caches are excluded from Git and image build contexts. The staged release is scanned for credential patterns and exact local secrets before publishing.
+The MIT-licensed application source is public at [yaboijbigs/under-review](https://github.com/yaboijbigs/under-review). **The public website rollout below is prepared, not executed, pending approval for its dedicated tunnel.** Image publication and local checks do not establish a VPS deployment or DNS change. The executed private staging release of 2026-09-21 is retained separately below as historical evidence. Private environment files, administrator credentials, database exports, backups, and caches are excluded from Git and image build contexts; release files are scanned before publishing.
 
-## Reproducible artifacts
+## Prepared public release — 2026-09-22 UTC
+
+The intended public origin is **https://underreview.jbigs.com**. [deploy/compose.public.yaml](deploy/compose.public.yaml) prepares a dedicated Cloudflare Tunnel route to **`http://web:3000`** on Under Review's private network. The `jbigs.com` apex, `www.jbigs.com`, unrelated routes/tunnels, and shared ports 80/443 remain outside the change. The application's existing loopback binding remains `127.0.0.1:4380`; PostgreSQL has no host binding. **No public-route, DNS, or VPS mutation is claimed by this prepared release.**
+
+Both new images were published successfully and anonymously verified by manifest content checksum and immutable-digest resolution. [deploy/images.json](deploy/images.json), verified **2026-09-22 00:30:52.534 UTC**, records these candidates:
+
+| Component | Source revision | Immutable image | Build |
+| --- | --- | --- | --- |
+| Web with tested public-login fix | `4bbc02dfb186e633f62f0e8cd83d34d18158d487` | `ghcr.io/yaboijbigs/under-review-web@sha256:05e1be47e8a4ba4036c3850be314a7f2b03e983f8b656d770ff6d9ce17b31bc8` | [Successful web-only run](https://github.com/yaboijbigs/under-review/actions/runs/35671937726) |
+| Worker, game audit, R runtime and model artifacts | `4d4da0ae0ef19bde46bec12c0298ae6bc3f3bff6` | `ghcr.io/yaboijbigs/under-review-worker@sha256:889135ddf364911ba2d3568d12f4ea9c3aa87cb7fbf0dcd1baec2862b841376a` | [Successful full runtime run](https://github.com/yaboijbigs/under-review/actions/runs/35671211998) |
+
+The worker job restored pinned R dependencies from a fresh CI environment, passed analytics tests, built the worker and published it in **13 minutes 26 seconds**. The separate web-only run incorporated the login fix without rebuilding the worker. The audit's 29 focused tests and TypeScript check passed locally. A read-only exploratory diagnostic surfaced all five selected historical target plays; the comparison games produced zero and three neutral review candidates. Those known cases motivated product rules and are not held-out classifier validation. No model fitting or dependency compilation is planned on the shared VPS.
+
+Local validation also passed the public manifest's isolation boundaries, both inline JavaScript commands, and the real GB report with a newly generated local dry-run draft. The staged preparation passed the secrets scan across 200 release files. These are local checks; tunnel approval remains the only pending rollout approval.
+
+The prepared sequence stops **only `under-review`**, preserves its named volumes, and starts its dedicated database and backup job before bootstrap. That job captures a PostgreSQL custom dump and `/data/snapshots` archive under `/data/backups/<UTC timestamp>-public-launch/` on the project's existing **artifact volume**. It checks dump catalog readability, validates gzip integrity, and records SHA-256 checksums. This prepared same-host capture is **not an executed backup, restore test, or off-host backup**.
+
+After backup, bootstrap syncs 2026 and queues a fresh, clean-source priority `2026_02_GB_NYJ` analysis with a release-specific job key, backfill semantics and a dry-run draft. The 30-minute readiness gate requires the current seed revision's complete aggregate winning profile, versioned game audit, checksummed historical reference and qualifying supported flag, at least one supported metric, a current-revision draft, and successful web checks. The tunnel depends on that gate succeeding. This expected seed result is a release fixture, not independent statistical validation.
+
+Worker **0.25 CPU / 1536 MiB**, web **0.10 CPU / 512 MiB**, and database **0.15 CPU / 512 MiB** limits remain configured. The tunnel is capped at **0.05 CPU / 128 MiB**; bounded one-shot services, one analysis worker/R thread, a 15-minute analytics timeout, bounded logs/PIDs and the 5 GiB disk reserve remain in place. Public report access does not enable posting: live posting remains disabled, drafts remain dry-run, and the kill switch stays enabled. Record actual backup, deployment, readiness, public HTTPS and unrelated-project comparisons only after execution. [OPERATIONS.md](OPERATIONS.md) provides the sequence and recovery limits.
+
+## Historical staging artifacts — deployed 2026-09-21
 
 | Component | Source revision | Build |
 | --- | --- | --- |
 | Worker, R runtime, and model artifacts | `208bbf402b8ee2422dc0edb70676a718c8c236e3` | [Successful full runtime build](https://github.com/yaboijbigs/under-review/actions/runs/35639017767) |
 | Web, including runtime branding/indexing configuration | `03818639368b1e4d140d5d2334da0efb3dffd2bc` | [Successful web build](https://github.com/yaboijbigs/under-review/actions/runs/35640359367) |
 
-[deploy/images.json](deploy/images.json) records the complete image digests. Subsequent documentation commits do not change these deployed runtime revisions. The full runtime build restored the pinned R dependency lock from a fresh CI environment, ran the R checks, built both images, and pushed them. The final web build included the runtime-configuration fix. All dependency compilation and model training occurred off the shared VPS.
+These older deployed staging digests are retained for rollback and must not be confused with the new candidates now in `deploy/images.json`:
+
+- Web: `ghcr.io/yaboijbigs/under-review-web@sha256:26e2939692079f85fc6e71c8a57e6a5683713da6ab9ec7730c43534635120784`.
+- Worker: `ghcr.io/yaboijbigs/under-review-worker@sha256:9bb5326dfe3cda816790cc8828552f056bcb76c5e0893abfe4dcaf7eaef03c31`.
+
+The historical full runtime build restored the pinned R dependency lock from a fresh CI environment, ran the R checks, built both images, and pushed them. The subsequent staging web build included the runtime-configuration fix. All dependency compilation and model training occurred off the shared VPS. Later source or documentation commits do not by themselves change a deployed runtime.
 
 To resolve a future release's public images, use full verified source commits:
 
@@ -19,7 +45,7 @@ node scripts/prepare-deployment.mjs --web-ref WEB_COMMIT_40_HEX --worker-ref WOR
 
 This updates only image references in the existing ignored `deploy/private/staging.env` and writes a public digest record. It requires that private deployment configuration already exist and that both images be anonymously retrievable.
 
-## Executed verification
+## Historical executed staging verification
 
 - All 56 TypeScript unit/integration tests passed, including real PostgreSQL tests in temporary isolated schemas. Coverage includes revision/draft idempotency, corrected-source history, concurrent game jobs, expired leases, review evidence, authorization, and safe publishing recovery. X transport was mocked throughout.
 - TypeScript checks and the production Next.js build passed. Twelve desktop/mobile browser tests covered the real report, evidence links, layout, authenticated administration, CSRF forms, logout protection, attribution, and private indexing behavior. Both private/public runtime modes and alternate branding were checked using the same built artifact.
@@ -29,7 +55,7 @@ This updates only image references in the existing ignored `deploy/private/stagi
 - A local copy of the isolated staging configuration completed bootstrap, both seed reports and dry-run drafts, eight web-route checks, and Linux-container administrator login/logout. The real report's share image returned HTTP 200 with valid PNG output.
 - The project-scoped backup script produced and verified a PostgreSQL dump and artifact archive, restored into a unique temporary database, matched table counts and migration checksums, removed only that temporary database, and resumed only its selected local worker. See [OPERATIONS.md](OPERATIONS.md) for exact results and commands. This is a verified local backup/restore procedure; it does not claim automated off-host VPS backups.
 
-## Hostinger staging deployment
+## Historical Hostinger staging deployment
 
 The additional `under-review` Docker project was created through the official Hostinger API. Deployment action `115884701` completed successfully at **2026-09-21 18:51:18 UTC**. Bootstrap exited successfully; database, web, and worker became healthy, using the image digests recorded above.
 
@@ -45,13 +71,13 @@ The final before/after comparison at **19:15:48 UTC** covered **nine pre-existin
 
 ## Operator actions and explicit limits
 
-The current website is private staging, independent of the public source/images. Local private access instructions and the generated administrator password are in ignored `deploy/private/access.txt`. Use an SSH port forward for access; stop any local preview already occupying port 4380 first. No domain has been purchased or attached.
+The last executed release verified here was private staging, independent of public source/images. Local private access instructions and the generated administrator password are in ignored `deploy/private/access.txt`. That release can be accessed with an SSH port forward; stop any local preview already occupying port 4380 first. The prepared `underreview.jbigs.com` rollout above has not been executed in this record; no completed hostname attachment is claimed.
 
 Live X posting remains disabled, draft-only mode and the kill switch remain enabled, and no real social post was sent. Live OAuth/delivery needs the operator's X developer application, supported paid access, account authorization, and explicit authenticated activation. [DATA_SOURCES.md](DATA_SOURCES.md) and [OPERATIONS.md](OPERATIONS.md) document setup and ambiguous-outcome recovery.
 
 Overall anomaly percentile remains unavailable. Only compatible, adequately supported category comparisons are shown. Automatic call alternatives cover a limited allowlist; human review and approval establish call judgments. Unsupported overtime/complex counterfactuals, recovery/kicking WP effects, clock-management/two-point/onside models, comprehensive missed-call detection, and betting-integrity detection are not presented as implemented. Third-party model training cutoff provenance is incomplete, so retrospective coaching checks are not claimed to be leakage-free or causal validation of unchosen actions.
 
-Arrange encrypted off-host backups and retention before relying on long-term hosted data. A public hostname/TLS route and live publishing are separate operator decisions. No unrelated VPS project requires changes to run this application.
+Arrange encrypted off-host backups and retention before relying on long-term hosted data. The dedicated public tunnel is pending approval; live publishing remains a separate operator decision. No unrelated VPS project requires changes to run this application.
 
 The backup subprocess deadline also covers stalled input/output streams. Focused checks verified an 8 MiB blocked input timed out in 1.59 seconds with a 1.5-second test deadline, terminated the parent and descendant processes, and reached the worker-resume cleanup. An 8 MiB binary round trip retained its SHA-256 hash, and a child failure did not expose its synthetic stderr secret. These tests used isolated helper processes and a mocked resume operation, without touching Docker projects.
 

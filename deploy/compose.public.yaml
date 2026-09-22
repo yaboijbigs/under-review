@@ -1,0 +1,206 @@
+name: under-review
+x-env: &app-env
+  PROJECT_ROOT: /app
+  DATABASE_URL: postgresql://under_review:${POSTGRES_PASSWORD:?required}@db:5432/under_review
+  DATA_DIR: /data
+  SITE_URL: https://underreview.jbigs.com
+  PRIVATE_STAGING: "false"
+  VPS_STAGING: "true"
+  TARGET_SEASON: "2026"
+  LIVE_POSTING_ALLOWED: "false"
+  SESSION_SECRET: ${SESSION_SECRET:?required}
+  TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY:?required}
+  BRAND_NAME: Under Review
+  BRAND_TAGLINE: What actually swung the game?
+  BRAND_ACCENT: ${BRAND_ACCENT:-}
+  BRAND_BACKGROUND: ${BRAND_BACKGROUND:-}
+  BRAND_INK: ${BRAND_INK:-}
+  SOCIAL_HANDLE: ${SOCIAL_HANDLE:-}
+  OMP_NUM_THREADS: "1"
+  OPENBLAS_NUM_THREADS: "1"
+  MKL_NUM_THREADS: "1"
+  ANALYTICS_TIMEOUT_MS: "900000"
+  MIN_FREE_DISK_BYTES: "5368709120"
+x-guard: &guard
+  cpu_shares: 128
+  security_opt: ["no-new-privileges:true"]
+  cap_drop: [ALL]
+  pids_limit: 100
+  logging:
+    driver: json-file
+    options: {max-size: "5m", max-file: "2"}
+services:
+  db:
+    <<: *guard
+    image: postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    environment:
+      POSTGRES_USER: under_review
+      POSTGRES_DB: under_review
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    command: [postgres, -c, shared_buffers=64MB, -c, max_connections=30]
+    volumes: ["database:/var/lib/postgresql/data"]
+    networks: [private]
+    cpus: 0.15
+    mem_limit: 512m
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U under_review -d under_review"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+  backup:
+    <<: *guard
+    image: postgres@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+    user: "10001:10001"
+    entrypoint: [sh, -ec]
+    environment:
+      PGHOST: db
+      PGUSER: under_review
+      PGDATABASE: under_review
+      PGPASSWORD: ${POSTGRES_PASSWORD:?required}
+    command:
+      - |
+        set -eu
+        umask 077
+        destination="/data/backups/$$(date -u +%Y%m%dT%H%M%SZ)-public-launch"
+        mkdir -p /data/backups
+        mkdir "$$destination"
+        timeout 600 pg_dump --format=custom --no-owner --file="$$destination/database.dump"
+        pg_restore --list "$$destination/database.dump" > "$$destination/database.contents"
+        timeout 900 tar -czf "$$destination/snapshots.tar.gz" -C /data snapshots
+        gzip -t "$$destination/snapshots.tar.gz"
+        sha256sum "$$destination/database.dump" "$$destination/snapshots.tar.gz" > "$$destination/SHA256SUMS"
+        printf '{"event":"under-review.backup.complete","path":"%s"}\n' "$$destination"
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777"]
+    volumes: ["artifacts:/data"]
+    networks: [private]
+    cpus: 0.10
+    mem_limit: 192m
+    depends_on: {db: {condition: service_healthy}}
+    restart: "no"
+  bootstrap:
+    <<: *guard
+    image: ${WORKER_IMAGE:?required}
+    environment:
+      <<: *app-env
+      UR_ADMIN_USERNAME: owner
+      UR_ADMIN_PASSWORD: ${UR_ADMIN_PASSWORD:?required}
+      SEED_GAMES: 2026_02_GB_NYJ
+    command:
+      - node
+      - --import
+      - tsx
+      - --input-type=module
+      - -e
+      - |
+        const {spawnSync}=await import('node:child_process');
+        const bootstrap=spawnSync(process.execPath,['--import','tsx','scripts/bootstrap.ts'],{stdio:'inherit',env:{...process.env,SEED_GAMES:''}});
+        if(bootstrap.status!==0)process.exit(1);
+        const {pool}=await import('@under-review/core/db');
+        const {syncSeason}=await import('@under-review/core/pipeline');
+        const {enqueue}=await import('@under-review/core/jobs');
+        await syncSeason(2026,false);
+        await enqueue('analyze','2026_02_GB_NYJ',{backfill:true,preferRaw:false,prepareDraft:true},'release:game-audit-v1:2026_02_GB_NYJ',new Date('2000-01-01T00:00:00Z'));
+        await pool.end();
+    read_only: true
+    tmpfs: ["/tmp:size=128m,mode=1777"]
+    volumes: ["artifacts:/data"]
+    networks: [private]
+    cpus: 0.25
+    mem_limit: 512m
+    depends_on: {db: {condition: service_healthy}, backup: {condition: service_completed_successfully}}
+    restart: "no"
+  web:
+    <<: *guard
+    image: ${WEB_IMAGE:?required}
+    environment:
+      <<: *app-env
+      TRUST_CLOUDFLARE_CLIENT_IP: "true"
+    ports: ["127.0.0.1:4380:3000"]
+    read_only: true
+    tmpfs: ["/tmp:size=64m,mode=1777", "/app/apps/web/.next/cache:size=32m,mode=1777"]
+    networks: [private]
+    cpus: 0.10
+    mem_limit: 512m
+    depends_on: {bootstrap: {condition: service_completed_successfully}}
+    restart: unless-stopped
+  worker:
+    <<: *guard
+    image: ${WORKER_IMAGE:?required}
+    environment: *app-env
+    command: [node, --import, tsx, apps/worker/src/index.ts]
+    read_only: true
+    tmpfs: ["/tmp:size=512m,mode=1777"]
+    volumes: ["artifacts:/data"]
+    networks: [private]
+    cpus: 0.25
+    mem_limit: 1536m
+    stop_grace_period: 60s
+    depends_on: {bootstrap: {condition: service_completed_successfully}}
+    restart: unless-stopped
+  check:
+    <<: *guard
+    image: ${WORKER_IMAGE:?required}
+    environment:
+      <<: *app-env
+      SEED_GAMES: 2026_02_GB_NYJ
+    command:
+      - node
+      - --import
+      - tsx
+      - --input-type=module
+      - -e
+      - |
+        const {getReport}=await import('@under-review/core/repository');
+        const games=process.env.SEED_GAMES.split(',');
+        function readyReport(r){
+          if(!r)return false;
+          const audit=r.revision.analysis.gameAudit;
+          const winner=audit?.profiles.find(p=>p.team==='GB'&&p.gameId===r.game.id);
+          const fields=['pointsFor','pointsAgainst','totalYards','opponentYards','penalties','penaltyYards','turnoverMargin','nonOffensiveTouchdowns'];
+          return audit?.version==='under-review-game-audit-v1'&&audit.status==='historical_outlier'
+            &&winner?.opponent==='NYJ'&&fields.every(k=>Number.isFinite(winner[k]))&&winner.pointsFor>winner.pointsAgainst
+            &&/^[a-f0-9]{64}$/.test(audit.reference.checksum??'')&&audit.reference.teamGames>0
+            &&audit.flags.some(f=>f.team==='GB'&&f.status==='historical_outlier'&&f.reference.matchingGames>=20)
+            &&r.drafts.some(d=>d.revisionId===r.revision.id&&d.mode==='dry_run')
+            &&r.revision.analysis.metrics.some(m=>m.status==='supported');
+        }
+        const deadline=Date.now()+1800000;
+        let ready=false;
+        while(Date.now()<deadline){
+          const reports=await Promise.all(games.map(id=>getReport(id)));
+          ready=reports.every(readyReport);
+          if(ready)break;
+          console.log(JSON.stringify({event:'public.awaiting_reports',games:games.filter((id,i)=>!readyReport(reports[i]))}));
+          await new Promise(resolve=>setTimeout(resolve,30000));
+        }
+        if(!ready){console.error('Seed reports did not become ready within 30 minutes.');process.exit(1);}
+        for(const id of games){const r=await fetch('http://web:3000/games/'+id,{signal:AbortSignal.timeout(30000)});if(!r.ok)process.exit(1);}
+        await import('./scripts/staging-check.ts');
+    read_only: true
+    tmpfs: ["/tmp:size=32m,mode=1777"]
+    networks: [private]
+    cpus: 0.10
+    mem_limit: 192m
+    depends_on: {web: {condition: service_healthy}, worker: {condition: service_healthy}}
+    restart: "no"
+  tunnel:
+    <<: *guard
+    image: cloudflare/cloudflared@sha256:b269e8abd07a5bf6f3f4be65d5050b2174eca89c56a0241a8ff32a16aec454e4
+    command: [tunnel, --no-autoupdate, --metrics, "0.0.0.0:2000", run]
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?required}
+    read_only: true
+    tmpfs: ["/tmp:size=16m,mode=1777"]
+    networks: [private]
+    cpus: 0.05
+    mem_limit: 128m
+    depends_on: {web: {condition: service_healthy}, check: {condition: service_completed_successfully}}
+    restart: unless-stopped
+volumes:
+  database:
+  artifacts:
+networks:
+  private:

@@ -1,13 +1,13 @@
 {
-  "verifiedAt": "2026-09-21T18:46:39.268Z",
+  "verifiedAt": "2026-09-22T00:30:52.534Z",
   "web": {
-    "sourceCommit": "03818639368b1e4d140d5d2334da0efb3dffd2bc",
-    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:26e2939692079f85fc6e71c8a57e6a5683713da6ab9ec7730c43534635120784",
+    "sourceCommit": "4bbc02dfb186e633f62f0e8cd83d34d18158d487",
+    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:05e1be47e8a4ba4036c3850be314a7f2b03e983f8b656d770ff6d9ce17b31bc8",
     "anonymousManifestVerified": true
   },
   "worker": {
-    "sourceCommit": "208bbf402b8ee2422dc0edb70676a718c8c236e3",
-    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:9bb5326dfe3cda816790cc8828552f056bcb76c5e0893abfe4dcaf7eaef03c31",
+    "sourceCommit": "4d4da0ae0ef19bde46bec12c0298ae6bc3f3bff6",
+    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:889135ddf364911ba2d3568d12f4ea9c3aa87cb7fbf0dcd1baec2862b841376a",
     "anonymousManifestVerified": true
   }
 }
