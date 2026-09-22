@@ -88,6 +88,7 @@ services:
       UR_ADMIN_USERNAME: owner
       UR_ADMIN_PASSWORD: ${UR_ADMIN_PASSWORD:?required}
       SEED_GAMES: ""
+      AUDIT_CATCHUP_WEEKS: "1,2"
     command: [node, --import, tsx, scripts/bootstrap.ts]
     read_only: true
     tmpfs: ["/tmp:size=128m,mode=1777"]

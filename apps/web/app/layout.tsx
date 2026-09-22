@@ -14,18 +14,18 @@ export default function RootLayout({children}: Readonly<{children: React.ReactNo
   return <html lang="en" style={theme}><body>
     <a className="skip-link" href="#main">Skip to content</a>
     <header className="site-header"><div className="header-inner">
-      <Link className="wordmark" href="/" aria-label={`${config.brandName} home`}><Brand/></Link>
-      <nav aria-label="Main navigation"><Link href="/">Game reports</Link><Link href="/methodology">How it works</Link><Link href="/sources">Sources</Link></nav>
+      <Link prefetch={false} className="wordmark" href="/" aria-label={`${config.brandName} home`}><Brand/></Link>
+      <nav aria-label="Main navigation"><Link prefetch={false} href="/">Game reports</Link><Link href="/methodology">How it works</Link><Link href="/sources">Sources</Link></nav>
       <span className="header-tag">INDEPENDENT<br/>POSTGAME ANALYSIS</span>
     </div></header>
     {process.env.DEMO_MODE === "true" ? <div className="demo-banner">DEMONSTRATION MODE · Synthetic content is excluded from indexing and social publishing.</div> : config.staging ? <div className="demo-banner">STAGING PREVIEW · Search indexing and live social publishing are disabled.</div> : null}
     <main id="main" className="main-shell">{children}</main>
     <footer className="site-footer"><div>
-      <Link href="/" className="footer-brand">{config.brandName.toUpperCase()}<span className="brand-square" aria-hidden="true"/></Link>
+      <Link prefetch={false} href="/" className="footer-brand">{config.brandName.toUpperCase()}<span className="brand-square" aria-hidden="true"/></Link>
       <p>{config.tagline}</p>
       {config.socialHandle ? <p><a href={`https://x.com/${config.socialHandle}`} target="_blank" rel="noreferrer">@{config.socialHandle} on X ↗</a></p> : null}
       <p className="disclaimer">Independent analysis. Not affiliated with the NFL or its teams. Rarity is not evidence of manipulation.</p>
-    </div><nav aria-label="Footer navigation"><Link href="/methodology">Methodology</Link><Link href="/sources">Data & attribution</Link><Link href="/corrections">Corrections</Link><Link href="/status">System status</Link><Link href="/admin">Operator access</Link></nav>
+    </div><nav aria-label="Footer navigation"><Link href="/methodology">Methodology</Link><Link href="/sources">Data & attribution</Link><Link prefetch={false} href="/corrections">Corrections</Link><Link prefetch={false} href="/status">System status</Link><Link prefetch={false} href="/admin">Operator access</Link></nav>
       <span className="footer-edition">EST. 2026<br/>THE RECORD REMAINS OPEN</span>
     </footer>
   </body></html>;

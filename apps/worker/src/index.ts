@@ -36,7 +36,17 @@ while(!stopping){
    switch(activeJob.kind){
     case 'sync-season':await syncSeason(Number(activeJob.payload.season??config.season));break;
     case 'analyze':if(!activeJob.gameId)throw new Error('Game required');await analyzeGame(activeJob.gameId,{backfill:activeJob.payload.backfill===true,preferRaw:activeJob.payload.preferRaw!==false});if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);break;
-    case 'refresh-audit':if(!activeJob.gameId)throw new Error('Game required');await refreshGameAudit(activeJob.gameId);if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);break;
+    case 'refresh-audit':{
+     if(!activeJob.gameId)throw new Error('Game required');
+     try{await refreshGameAudit(activeJob.gameId);}
+     catch(error){
+      if(!(error instanceof Error)||!('code' in error)||error.code!=='source_downgrade')throw error;
+      log('audit.clean-reconciliation',{gameId:activeJob.gameId});
+      await analyzeGame(activeJob.gameId,{preferRaw:false,backfill:activeJob.payload.backfill===true});
+     }
+     if(activeJob.payload.prepareDraft===true)await createDraft(activeJob.gameId);
+     break;
+    }
     case 'publish':await publishOutbox(String(activeJob.payload.outboxId));break;
     case 'reconcile-week':for(const r of (await query("SELECT id FROM games WHERE season=$1 AND kickoff_at>now()-interval '8 days' AND kickoff_at<now() AND game_json->>'homeScore' IS NOT NULL AND game_json->>'awayScore' IS NOT NULL",[Number(activeJob.payload.season??config.season)])).rows)await enqueueAnalysisIfIdle(r.id,{preferRaw:false},`thursday-game:${r.id}:${new Date().toISOString().slice(0,10)}`);break;
     default:throw new Error('Unknown job kind');

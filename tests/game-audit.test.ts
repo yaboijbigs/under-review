@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 import { gameAuditSchema, type Game, type GameProfile, type GameProfileReference } from '../packages/core/src/contracts.js';
-import { buildGameAudit, GAME_AUDIT_PATTERN_LIBRARY } from '../packages/core/src/game-audit.js';
+import { buildGameAudit, GAME_AUDIT_PATTERN_LIBRARY,GAME_AUDIT_VERSION } from '../packages/core/src/game-audit.js';
 import type { ProviderRow } from '../packages/core/src/normalize.js';
 
 const game: Game = { id: '2026_01_AAA_BBB', season: 2026, week: 1, gameType: 'REG', homeTeam: 'BBB', awayTeam: 'AAA', homeScore: 17, awayScore: 20, kickoffAt: null, providerData: {} };
@@ -168,5 +168,71 @@ describe('frozen attributable aggregate reference', () => {
     expect(result.headline).toContain('total offense below 200 yards and negative turnover margin; 6 wins in 414');
     expect(result.notes.join(' ')).toContain('motivated by known cases');
     expect(gameAuditSchema.parse(result)).toEqual(result);
+  });
+});
+
+describe('defensive penalties extending third and fourth downs',()=>{
+  const gbMin:Game={...game,id:'2026_01_GB_MIN',homeTeam:'MIN',awayTeam:'GB',homeScore:39,awayScore:22};
+  // Exact identity/timing/down/penalty fields and descriptions from the preserved
+  // 2026 clean PBP snapshot. No call-correctness claim is part of this fixture.
+  const drive:ProviderRow[]=[
+    {play_id:3411,time:'11:03',down:3,ydstogo:11,penalty_type:'Illegal Contact',desc:'(11:03) (Shotgun) 11-C.Wentz sacked at MIN 24 for -10 yards (sack split by 56-E.Cooper and 95-D.Wyatt). PENALTY on GB-7-J.Bullard, Illegal Contact, 5 yards, enforced at MIN 34 - No Play.'},
+    {play_id:3489,time:'09:12',down:3,ydstogo:3,penalty_type:'Roughing the Passer',desc:'(9:12) (Shotgun) 11-C.Wentz pass incomplete short middle to 87-T.Hockenson (55-C.McClellan). PENALTY on GB-55-C.McClellan, Roughing the Passer, 15 yards, enforced at MIN 46 - No Play.'},
+    {play_id:3592,time:'06:49',down:3,ydstogo:5,penalty_type:'Defensive Holding',desc:'(6:49) (Shotgun) 11-C.Wentz pass short middle intended for 3-J.Addison INTERCEPTED by 33-E.Williams [98-J.Hargrave] at GB -4. 33-E.Williams to GB 13 for 17 yards (33-A.Jones). PENALTY on GB-29-X.McKinney, Defensive Holding, 3 yards, enforced at GB 6 - No Play.'},
+  ].map(play=>({game_id:gbMin.id,qtr:4,posteam:'MIN',defteam:'GB',penalty_team:'GB',penalty:1,first_down_penalty:1,first_down_pass:0,first_down_rush:0,drive:19,fixed_drive:19,score_differential:-5,replay_or_challenge:0,...play}));
+  const inspect=(plays:ProviderRow[])=>buildGameAudit({game:gbMin,plays});
+  const clusters=(plays:ProviderRow[])=>inspect(plays).context.filter(row=>row.kind==='drive_extending_penalties');
+
+  it('flags all three documented early fourth-quarter extensions and groups the drive',()=>{
+    const audit=inspect(drive);
+    expect(audit.version).toBe(GAME_AUDIT_VERSION);expect(GAME_AUDIT_VERSION).toBe('under-review-game-audit-v2');
+    expect(audit.reviewCandidates.map(row=>row.playId)).toEqual(['3411','3489','3592']);
+    expect(audit.reviewCandidates.every(row=>row.priority==='high')).toBe(true);
+    expect(audit.reviewCandidates.every(row=>row.reasons.length===2)).toBe(true);
+    expect(clusters(drive)).toEqual([{team:'MIN',kind:'drive_extending_penalties',playIds:['3411','3489','3592'],text:'MIN received 3 first downs from GB penalties on third or fourth down during drive 19. Review these plays together; this does not establish that any call was wrong.'}]);
+    expect(audit.flags).toEqual([]);expect(audit.status).toBe('review_worthy');
+    expect(gameAuditSchema.parse(audit)).toEqual(audit);
+  });
+  it.each([1,2,3,4,5])('flags a structured fourth-down penalty in period %i without requiring a close score',qtr=>{
+    const audit=inspect([{...drive[0],qtr,time:'12:00',down:4,score_differential:-24}]);
+    expect(audit.reviewCandidates).toHaveLength(1);
+    expect(audit.reviewCandidates[0]).toMatchObject({priority:'medium',reasons:['Defensive penalty on GB awarded MIN a first down on fourth down; call correctness requires review.']});
+    expect(clusters([{...drive[0],qtr,down:4}])).toEqual([]);
+  });
+  it.each([
+    {penalty:0},{first_down_penalty:0},{down:2},{down:null},{posteam:'UNK'},{defteam:'UNK'},{penalty_team:'MIN'},
+    {penalty_team:null},{penalty_type:'Unknown'},{penalty_type:null},{game_id:'2026_02_GB_MIN'},{first_down_pass:1},{first_down_rush:1},
+    {desc:'PENALTY on GB, Illegal Contact, declined.'},{desc:'PENALTY on GB, Illegal Contact, offsetting.'},
+    {desc:'PENALTY on GB, Illegal Contact. PENALTY on MIN, Holding.'},{desc:'PENALTY flag picked up.'},
+  ])('excludes unsupported or ambiguous penalty attribution: %o',patch=>{
+    expect(inspect([{...drive[0],...patch}]).reviewCandidates).toEqual([]);
+  });
+  it('retains individual flags without inventing a shared drive when IDs are missing or invalid',()=>{
+    for(const missing of [{fixed_drive:null,drive:null},{fixed_drive:0},{fixed_drive:'unknown'}]){
+      const plays=drive.map(play=>({...play,...missing}));
+      expect(inspect(plays).reviewCandidates).toHaveLength(3);
+      expect(inspect(plays).reviewCandidates.every(row=>row.priority==='medium')).toBe(true);
+      expect(clusters(plays)).toEqual([]);
+    }
+  });
+  it('keeps distinct drive IDs separate and uses an explicit legacy drive when corrected IDs are absent',()=>{
+    expect(clusters(drive.map((play,index)=>({...play,fixed_drive:19+index,drive:19+index})))).toEqual([]);
+    expect(clusters(drive.map(play=>({...play,fixed_drive:null})))[0].playIds).toEqual(['3411','3489','3592']);
+  });
+  it('does not combine opposing possessions even if a provider reuses the same drive number',()=>{
+    const other={...drive[1],posteam:'GB',defteam:'MIN',penalty_team:'MIN'};
+    expect(clusters([drive[0],other])).toEqual([]);
+  });
+  it('deduplicates repeated source rows and quarantines conflicting play IDs',()=>{
+    expect(clusters([drive[0],{...drive[0]}])).toEqual([]);
+    expect(inspect([drive[0],{...drive[0]}]).reviewCandidates).toHaveLength(1);
+    expect(clusters([...drive,{...drive[0]}])[0].playIds).toEqual(['3411','3489','3592']);
+    const conflict={...drive[0],penalty_team:'MIN'};
+    expect(inspect([drive[0],conflict,drive[1]]).reviewCandidates.map(row=>row.playId)).toEqual(['3489']);
+    expect(clusters([drive[0],conflict,drive[1]])).toEqual([]);
+  });
+  it('does not infer an uncalled foul on the subsequent successful two-point conversion',()=>{
+    const play={game_id:gbMin.id,play_id:3648,qtr:4,time:'06:37',posteam:'MIN',defteam:'GB',down:null,penalty:0,first_down_penalty:0,two_point_attempt:1,two_point_conv_result:'success',desc:'TWO-POINT CONVERSION ATTEMPT. 11-C.Wentz pass to 18-J.Jefferson is complete. ATTEMPT SUCCEEDS.'};
+    expect(inspect([play]).reviewCandidates).toEqual([]);
   });
 });

@@ -1,7 +1,7 @@
 import type { EvidenceEvent, Game, GameAudit, GameAuditFlag, GameProfile, GameProfileReference, ReviewCandidate } from './contracts.js';
 import type { ProviderRow } from './normalize.js';
 
-export const GAME_AUDIT_VERSION = 'under-review-game-audit-v1';
+export const GAME_AUDIT_VERSION = 'under-review-game-audit-v2';
 
 const finite = (value: unknown): number | null => value === null || value === undefined || value === '' || typeof value === 'boolean' || !Number.isFinite(Number(value)) ? null : Number(value);
 const yes = (value: unknown): boolean => value === true || value === 1;
@@ -75,7 +75,34 @@ function observedWpMovement(play: ProviderRow, game: Game): number | null {
   return play.posteam === game.homeTeam || play.posteam === game.awayTeam ? Math.abs(wpa) : null;
 }
 
-function reviewCandidates(game: Game, plays: ProviderRow[], events: EvidenceEvent[]): ReviewCandidate[] {
+interface DriveExtension { playId:string;team:string;defense:string;down:number;drive:number|null;groupKey:string|null }
+function driveExtensions(game:Game,plays:ProviderRow[]):{byPlay:Map<string,DriveExtension>;groups:DriveExtension[][]}{
+  const unique=new Map<string,ProviderRow>();const conflicts=new Set<string>();
+  for(const play of plays){
+    const id=text(play.play_id);if(!id)continue;
+    if(unique.has(id)&&JSON.stringify(unique.get(id))!==JSON.stringify(play))conflicts.add(id);
+    else unique.set(id,play);
+  }
+  const byPlay=new Map<string,DriveExtension>();const groups=new Map<string,DriveExtension[]>();
+  for(const [playId,play] of unique){
+    const team=text(play.posteam);const defense=text(play.defteam);const down=finite(play.down);const description=text(play.desc);
+    const penaltyType=text(play.penalty_type).trim();
+    if(conflicts.has(playId)||(play.game_id!=null&&play.game_id!==game.id)||!yes(play.penalty)||!yes(play.first_down_penalty)||!([3,4] as (number|null)[]).includes(down)
+      ||![game.homeTeam,game.awayTeam].includes(team)||defense!==(team===game.homeTeam?game.awayTeam:game.homeTeam)||text(play.penalty_team)!==defense
+      ||!penaltyType||/\bunknown\b|\bunspecified\b|\bmultiple\b/i.test(penaltyType)||yes(play.first_down_pass)||yes(play.first_down_rush)
+      ||/\bdeclined\b|\boffset(?:ting)?\b|\bno penalty\b|\bpicked up\b/i.test(description)||(description.match(/\bpenalty\b/gi)?.length??0)>1)continue;
+    // Prefer the provider's corrected drive ID. Missing/invalid IDs still allow
+    // the individual factual flag, but can never manufacture a drive cluster.
+    const field=play.fixed_drive!=null?'fixed_drive':'drive';const value=finite(play[field]);
+    const drive=value!==null&&Number.isInteger(value)&&value>0?value:null;
+    const groupKey=drive===null?null:`${field}:${drive}:${team}`;
+    const extension={playId,team,defense,down:down!,drive,groupKey};byPlay.set(playId,extension);
+    if(groupKey)groups.set(groupKey,[...(groups.get(groupKey)??[]),extension]);
+  }
+  return {byPlay,groups:[...groups.values()].filter(group=>group.length>=2)};
+}
+
+function reviewCandidates(game: Game, plays: ProviderRow[], events: EvidenceEvent[],extensions:ReturnType<typeof driveExtensions>): ReviewCandidate[] {
   const candidates = new Map<string, ReviewCandidate>();
   const existing = new Map(events.map(event => [event.playId, event.id]));
   for (const play of plays) {
@@ -89,6 +116,12 @@ function reviewCandidates(game: Game, plays: ProviderRow[], events: EvidenceEven
     const nullified = /\bno play\b|\bnullified\b|\bnegated\b|\bdisallowed\b/i.test(description) || play.play_type === 'no_play';
     const reasons: string[] = [];
     let priority: ReviewCandidate['priority'] = 'medium';
+    const extension=extensions.byPlay.get(playId);
+    if(extension){
+      reasons.push(`Defensive penalty on ${extension.defense} awarded ${extension.team} a first down on ${extension.down===3?'third':'fourth'} down; call correctness requires review.`);
+      const group=extensions.groups.find(group=>group[0].groupKey===extension.groupKey);
+      if(group){reasons.push(`${group.length} defensive-penalty first downs on third or fourth down occurred on ${extension.team} drive ${extension.drive}; review the sequence together.`);priority='high';}
+    }
     if (reversed && catchOrScore) {
       reasons.push('Replay reversed a catch or scoring ruling; review the correction and remaining effect separately.'); priority = 'high';
     }
@@ -114,8 +147,9 @@ function reviewCandidates(game: Game, plays: ProviderRow[], events: EvidenceEven
   return [...candidates.values()].sort((a, b) => Number(b.priority === 'high') - Number(a.priority === 'high') || Math.abs(b.observedWpSwing ?? 0) - Math.abs(a.observedWpSwing ?? 0));
 }
 
-function observedContext(game: Game, plays: ProviderRow[], profiles: GameProfile[]): GameAudit['context'] {
-  const context: GameAudit['context'] = [];
+function observedContext(game: Game, plays: ProviderRow[], profiles: GameProfile[],extensions:ReturnType<typeof driveExtensions>): GameAudit['context'] {
+  const context: GameAudit['context'] = extensions.groups.map(group=>({team:group[0].team,kind:'drive_extending_penalties',playIds:group.map(play=>play.playId),
+    text:`${group[0].team} received ${group.length} first downs from ${group[0].defense} penalties on third or fourth down during drive ${group[0].drive}. Review these plays together; this does not establish that any call was wrong.`}));
   for (const profile of profiles) {
     const sacks = plays.filter(play => play.posteam === profile.team && yes(play.sack) && play.play_type !== 'no_play' && !yes(play.two_point_attempt));
     if (sacks.length) context.push({ team: profile.team, kind: 'sacks_allowed', text: `Allowed ${sacks.length} sacks, including ${sacks.filter(play => (finite(play.qtr) ?? 0) > 4).length} in overtime.`, playIds: sacks.map(play => text(play.play_id)) });
@@ -142,6 +176,7 @@ export function buildGameAudit({ game, plays = [], profiles: supplied = [], refe
     'Reference counts use complete aggregate team-games from strictly earlier seasons, including regular season and postseason. Same-season and future records are excluded.',
     'At least 20 matching prior team-games are required for labels: at most 5% wins for Historical outlier; at most 10% for Unusual winning profile. These are product flag thresholds, not calibrated significance tests.',
     'Review candidates are neutral priorities, not adjudicated errors or complete officiating coverage. Observed WP movement is the absolute whole-play change, never a beneficiary attribution or error-attributable cost; overtime WP is omitted.',
+    'Defensive penalties awarding first downs on third or fourth down are checked throughout the game. At least two distinct qualifying plays sharing an explicit provider drive and offensive team form a drive review cluster; this is not a claim that every penalty erased a stop. Declined, offsetting, ambiguous and independently converted plays are excluded from this check.',
     'Official aggregate totals supply the profile. PBP evidence links for aggregate context may be partial, particularly for multiple penalties; no approximate PBP penalty totals enter rarity comparisons.',
   ];
   const profiles = currentProfiles(game, supplied, notes);
@@ -167,10 +202,11 @@ export function buildGameAudit({ game, plays = [], profiles: supplied = [], refe
         reference: { startSeason, endSeason, teamGames: prior.rows.length, matchingGames: matches.length, wins, losses, ties, winRate } });
     }
   }
-  const candidates = reviewCandidates(game, plays, events);
+  const extensions=driveExtensions(game,plays);
+  const candidates = reviewCandidates(game, plays, events,extensions);
   const strongest = flags.find(flag => flag.status === 'historical_outlier') ?? flags.find(flag => flag.status === 'unusual_profile');
   const status: GameAudit['status'] = strongest ? strongest.status as 'historical_outlier' | 'unusual_profile' : candidates.length ? 'review_worthy' : !profiles.every(complete) || !prior.rows.length || flags.some(flag => flag.status === 'rare_sample') ? 'insufficient_data' : 'no_flag_found';
   const headline = strongest ? `${strongest.team}: ${strongest.title.toLowerCase()} — win with ${strongest.conditions.map(condition => condition.toLowerCase()).join(' and ')}; ${strongest.reference.wins} wins in ${strongest.reference.matchingGames} matching prior team-games.${candidates.length ? ` ${candidates.length} plays need review.` : ''}` : candidates.length ? `${candidates.length} plays need review; no call-correctness judgment has been made.` : status === 'insufficient_data' ? 'Insufficient comparable data for a historical outlier label.' : 'No configured historical outlier flag found; officiating correctness remains unreviewed.';
-  return { version: GAME_AUDIT_VERSION, status, headline, profiles, flags, reviewCandidates: candidates, context: observedContext(game, plays, profiles),
+  return { version: GAME_AUDIT_VERSION, status, headline, profiles, flags, reviewCandidates: candidates, context: observedContext(game, plays, profiles,extensions),
     reference: { version: reference?.version ?? 'unavailable', checksum: referenceChecksum, startSeason, endSeason, teamGames: prior.rows.length }, notes: [...notes, ...(reference?.notes ?? [])] };
 }

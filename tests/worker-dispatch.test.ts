@@ -61,6 +61,27 @@ describe('single-worker audit refresh dispatch', () => {
     expect(mocks.createDraft).not.toHaveBeenCalled();
   });
 
+  it('reconciles with clean data when an audit refresh would repeat a source downgrade', async () => {
+    const actions:string[]=[];
+    mocks.refreshGameAudit.mockImplementation(async()=>{actions.push('refresh');throw Object.assign(new Error('Use clean source'),{code:'source_downgrade'});});
+    mocks.analyzeGame.mockImplementation(async()=>{actions.push('clean');process.emit('SIGTERM');});
+    mocks.createDraft.mockImplementation(async()=>{actions.push('draft');});
+    mocks.finishJob.mockImplementation(async()=>{actions.push('finish');});
+    await import('../apps/worker/src/index.js');
+    expect(actions).toEqual(['refresh','clean','draft','finish']);
+    expect(mocks.analyzeGame).toHaveBeenCalledExactlyOnceWith('synthetic-game',{preferRaw:false,backfill:false});
+    expect(mocks.finishJob).toHaveBeenCalledExactlyOnceWith(job);
+  });
+
+  it('keeps failed clean reconciliation retryable and does not create a draft', async () => {
+    const error=new Error('Clean source temporarily unavailable');
+    mocks.refreshGameAudit.mockRejectedValue(Object.assign(new Error('Use clean source'),{code:'source_downgrade'}));
+    mocks.analyzeGame.mockImplementation(async()=>{process.emit('SIGTERM');throw error;});
+    await import('../apps/worker/src/index.js');
+    expect(mocks.finishJob).toHaveBeenCalledExactlyOnceWith(job,error);
+    expect(mocks.createDraft).not.toHaveBeenCalled();
+  });
+
   it('repairs equivalent legacy regressions at startup and queues clean reconciliation for actual changes', async () => {
     mocks.repairSourceRegressions.mockResolvedValue([
       { gameId: 'restored', revisionId: 'restored-id', status: 'restored' },
