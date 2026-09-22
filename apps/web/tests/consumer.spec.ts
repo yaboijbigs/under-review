@@ -71,6 +71,19 @@ test("the Rams filter uses the schedule team code and accepts an older link",asy
   for(let index=0;index<await cards.count();index++)await expect(cards.nth(index)).toContainText('Los Angeles Rams');
 });
 
+test("streamed SVG final-result titles are present before hydration",async({page})=>{
+  const gameId=process.env.SMOKE_OVERTIME_AWAY_GAME_ID;
+  test.skip(!gameId,'Set SMOKE_OVERTIME_AWAY_GAME_ID to a real overtime report with an explicit final outcome.');
+  // Inline streaming instructions still run; block external React bundles so client
+  // recovery cannot conceal a server-rendered empty SVG title (React error 418).
+  await page.route('**/_next/static/**/*.js',route=>route.abort());
+  await page.goto(`/games/${gameId}`);
+  await reportReady(page);
+  const title=page.locator('.chart-observed-result > title');
+  await expect(title).toHaveCount(1);
+  await expect(title).toHaveText(/^Recorded final result: .+\. This point is an observation, not a forecast\.$/);
+});
+
 test("report verdict and completed automation are separate from human review",async({page},testInfo)=>{
   const gameId=process.env.SMOKE_AUDIT_GAME_ID;
   test.skip(!gameId,'Set SMOKE_AUDIT_GAME_ID to a real report.');

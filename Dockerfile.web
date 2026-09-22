@@ -15,7 +15,7 @@ FROM node:24.15.0-bookworm-slim AS runtime
 WORKDIR /app
 LABEL org.opencontainers.image.source=https://github.com/yaboijbigs/under-review
 COPY LICENSE THIRD_PARTY_NOTICES.md DATA_SOURCES.md ./
-ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 PROJECT_ROOT=/app
+ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 PORT=3000 HOSTNAME=0.0.0.0 PROJECT_ROOT=/app KEEP_ALIVE_TIMEOUT=120000
 COPY --from=build --chown=node:node /app/apps/web/.next/standalone ./
 COPY --from=build --chown=node:node /app/apps/web/.next/static ./apps/web/.next/static
 USER node
