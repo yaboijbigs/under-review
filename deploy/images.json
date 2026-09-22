@@ -1,5 +1,5 @@
 {
-  "verifiedAt": "2026-09-22T04:31:43.405Z",
+  "verifiedAt": "2026-09-22T05:00:27.899Z",
   "workflowRun": {
     "id": 35685099170,
     "url": "https://github.com/yaboijbigs/under-review/actions/runs/35685099170",
@@ -7,10 +7,10 @@
     "conclusion": "success"
   },
   "web": {
-    "sourceCommit": "857016a70f8c64421f9779bbf9f5a07baf685dc9",
-    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:24ee2689286bb44c9eb5a5b63d96bd0c8213e5cb6da946d7c2bf78ddf9eae6e4",
+    "sourceCommit": "a2682ee5008e6341d91ad8f69fbaf55cbf2c7278",
+    "image": "ghcr.io/yaboijbigs/under-review-web@sha256:d8434b8bf59878a8e18e7af2ab15f996e147c48a16d98c485d70c88e9579568a",
     "anonymousManifestVerified": true,
-    "workflowRun": "https://github.com/yaboijbigs/under-review/actions/runs/35687046072"
+    "workflowRun": "https://github.com/yaboijbigs/under-review/actions/runs/35688904861"
   },
   "worker": {
     "sourceCommit": "f7152cb580c8d4b06f44610d94948c5505b994d3",
