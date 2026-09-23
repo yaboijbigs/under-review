@@ -270,14 +270,14 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     expect(preview.text).toContain('Week 1: @Packers 20 — @NYJets 17');expect(preview.apiText).toContain('Week 1: Packers 20 — Jets 17');
     await publishing.maybeAutomaticDraft(gameId);
     const rows=(await db.query('SELECT mode,text,template_version FROM publication_outbox ORDER BY mode')).rows;
-    expect(rows).toEqual([{mode:'dry_run',text:preview.text,template_version:'game-final-screening-v4'},{mode:'live',text:preview.apiText,template_version:'game-final-screening-v4-names'}]);expect(rows.every(row=>!row.text.includes('https://')&&!row.text.includes('See the Review:'))).toBe(true);expect(requests).toHaveLength(0);
+    expect(rows).toEqual([{mode:'dry_run',text:preview.text,template_version:'game-final-screening-v5'},{mode:'live',text:preview.apiText,template_version:'game-final-screening-v5-names'}]);expect(rows.every(row=>!row.text.includes('https://')&&!row.text.includes('See the Review:'))).toBe(true);expect(requests).toHaveLength(0);
   });
   it.each(['initial','update','correction'] as const)('renders approved manual API %s posts with names without rewriting their previews',async kind=>{
     await useNflTeamCodes();
     if(kind!=='initial')await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'manual-update',statistical_status,charting_status,'manual update',summary,analysis,snapshot_ids,game_json FROM analysis_revisions WHERE id=$2`,[randomUUID(),revisionId]);
     const draft=await publishing.createDraft(gameId,kind);expect(draft.text).toContain('@Packers');
     const id=await publishing.approveDraft(draft.id,adminId),live=(await db.query('SELECT text,template_version FROM publication_outbox WHERE id=$1',[id])).rows[0];
-    expect(live.text).toContain('Week 1: Packers 20 — Jets 17');expect(live.text).not.toContain('@');expect(live.text).not.toMatch(/https?:\/\/|See the Review:/);expect(live.template_version).toBe('game-final-screening-v4-names');
+    expect(live.text).toContain('Week 1: Packers 20 — Jets 17');expect(live.text).not.toContain('@');expect(live.text).not.toMatch(/https?:\/\/|See the Review:/);expect(live.template_version).toBe('game-final-screening-v5-names');
     if(kind!=='initial')expect(live.text).toContain(kind==='correction'?'Correction:':'Update:');
     expect((await db.query('SELECT text FROM publication_outbox WHERE id=$1',[draft.id])).rows[0].text).toBe(draft.text);expect(requests).toHaveLength(0);
   });

@@ -2,8 +2,8 @@ import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { config,projectRoot } from '../packages/core/src/config.js';
-import { gameSchema,type AnalysisResult,type Game,type SourceSnapshot } from '../packages/core/src/contracts.js';
-import type { ProviderRow } from '../packages/core/src/normalize.js';
+import { analysisSchema,gameSchema,type AnalysisResult,type Game,type SourceSnapshot } from '../packages/core/src/contracts.js';
+import { numberOrNull,type ProviderRow } from '../packages/core/src/normalize.js';
 import { getGameVerdict } from '../packages/core/src/consumer-summary.js';
 import { buildGameAudit } from '../packages/core/src/game-audit.js';
 import { loadGameProfileReference } from '../packages/core/src/game-profile-source.js';
@@ -51,10 +51,15 @@ if(fixture.schemaVersion!==1||candidateGame.id!==id||candidateGame.homeScore!==g
 const fixtureChecksum=createHash('sha256').update(fixtureBytes).digest('hex');
 const playSnapshot:SourceSnapshot={id:'ci-frozen-game-pbp-'+fixtureChecksum,provider:'ci-frozen-game-pbp',url:'https://github.com/yaboijbigs/under-review/blob/main/tests/fixtures/officiating-game.json',checksum:fixtureChecksum,retrievedAt:source.retrievedAt,path:fixturePath,license:fixture.sources.playByPlay.license,metadata:{ciFixture:true,sourceUrl:fixture.sources.playByPlay.url,sourceChecksum:fixture.sources.playByPlay.checksum,notes:'Actual public game extract. Snapshot checksum identifies the extract; sourceChecksum identifies its parent play-by-play CSV.'}};
 const candidateSnapshots=[...snapshots,playSnapshot],officiating=await loadOfficiatingReference();
-const candidateBase:AnalysisResult={...beforeAudit,warnings:['Isolated CI candidate from real frozen schedule, paired statistics and play-by-play; no fabricated plays or forecasts.'],gameAudit:buildGameAudit({game:candidateGame,plays:candidatePlays,profiles:profiles.reference.rows.filter(item=>item.gameId===id),reference:profiles.reference,referenceChecksum:profiles.checksum})};
+if(candidatePlays.some((play,index)=>play.source_order!==index||play.play_id===null||play.play_id===undefined))throw new Error('The public fixture must preserve every source play in its recorded order.');
+const candidateTimeline:AnalysisResult['timeline']=candidatePlays.map(play=>({playId:String(play.play_id),quarter:numberOrNull(play.qtr),clock:typeof play.time==='string'?play.time:null,description:typeof play.desc==='string'?play.desc:'',homeWp:null,status:'unavailable',reasonCode:'ci_wp_not_computed'}));
+const candidateBase:AnalysisResult={...beforeAudit,timeline:candidateTimeline,warnings:['Isolated CI candidate from real frozen schedule, paired statistics and source plays. No model WP estimates were computed.'],gameAudit:buildGameAudit({game:candidateGame,plays:candidatePlays,profiles:profiles.reference.rows.filter(item=>item.gameId===id),reference:profiles.reference,referenceChecksum:profiles.checksum})};
 const candidate=applyOfficiatingAudit(candidateGame,candidatePlays,applyExpectationsAudit(candidateGame,applySpreadAudit(candidateGame,candidateBase,candidateSnapshots,spread),expectations),officiating);
 const candidateVerdict=getGameVerdict(candidate.gameAudit),candidateAudit=candidate.gameAudit?.officiating;
 if(candidateVerdict.rating!==2||candidateVerdict.rulesVersion!=='game-suspicion-v4'||!validOfficiatingAudit(candidateAudit)||candidateAudit?.crew.status!=='complete'||candidateAudit.crew.roles.length!==7)throw new Error('The real candidate must reproduce Debatable 2/5 with valid enforcement evidence and a complete crew.');
+analysisSchema.parse(candidate);
+const sourcePlayIds=new Set(candidate.timeline.map(play=>play.playId));
+if(candidateAudit.result!.events.some(event=>!sourcePlayIds.has(event.playId))||candidate.gameAudit!.reviewCandidates.some(play=>!sourcePlayIds.has(play.playId)))throw new Error('Every candidate evidence link must resolve to its real source play.');
 
 if(process.argv.includes('--validate-only')){
  console.log('Validated frozen 2025_12_MIN_GB: pre-audit, v2 and v3 legacy rules, candidate v4 Debatable 2/5, seven-role crew, checksummed reference and real play extract; no database opened.');
