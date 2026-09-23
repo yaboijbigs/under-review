@@ -150,6 +150,8 @@ For an unknown outcome, an administrator has two reconciliation choices: supply 
 
 Automatic delivery waits for a numeric game rating (1–5); an Unrated preview does not consume the initial-publication slot. It renders the latest report when queueing and rechecks that rating before delivery. If the current rating has been withdrawn, the unsent post waits for a later complete revision. Already published or uncertain submissions never become automatic correction posts.
 
+The `game-final-screening-v2` templates use the five emoji rating headings, an away/home score line, a supported finding, `See the Review:`, and `#NFL #UnderReview`. Debatable reports with review candidates show their count; a spread-only Debatable report explains the spread instead. Sus describes a strong fairness concern, and RIGGED? requires both qualifying evidence types. Text is checked using X's weighted 280-character limit; shorter complete finding variants preserve the evidence, full revision link, and hashtags. Manual corrections and updates retain their explicit prefixes.
+
 No test, credential check, or deployment readiness check should submit a real X post. Live API delivery and OAuth authorization must be distinguished from mocked publishing tests and dry-run drafts in the release report.
 
 ## Verified checks and release record

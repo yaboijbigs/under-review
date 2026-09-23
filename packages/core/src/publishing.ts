@@ -250,7 +250,8 @@ export async function reconcilePublication(outboxId:string,resolution:'posted'|'
   const body=await response.json() as {data?:{id?:string;author_id?:string;text?:string;entities?:unknown}};
   if(body.data?.id!==externalId||body.data.author_id!==row.account_id)throw new Error('The supplied post does not belong to the intended X account.');
   const reportUrl=`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${row.number}`;
-  if(!row.text.endsWith(reportUrl)||verifiedPostText(body.data)!==row.text.normalize('NFC'))throw new Error('The supplied post does not exactly match the intended full text and report URL.');
+  const recognizedFooter=row.text.endsWith(reportUrl)||row.text.endsWith(`\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`);
+  if(!recognizedFooter||verifiedPostText(body.data)!==row.text.normalize('NFC'))throw new Error('The supplied post does not exactly match the intended full text and report URL.');
  }
  await transaction(async client=>{
   const current=(await client.query('SELECT * FROM publication_outbox WHERE id=$1 FOR UPDATE',[outboxId])).rows[0];

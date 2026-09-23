@@ -11,15 +11,16 @@ const accountId = '123456789', adminId = randomUUID(), reviewerId = randomUUID()
 const gameId = '2099_01_TST_DEMO', revisionId = randomUUID();
 const reportUrl = `https://under-review.example/games/${gameId}?revision=1`;
 const intendedText = `Synthetic test only. Calls not reviewed. ${reportUrl}`;
+const labeledText = `Synthetic test only.\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`;
 let admin: pg.Client;
 let db: typeof import('../packages/core/src/db.js');
 let publishing: typeof import('../packages/core/src/publishing.js');
 let requests: { url: string; method: string }[];
 let handler: (url: string, init?: RequestInit) => Promise<Response>;
 
-async function makeOutbox(status = 'unknown_outcome') {
+async function makeOutbox(status = 'unknown_outcome', text = intendedText) {
   const id = randomUUID();
-  await db.query("INSERT INTO publication_outbox(id,game_id,revision_id,account_id,kind,mode,status,text,evidence_ids) VALUES($1,$2,$3,$4,'initial','live',$5,$6,'[]')", [id, gameId, revisionId, accountId, status, intendedText]);
+  await db.query("INSERT INTO publication_outbox(id,game_id,revision_id,account_id,kind,mode,status,text,evidence_ids) VALUES($1,$2,$3,$4,'initial','live',$5,$6,'[]')", [id, gameId, revisionId, accountId, status, text]);
   return id;
 }
 function postResponse(overrides: Record<string, unknown> = {}) {
@@ -78,9 +79,9 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     Object.assign(config, original);
   });
 
-  it('binds only the intended author, complete text and expanded report URL, with durable audit', async () => {
-    const id = await makeOutbox();
-    handler = async (url) => { expect(url).toBe('https://api.x.com/2/tweets/987654321?tweet.fields=author_id%2Centities'); return postResponse(); };
+  it.each([['legacy', intendedText], ['labeled', labeledText]])('binds the %s footer, intended author, complete text and expanded report URL, with durable audit', async (_format, text) => {
+    const id = await makeOutbox('unknown_outcome', text);
+    handler = async (url) => { expect(url).toBe('https://api.x.com/2/tweets/987654321?tweet.fields=author_id%2Centities'); return postResponse({ text: text.replace(reportUrl, 'https://t.co/AbC123') }); };
     await publishing.reconcilePublication(id, 'posted', '987654321', adminId);
     expect((await db.query('SELECT status,external_id FROM publication_outbox WHERE id=$1', [id])).rows[0]).toEqual({ status: 'published', external_id: '987654321' });
     expect((await db.query('SELECT details FROM audit_log')).rows[0].details).toMatchObject({ resolution: 'posted', verified: true, accountId });
@@ -88,9 +89,25 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     expect((await db.query('SELECT count(*)::int AS n FROM jobs')).rows[0].n).toBe(0);
   });
 
+  it.each(['changed-remote-footer', 'different-revision-url', 'different-footer', 'trailing-text'])('rejects a labeled post with %s and keeps the outcome uncertain', async failure => {
+    const text = failure === 'different-revision-url' ? labeledText.replace('?revision=1', '?revision=2')
+      : failure === 'different-footer' ? labeledText.replace('#UnderReview', '#Other')
+      : failure === 'trailing-text' ? `${labeledText}\nMore text` : labeledText;
+    const id = await makeOutbox('unknown_outcome', text);
+    // Matching invalid stored/remote text must still fail the canonical footer guard.
+    const remoteText = failure === 'changed-remote-footer' ? text.replace('#UnderReview', '#Other') : text;
+    handler = async () => postResponse({ text: remoteText.replace(reportUrl, 'https://t.co/AbC123') });
+    await expect(publishing.reconcilePublication(id, 'posted', '987654321', adminId)).rejects.toThrow('exactly match');
+    expect((await db.query('SELECT status,external_id FROM publication_outbox WHERE id=$1', [id])).rows[0]).toEqual({ status: 'unknown_outcome', external_id: null });
+    expect(requests.map(request => request.method)).toEqual(['GET']);
+    expect((await db.query('SELECT count(*)::int AS n FROM publication_attempts')).rows[0].n).toBe(0);
+    expect((await db.query('SELECT count(*)::int AS n FROM audit_log')).rows[0].n).toBe(0);
+    expect((await db.query('SELECT count(*)::int AS n FROM jobs')).rows[0].n).toBe(0);
+  });
+
   it('shows credential/account readiness and an attributable preview without calling X',async()=>{
     const ready=await publishing.getPublishingReadiness();expect(ready).toMatchObject({connectionReady:true,automaticReady:true,cutoffPolicy:'kickoff_after_activation',corrections:'manual_only',selectedAccount:{id:accountId}});
-    const preview=await publishing.buildAutoPostPreview(gameId);expect(preview).toMatchObject({valid:true,revision:1,eligibleForAutomation:true,reportUrl});expect(preview.text).toContain('TST 20–17 DEMO | Final. Game rating: Fair (1/5).');
+    const preview=await publishing.buildAutoPostPreview(gameId);expect(preview).toMatchObject({valid:true,revision:1,eligibleForAutomation:true,reportUrl});expect(preview.text).toContain('🟢 FAIR — 1/5\nTST 20 — DEMO 17');
     vi.stubEnv('X_EXPECTED_USERNAME','riggednflmoment');expect((await publishing.getPublishingReadiness()).automaticReady).toBe(false);
     vi.stubEnv('X_REDIRECT_URI','https://attacker.example/callback');expect((await publishing.getPublishingReadiness()).connectionReady).toBe(false);
     await expect(publishing.beginXConnection(adminId)).rejects.toThrow('exact callback');expect(requests).toHaveLength(0);
@@ -113,8 +130,8 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     const newRevision=randomUUID();
     await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'corrected-final',statistical_status,charting_status,'corrected final',summary,jsonb_set(jsonb_set(analysis,'{gameAudit,profiles,0,pointsFor}','21'),'{gameAudit,profiles,1,pointsAgainst}','21'),snapshot_ids,jsonb_set(game_json,'{homeScore}','21') FROM analysis_revisions WHERE id=$2`,[newRevision,revisionId]);
     await publishing.maybeAutomaticDraft(gameId);
-    const live=(await db.query("SELECT revision_id,text FROM publication_outbox WHERE mode='live'")).rows[0];expect(live.revision_id).toBe(newRevision);expect(live.text).toContain('TST 20–21 DEMO');expect(live.text.endsWith('?revision=2')).toBe(true);
-    expect((await db.query('SELECT text FROM publication_outbox WHERE id=$1',[old.id])).rows[0].text).toContain('TST 20–17 DEMO');expect(requests).toHaveLength(0);
+    const live=(await db.query("SELECT revision_id,text FROM publication_outbox WHERE mode='live'")).rows[0];expect(live.revision_id).toBe(newRevision);expect(live.text).toContain('TST 20 — DEMO 21');expect(live.text.endsWith('?revision=2\n\n#NFL #UnderReview')).toBe(true);
+    expect((await db.query('SELECT text FROM publication_outbox WHERE id=$1',[old.id])).rows[0].text).toContain('TST 20 — DEMO 17');expect(requests).toHaveLength(0);
   });
   it('waits for a complete rating without consuming the initial slot, then queues once',async()=>{
     const saved=(await db.query('SELECT analysis FROM analysis_revisions WHERE id=$1',[revisionId])).rows[0].analysis;
