@@ -280,4 +280,39 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     await repository.saveAnalysis(emptyGame,[],[],analysis,'clean');
     expect(await repository.getReport(emptyGame.id)).toMatchObject({revision:{sourceSnapshots:[]},drafts:[],reviews:[]});
   });
+
+  it('prioritizes ready publication ahead of historical maintenance while retaining sync and new-final-game priority',async()=>{
+    await db.query('DELETE FROM jobs'); // This suite owns its isolated temporary schema.
+    const recent={...game,id:'2099_90_NEW_DMO',week:90,kickoffAt:new Date(Date.now()-3*3600000).toISOString()};
+    const historical={...game,id:'2099_91_OLD_DMO',week:91,kickoffAt:new Date(Date.now()-365*86400000).toISOString()};
+    await repository.saveGames([recent,historical]);
+    const oldDue=new Date(Date.now()-24*3600000),due=new Date(Date.now()-1000);
+    const maintenance=await jobs.enqueue('analyze',historical.id,{},'priority:maintenance',oldDue);
+    const fresh=await jobs.enqueue('analyze',recent.id,{},'priority:first-final',oldDue);
+    const publish=await jobs.enqueue('publish',game.id,{outboxId:'synthetic-only'},'priority:publish',due);
+    const futurePublish=await jobs.enqueue('publish',historical.id,{outboxId:'synthetic-only'},'priority:future-publish',new Date(Date.now()+3600000));
+    const sync=await jobs.enqueue('sync-season',null,{},'priority:sync',oldDue);
+    const reconcile=await jobs.enqueue('reconcile-week',null,{},'priority:reconcile',due);
+    for(const id of [sync,reconcile,publish,fresh,maintenance]){
+      const claimed=await jobs.claimJob('synthetic-priority-worker');expect(claimed?.id).toBe(id);await jobs.finishJob(claimed!);
+    }
+    expect(await jobs.claimJob('synthetic-priority-worker')).toBeNull();
+    expect((await db.query('SELECT status FROM jobs WHERE id=$1',[futurePublish])).rows[0].status).toBe('pending');
+  });
+
+  it('never preempts active analysis and retains per-game exclusion across prioritized publish jobs',async()=>{
+    await db.query('DELETE FROM jobs');
+    const analysis=await jobs.enqueue('analyze',game.id,{},'priority:active-analysis');
+    const active=await jobs.claimJob('synthetic-active-worker');expect(active?.id).toBe(analysis);
+    const first=await jobs.enqueue('publish',game.id,{outboxId:'synthetic-one'},'priority:same-game-one');
+    const second=await jobs.enqueue('publish',game.id,{outboxId:'synthetic-two'},'priority:same-game-two');
+    expect(await jobs.claimJob('synthetic-waiting-worker')).toBeNull();
+    expect((await db.query('SELECT status,worker_id FROM jobs WHERE id=$1',[analysis])).rows[0]).toEqual({status:'running',worker_id:'synthetic-active-worker'});
+    await jobs.finishJob(active!);
+    const concurrent=(await Promise.all([jobs.claimJob('synthetic-publisher-one'),jobs.claimJob('synthetic-publisher-two')])).filter(job=>job!==null);
+    expect(concurrent).toHaveLength(1);expect([first,second]).toContain(concurrent[0]!.id);
+    expect((await db.query("SELECT count(*)::int n FROM jobs WHERE game_id=$1 AND status='running'",[game.id])).rows[0].n).toBe(1);
+    await jobs.finishJob(concurrent[0]!);
+    const remaining=await jobs.claimJob('synthetic-publisher-three');expect(remaining).not.toBeNull();expect(remaining!.id).not.toBe(concurrent[0]!.id);await jobs.finishJob(remaining!);
+  });
 });

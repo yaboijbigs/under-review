@@ -1,0 +1,18 @@
+# Used only after CI proves analytics/ and Dockerfile.worker match the pinned base.
+ARG WORKER_BASE
+FROM ${WORKER_BASE}
+USER root
+WORKDIR /app
+# Replace application trees completely so deleted source files cannot survive.
+RUN rm -rf /app/packages /app/apps /app/migrations /app/scripts
+COPY package.json package-lock.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/worker/package.json apps/worker/package.json
+COPY packages/core/package.json packages/core/package.json
+RUN npm ci --omit=dev --workspace=@under-review/worker --include-workspace-root
+COPY packages packages
+COPY apps/worker apps/worker
+COPY migrations migrations
+COPY scripts scripts
+COPY LICENSE THIRD_PARTY_NOTICES.md DATA_SOURCES.md tsconfig.json ./
+USER underreview

@@ -17,14 +17,14 @@ export function RatingFeedback({gameId,revisionId,revisionNumber,rating:modelRat
  const [loadAttempt,setLoadAttempt]=useState(0);
  const [activated,setActivated]=useState(!compact);
  const endpoint=`/api/games/${encodeURIComponent(gameId)}/feedback`;
- const reportKey=`${gameId}:${revisionId}:${rulesVersion}`,loadedReport=useRef(reportKey),edited=useRef(false);
+ const reportKey=`${gameId}:${revisionId}:${rulesVersion}`,loadedReport=useRef(reportKey),edited=useRef({agreement:false,rating:false,comment:false});
  useEffect(()=>{
   if(!activated)return;
   const controller=new AbortController();setReady(false);setError('');
-  if(loadedReport.current!==reportKey){loadedReport.current=reportKey;edited.current=false;setAgreement(null);setRating(modelRating);setComment('');setSaved(null);setSummary(null);}
+  if(loadedReport.current!==reportKey){loadedReport.current=reportKey;edited.current={agreement:false,rating:false,comment:false};setAgreement(null);setRating(modelRating);setComment('');setSaved(null);setSummary(null);}
   fetch(`${endpoint}?revisionId=${encodeURIComponent(revisionId)}&rulesVersion=${encodeURIComponent(rulesVersion)}`,{credentials:'same-origin',cache:'no-store',signal:controller.signal}).then(async response=>{
    const data=await readResponse(response);
-   if(data.feedback){setSaved(data.feedback);setSummary(data.summary);if(!edited.current){setAgreement(data.feedback.agreement);setRating(data.feedback.rating);setComment(data.feedback.comment);}}
+   if(data.feedback){setSaved(data.feedback);setSummary(data.summary);if(!edited.current.agreement)setAgreement(data.feedback.agreement);if(!edited.current.rating)setRating(data.feedback.rating);if(!edited.current.comment)setComment(data.feedback.comment);}
    setReady(true);
   }).catch(reason=>{if(!controller.signal.aborted)setError(errorMessage(reason));});
   return ()=>controller.abort();
@@ -43,13 +43,13 @@ export function RatingFeedback({gameId,revisionId,revisionNumber,rating:modelRat
  return <section className={`rating-feedback${compact?' rating-feedback-compact':''}`} aria-labelledby={`${id}-title`} data-report-version={revisionNumber}>
   <div className={compact?'sr-only':undefined}><h3 id={`${id}-title`}>Do you agree with this rating?</h3>{!compact&&<p>Share your take with other fans.</p>}</div>
   <div className="feedback-choices" aria-label="Agreement with the game rating">
-   {(['agree','disagree'] as const).map(value=><button key={value} type="button" className="feedback-choice" aria-label={value==='agree'?'Agree':'Disagree'} title={value==='agree'?'Agree with this rating':'Disagree with this rating'} aria-pressed={agreement===value} aria-controls={`${id}-form`} aria-expanded={agreement!==null} disabled={saving} onClick={()=>{edited.current=true;setAgreement(value);setActivated(true);}}><span aria-hidden="true">{value==='agree'?'👍':'👎'}</span>{!compact&&<> {value==='agree'?'Agree':'Disagree'}</>}</button>)}
+   {(['agree','disagree'] as const).map(value=><button key={value} type="button" className="feedback-choice" aria-label={value==='agree'?'Agree':'Disagree'} title={value==='agree'?'Agree with this rating':'Disagree with this rating'} aria-pressed={agreement===value} aria-controls={`${id}-form`} aria-expanded={agreement!==null} disabled={saving} onClick={()=>{edited.current.agreement=true;setAgreement(value);setActivated(true);}}><span aria-hidden="true">{value==='agree'?'👍':'👎'}</span>{!compact&&<> {value==='agree'?'Agree':'Disagree'}</>}</button>)}
   </div>
   {agreement && <form className="feedback-form" id={`${id}-form`} onSubmit={submit}>
    <label htmlFor={`${id}-rating`}>How would you rate this game? <strong>{SUSPICION_SCALE[rating-1].label} · {rating}/5</strong></label>
-   <input className="feedback-slider" id={`${id}-rating`} name="rating" type="range" min="1" max="5" step="1" value={rating} onChange={event=>{edited.current=true;setRating(Number(event.target.value) as Rating);}} aria-valuetext={`${SUSPICION_SCALE[rating-1].label}, ${rating} of 5`} disabled={saving}/>
+   <input className="feedback-slider" id={`${id}-rating`} name="rating" type="range" min="1" max="5" step="1" value={rating} onChange={event=>{edited.current.rating=true;setRating(Number(event.target.value) as Rating);}} aria-valuetext={`${SUSPICION_SCALE[rating-1].label}, ${rating} of 5`} disabled={saving}/>
    <div className="feedback-labels" aria-hidden="true">{SUSPICION_SCALE.map(tier=><span key={tier.level} data-selected={tier.rating===rating}>{tier.label}</span>)}</div>
-   <label htmlFor={`${id}-comment`}>Why? <span>(optional)</span></label><textarea id={`${id}-comment`} name="comment" value={comment} maxLength={1000} rows={3} onChange={event=>{edited.current=true;setComment(event.target.value);}} placeholder="Which plays or patterns shaped your view? Please leave out personal information." disabled={saving}/>
+   <label htmlFor={`${id}-comment`}>Why? <span>(optional)</span></label><textarea id={`${id}-comment`} name="comment" value={comment} maxLength={1000} rows={3} onChange={event=>{edited.current.comment=true;setComment(event.target.value);}} placeholder="Which plays or patterns shaped your view? Please leave out personal information." disabled={saving}/>
    <p className="small feedback-public-notice">Your rating and explanation will be public on this game’s page. Don’t include personal information.</p>
    {saved&&!saved.public&&<p className="small muted">Your earlier response is private. Submit again to share it publicly.</p>}
    <div className="feedback-actions"><button className="button dark" type="submit" disabled={!ready||saving||unchanged}>{saving?'Posting…':saved?.public?'Update feedback':'Post feedback'}</button><span className="small muted">{comment.length}/1,000</span></div>

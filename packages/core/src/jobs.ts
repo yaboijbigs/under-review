@@ -40,11 +40,12 @@ export async function claimJob(workerId:string):Promise<Job|null>{
   AND (game_id IS NULL OR NOT EXISTS(SELECT 1 FROM jobs busy WHERE busy.game_id=j.game_id AND busy.status='running'))
   ORDER BY CASE
    WHEN j.kind IN ('sync-season','reconcile-week') THEN 0
+   WHEN j.kind='publish' THEN 1
    WHEN j.kind='analyze' AND EXISTS(
     SELECT 1 FROM games g WHERE g.id=j.game_id AND g.kickoff_at BETWEEN now()-interval '36 hours' AND now()
      AND NOT EXISTS(SELECT 1 FROM analysis_revisions r WHERE r.game_id=g.id)
-   ) THEN 1
-   ELSE 2 END,j.run_after,j.created_at FOR UPDATE OF j SKIP LOCKED LIMIT 1`)).rows[0];
+   ) THEN 2
+   ELSE 3 END,j.run_after,j.created_at FOR UPDATE OF j SKIP LOCKED LIMIT 1`)).rows[0];
   if(!row)return null;
   if(row.game_id){const lock=(await client.query('SELECT pg_try_advisory_xact_lock(hashtext($1)) AS acquired',[`job:${row.game_id}`])).rows[0];if(!lock.acquired)return null;
    if((await client.query("SELECT 1 FROM jobs WHERE game_id=$1 AND status='running'",[row.game_id])).rowCount)return null;

@@ -43,9 +43,9 @@ test('a delayed saved response does not overwrite a new thumb choice or explanat
  let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});
  await page.route(ownEndpoint(gameId),async route=>{await gate;await route.fulfill({json:{feedback:{agreement:'agree',rating:1,comment:'An earlier view.',public:true},summary:{total:1,agree:1,disagree:0}}});});
  await page.goto(`/games/${gameId}`);const widget=page.locator('.rating-feedback');await expect(widget).toBeVisible({timeout:20000});
- await widget.getByRole('button',{name:'Disagree',exact:true}).click();await widget.getByRole('textbox',{name:/Why/}).fill('This is the new explanation.');release();
+ await widget.getByRole('button',{name:'Disagree',exact:true}).click();await widget.getByRole('slider').focus();await widget.getByRole('slider').press('End');await widget.getByRole('textbox',{name:/Why/}).fill('This is the new explanation.');release();
  await expect(widget.getByRole('button',{name:'Update feedback',exact:true})).toBeEnabled();
- await expect(widget.getByRole('button',{name:'Disagree',exact:true})).toHaveAttribute('aria-pressed','true');await expect(widget.getByRole('textbox',{name:/Why/})).toHaveValue('This is the new explanation.');
+ await expect(widget.getByRole('button',{name:'Disagree',exact:true})).toHaveAttribute('aria-pressed','true');await expect(widget.getByRole('slider')).toHaveValue('5');await expect(widget.getByRole('textbox',{name:/Why/})).toHaveValue('This is the new explanation.');
 });
 
 test('feedback initialization can be retried and proxy errors keep the draft',async({page})=>{
@@ -80,6 +80,20 @@ test('public feedback displays reader ratings and report versions, escapes comme
  await page.goto(`/games/${gameId}`);const list=page.locator('#fan-feedback');await expect(list.locator('article')).toHaveCount(1,{timeout:20000});await expect(list).toContainText('Sus · 4/5');await expect(list).toContainText('Disagrees with Debatable');await expect(list.locator('.visitor-comment')).toHaveText(first.comment);await expect(list.locator('img,script')).toHaveCount(0);
  await expect(list.getByRole('link',{name:'Report version 1'})).toHaveAttribute('href',`/games/${gameId}?revision=1`);await list.getByRole('button',{name:'Show more feedback'}).click();await expect(list.locator('article')).toHaveCount(2);await expect(list).toContainText('Rating only');await expect(list.getByRole('button',{name:'Show more feedback'})).toHaveCount(0);
  await list.screenshot({path:testInfo.outputPath('public-feedback.png')});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});
+
+test('a returning visitor can change a home thumb without losing their saved rating or explanation',async({page})=>{
+ const gameId=process.env.SMOKE_AUDIT_GAME_ID;test.skip(!gameId,'Set SMOKE_AUDIT_GAME_ID to an existing rated report.');
+ let release!:()=>void;const gate=new Promise<void>(resolve=>{release=resolve;});const submissions:Record<string,unknown>[]=[];
+ await page.route(ownEndpoint(gameId),async route=>{
+  if(route.request().method()==='GET'){await gate;return route.fulfill({json:{feedback:{agreement:'agree',rating:4,comment:'The same drive had three critical flags.',public:true},summary:{total:1,agree:1,disagree:0}}});}
+  const body=route.request().postDataJSON();submissions.push(body);return route.fulfill({json:{feedback:body,summary:{total:1,agree:0,disagree:1}}});
+ });
+ await page.goto(process.env.SMOKE_SEASON?`/?season=${encodeURIComponent(process.env.SMOKE_SEASON)}`:'/');
+ const card=page.locator('.game-card').filter({has:page.locator(`.scoreboard-link[href="/games/${gameId}"]`)}),widget=card.locator('.rating-feedback');
+ await expect(widget).toBeVisible({timeout:20000});await widget.getByRole('button',{name:'Disagree',exact:true}).click();await expect(widget.getByRole('slider')).toBeVisible();release();
+ await expect(widget.getByRole('button',{name:'Update feedback',exact:true})).toBeEnabled();await expect(widget.getByRole('button',{name:'Disagree',exact:true})).toHaveAttribute('aria-pressed','true');await expect(widget.getByRole('slider')).toHaveValue('4');await expect(widget.getByRole('textbox',{name:/Why/})).toHaveValue('The same drive had three critical flags.');
+ await widget.getByRole('button',{name:'Update feedback',exact:true}).click();await expect(widget.getByRole('status')).toContainText('feedback is public');expect(submissions).toHaveLength(1);expect(submissions[0]).toMatchObject({agreement:'disagree',rating:4,comment:'The same drive had three critical flags.',public:true});
 });
 
 test('private earlier feedback stays private until the visitor explicitly posts it',async({page})=>{

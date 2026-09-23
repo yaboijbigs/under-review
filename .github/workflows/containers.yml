@@ -11,6 +11,10 @@ on:
         description: Optional release tag containing validated public report bundles
         type: string
         default: ''
+      reuse_worker_runtime:
+        description: Reuse the verified pinned worker runtime only when analytics and runtime recipe are unchanged
+        type: boolean
+        default: false
 permissions:
   contents: read
   packages: write
@@ -50,11 +54,34 @@ jobs:
           git fetch --depth 1 origin "$GITHUB_SHA"
           git checkout --detach FETCH_HEAD
       - name: Restore pinned analytics dependencies
+        if: ${{ !inputs.reuse_worker_runtime }}
         run: docker build -f analytics/Dockerfile -t under-review-analytics:local .
       - name: Test analytics
+        if: ${{ !inputs.reuse_worker_runtime }}
         run: docker run --rm under-review-analytics:local Rscript analytics/tests/run.R
       - name: Build worker
+        if: ${{ !inputs.reuse_worker_runtime }}
         run: docker build -f Dockerfile.worker -t ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }} .
+      - name: Verify and reuse the recorded analytics runtime
+        if: ${{ inputs.reuse_worker_runtime }}
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFileSync,appendFileSync} from 'node:fs';
+          import assert from 'node:assert/strict';
+          const {worker}=JSON.parse(readFileSync('deploy/images.json','utf8'));
+          assert.equal(worker.anonymousManifestVerified,true);
+          assert.match(worker.sourceCommit,/^[a-f0-9]{40}$/);
+          assert.match(worker.image,/^ghcr\.io\/yaboijbigs\/under-review-worker@sha256:[a-f0-9]{64}$/);
+          appendFileSync(process.env.GITHUB_ENV,`WORKER_BASE=${worker.image}\nWORKER_BASE_COMMIT=${worker.sourceCommit}\n`);
+          NODE
+      - name: Check runtime compatibility and build application update
+        if: ${{ inputs.reuse_worker_runtime }}
+        run: |
+          git fetch --depth 1 origin "$WORKER_BASE_COMMIT"
+          git diff --exit-code "$WORKER_BASE_COMMIT" "$GITHUB_SHA" -- analytics Dockerfile.worker
+          docker pull "$WORKER_BASE"
+          docker run --rm "$WORKER_BASE" Rscript analytics/tests/run.R
+          docker build -f Dockerfile.worker-app --build-arg WORKER_BASE="$WORKER_BASE" -t ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }} .
       - name: Publish worker
         env:
           REGISTRY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
