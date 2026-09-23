@@ -80,7 +80,7 @@ jobs:
           git fetch --depth 1 origin "$WORKER_BASE_COMMIT"
           git diff --exit-code "$WORKER_BASE_COMMIT" "$GITHUB_SHA" -- analytics Dockerfile.worker
           docker pull "$WORKER_BASE"
-          docker run --rm "$WORKER_BASE" Rscript analytics/tests/run.R
+          docker run --rm --user root "$WORKER_BASE" Rscript analytics/tests/run.R
           docker build -f Dockerfile.worker-app --build-arg WORKER_BASE="$WORKER_BASE" -t ghcr.io/${{ github.repository_owner }}/under-review-worker:${{ github.sha }} .
       - name: Publish worker
         env:
