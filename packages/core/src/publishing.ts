@@ -275,7 +275,7 @@ export function verifiedPostText(post:unknown):string{
 export async function reconcilePublication(outboxId:string,resolution:'posted'|'cancel',externalId:string|null,userId:string):Promise<void>{
  if(!(await query("SELECT 1 FROM users WHERE id=$1 AND role='admin'",[userId])).rowCount)throw new Error('Administrator access is required to reconcile a publication.');
  if(resolution!=='posted'&&resolution!=='cancel')throw new Error('Choose a verified existing post or permanent cancellation.');
- const row=(await query("SELECT o.*,r.number FROM publication_outbox o JOIN analysis_revisions r ON r.id=o.revision_id WHERE o.id=$1 AND o.mode='live' AND o.status='unknown_outcome'",[outboxId])).rows[0];
+ const row=(await query("SELECT o.*,r.number FROM publication_outbox o JOIN analysis_revisions r ON r.id=o.revision_id AND r.game_id=o.game_id WHERE o.id=$1 AND o.mode='live' AND o.status='unknown_outcome'",[outboxId])).rows[0];
  if(!row)throw new Error('Only an unknown publication outcome can be reconciled.');
  if(resolution==='posted'){
   if(!externalId||!/^\d{1,30}$/.test(externalId))throw new Error('A numeric X post ID is required.');
@@ -286,21 +286,26 @@ export async function reconcilePublication(outboxId:string,resolution:'posted'|'
   const body=await response.json() as {data?:{id?:string;author_id?:string;text?:string;entities?:unknown}};
   if(body.data?.id!==externalId||body.data.author_id!==row.account_id)throw new Error('The supplied post does not belong to the intended X account.');
   const reportUrl=`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${row.number}`;
-  const recognizedFooter=row.text.endsWith(reportUrl)||row.text.endsWith(`\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`);
-  if(!recognizedFooter||verifiedPostText(body.data)!==row.text.normalize('NFC'))throw new Error('The supplied post does not exactly match the intended full text and report URL.');
+  // Historical reconciliation uses the stored version, never a moving current-template constant.
+  const urlFreeVersion=row.template_version==='game-final-screening-v4-names';
+  const legacyVersion=row.template_version==null||['game-final-screening-v1','game-final-screening-v2','game-final-screening-v3','game-final-screening-v3-names'].includes(row.template_version);
+  const recognizedFooter=urlFreeVersion
+   ? twitterText.extractUrls(row.text).length===0&&row.text.endsWith('\n\n#NFL #UnderReview')
+   : legacyVersion&&(row.text.endsWith(reportUrl)||row.text.endsWith(`\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`));
+  if(!recognizedFooter||verifiedPostText(body.data)!==row.text.normalize('NFC'))throw new Error('The supplied post does not exactly match the intended full text and stored report revision.');
  }
  await transaction(async client=>{
   const current=(await client.query('SELECT * FROM publication_outbox WHERE id=$1 FOR UPDATE',[outboxId])).rows[0];
-  if(!current||current.status!=='unknown_outcome'||current.mode!=='live'||current.text!==row.text||current.account_id!==row.account_id)throw new Error('The publication changed during reconciliation; reload and review it again.');
+  if(!current||current.status!=='unknown_outcome'||current.mode!=='live'||current.text!==row.text||current.account_id!==row.account_id||current.game_id!==row.game_id||current.revision_id!==row.revision_id||current.template_version!==row.template_version||current.kind!==row.kind)throw new Error('The publication changed during reconciliation; reload and review it again.');
   if(resolution==='posted'){
    // Account advisory lock makes the external-ID check atomic without a broad schema change.
    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[`publication-reconcile:${row.account_id}`]);
    if((await client.query("SELECT 1 FROM publication_outbox WHERE mode='live' AND account_id=$1 AND external_id=$2 AND id<>$3",[row.account_id,externalId,outboxId])).rowCount)throw new Error('This X post is already linked to another publication.');
   }
   const status=resolution==='posted'?'published':'cancelled';
-  const reason=resolution==='posted'?'Administrator reconciled the existing X post after verifying author, full text and report URL.':'Administrator permanently cancelled further submission; the original outcome may remain unknown.';
+  const reason=resolution==='posted'?'Administrator reconciled the existing X post after verifying author, full text and stored report revision.':'Administrator permanently cancelled further submission; the original outcome may remain unknown.';
   await client.query('UPDATE publication_outbox SET status=$2,external_id=$3,reason=$4,updated_at=now() WHERE id=$1',[outboxId,status,resolution==='posted'?externalId:null,reason]);
   await client.query('INSERT INTO publication_attempts(id,outbox_id,state,http_status,external_id,error,finished_at) VALUES($1,$2,$3,$4,$5,$6,now())',[randomUUID(),outboxId,`reconciled_${status}`,resolution==='posted'?200:null,resolution==='posted'?externalId:null,reason]);
-  await client.query('INSERT INTO audit_log(user_id,action,target,details) VALUES($1,$2,$3,$4)',[userId,'publication.reconciled',outboxId,JSON.stringify({resolution,accountId:row.account_id,externalId:resolution==='posted'?externalId:null,verified:resolution==='posted'})]);
+  await client.query('INSERT INTO audit_log(user_id,action,target,details) VALUES($1,$2,$3,$4)',[userId,'publication.reconciled',outboxId,JSON.stringify({resolution,accountId:row.account_id,revisionId:row.revision_id,templateVersion:row.template_version,externalId:resolution==='posted'?externalId:null,verified:resolution==='posted'})]);
  });
 }

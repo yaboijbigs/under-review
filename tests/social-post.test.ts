@@ -9,7 +9,7 @@ const game:Game={id:'2026_02_GB_NYJ',season:2026,week:2,gameType:'REG',homeTeam:
 const winner:GameProfile={gameId:game.id,season:2026,team:'GB',opponent:'NYJ',pointsFor:23,pointsAgainst:20,totalYards:199,opponentYards:350,penalties:13,penaltyYards:133,turnoverMargin:-1,nonOffensiveTouchdowns:1};
 const loser:GameProfile={...winner,team:'NYJ',opponent:'GB',pointsFor:20,pointsAgainst:23,totalYards:350,opponentYards:199,penalties:4,penaltyYards:30,turnoverMargin:1};
 const reportUrl=`https://underreview.jbigs.com/games/${game.id}?revision=2`;
-const footer=`\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`;
+const footer='\n\n#NFL #UnderReview';
 const scoreLine='Week 2: @Packers 23 — @NYJets 20';
 function audit(wins=1,n=20):GameAudit{
  const reference:GameProfileReference={schemaVersion:1,version:'test',startSeason:2025,endSeason:2025,sourceUrls:[],sourceChecksums:{},notes:[],rows:Array.from({length:n},(_,i)=>({...winner,gameId:`2025_${i}_GB_NYJ`,season:2025,pointsFor:i<wins?23:10}))};
@@ -61,18 +61,18 @@ describe('original automatic X final report prose',()=>{
  it('leads with the stronger cluster when historical evidence only reaches a lower rating',()=>{
   const a=audit(2);addCluster(a,3);const draft=renderSocialPost(game,analysis(a),reportUrl);expect(draft.text).toContain('🔴 SUS — 4/5');expect(draft.text).toContain('3 defensive penalties extended one GB drive');
  });
- it('makes manually requested correction/update text explicit and pins its revision',()=>{
+ it('makes manually requested correction/update text explicit without a review link',()=>{
   for(const kind of ['correction','update'] as const){const draft=renderSocialPost(game,analysis(audit()),reportUrl,kind);expect(draft.text.toLowerCase().startsWith(`${scoreLine.toLowerCase()}\n\n${kind}:`)).toBe(true);expect(draft.text.endsWith(footer)).toBe(true);expect(draft.valid).toBe(true);}
  });
  it.each(['initial','correction','update'] as const)('keeps large realistic counts, both top-tier claims, emoji and complete footer within 280 for %s',kind=>{
   const a=audit(350,14000);addCluster(a,12);const draft=renderSocialPost(game,analysis(a),reportUrl,kind);
   expect(draft.valid).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text).toMatch(/350(?: wins in |\/)14000/);expect(draft.text).toContain('12');expect(draft.text).toContain('one GB drive');expect(draft.text).toContain('🚨🚨 RIGGED? 🚨🚨');expect(draft.text.endsWith(footer)).toBe(true);expect(draft.evidenceIds.length).toBe(13);
  });
- it.each(['correction','update'] as const)('budgets every level and market-only findings with the %s prefix and an unshortened long URL',kind=>{
+ it.each(['correction','update'] as const)('omits even long report URLs at every level with the %s prefix',kind=>{
   const review=audit(3);addCluster(review,1);const top=audit();addCluster(top,3);const marketOnly=audit(3);marketOnly.market=market(3);
   const longUrl=reportUrl+'&source='+ 'a'.repeat(300);
   for(const a of [audit(3),review,audit(2),audit(),top,marketOnly]){
-   const draft=renderSocialPost(game,analysis(a),longUrl,kind);expect(draft.valid).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text).toContain(`${kind==='correction'?'Correction':'Update'}: `);expect(draft.text.endsWith(`See the Review: ${longUrl}\n\n#NFL #UnderReview`)).toBe(true);expect(validateSocialPost(draft.text,draft)).toBe(true);
+   const draft=renderSocialPost(game,analysis(a),longUrl,kind);expect(draft.valid).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text).toContain(`${kind==='correction'?'Correction':'Update'}: `);expect(draft.text.endsWith(footer)).toBe(true);expect(draft.text).not.toMatch(/https?:\/\/|See the Review/);expect(draft.text).toBe(renderSocialPost(game,analysis(a),reportUrl,kind).text);expect(validateSocialPost(draft.text,draft)).toBe(true);
   }
  });
  it('budgets the longest official mentions at every rating, with large counts and correction prefixes',()=>{
@@ -97,7 +97,7 @@ describe('original automatic X final report prose',()=>{
    for(const kind of ['initial','correction','update'] as const)for(const a of [legacy,current]){
     const draft=renderSocialPost(matchup,analysis(a),reportUrl,kind,style);
     expect(draft.text.startsWith(`Week 18: ${label(awayTeam)} 45 — ${label(homeTeam)} 38\n\n`)).toBe(true);
-    expect(draft.valid,draft.text).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text.endsWith(footer)).toBe(true);
+    expect(draft.valid,draft.text).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text.endsWith(footer)).toBe(true);expect(draft.text).not.toMatch(/https?:\/\/|See the Review/);
     if(style==='names')expect(draft.text).not.toContain('@');
    }
   }
@@ -112,7 +112,7 @@ describe('original automatic X final report prose',()=>{
   const a=expectationsAudit(rating);
   for(const kind of ['initial','correction','update'] as const){
    const draft=renderSocialPost(game,analysis(a),reportUrl,kind);
-   expect(draft.valid,draft.text).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text.startsWith(scoreLine+'\n\n')).toBe(true);expect(draft.text.endsWith(footer)).toBe(true);
+   expect(draft.valid,draft.text).toBe(true);expect(draft.weightedLength).toBeLessThanOrEqual(280);expect(draft.text.startsWith(scoreLine+'\n\n')).toBe(true);expect(draft.text.endsWith(footer)).toBe(true);expect(draft.text).not.toMatch(/https?:\/\/|See the Review/);
    if(rating===1){expect(draft.text).toContain('🟢 FAIR — 1/5');expect(draft.evidenceIds).toEqual([]);}
    else {expect(draft.text).toContain(rating===5?'GB beat its box-score expectation by 18.2 points; 3 penalties extended one GB drive.':'GB finished 18.2 points above its box-score expectation.');expect(draft.evidenceIds).toEqual([`verdict:${game.id}:game-suspicion-v3:reason:0`]);}
    if(rating===2){expect(draft.text).toContain('🟡 DEBATABLE — 2/5\n\n📊 ');expect(draft.text).not.toContain('0 plays');}
@@ -132,6 +132,6 @@ describe('original automatic X final report prose',()=>{
   const a=expectationsAudit(4);a.expectations!.outcome.residual=999;
   const draft=renderSocialPost(game,analysis(a),reportUrl);expect(draft.text).toContain('⚪ UNRATED');expect(draft.text).not.toContain('999');expect(draft.evidenceIds).toEqual([]);
  });
- it('versions the changed templates',()=>expect(SOCIAL_TEMPLATE_VERSION).toBe('game-final-screening-v3'));
+ it('versions the changed templates',()=>expect(SOCIAL_TEMPLATE_VERSION).toBe('game-final-screening-v4'));
  it('does not validate an unscored game for publication',()=>expect(renderSocialPost({...game,homeScore:null},analysis(),reportUrl).valid).toBe(false));
 });

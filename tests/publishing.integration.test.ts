@@ -102,6 +102,34 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     expect((await db.query('SELECT count(*)::int AS n FROM jobs')).rows[0].n).toBe(0);
   });
 
+  it('reconciles exact URL-free v4 text with its intended author and internal report revision',async()=>{
+    const preview=await publishing.buildAutoPostPreview(gameId),id=await makeOutbox('unknown_outcome',preview.apiText);
+    await db.query("UPDATE publication_outbox SET template_version='game-final-screening-v4-names' WHERE id=$1",[id]);
+    expect(preview.apiText).not.toMatch(/https?:\/\/|See the Review:/);
+    handler=async()=>postResponse({text:preview.apiText,entities:{urls:[]}});
+    await publishing.reconcilePublication(id,'posted','987654321',adminId);
+    expect((await db.query('SELECT status,external_id,revision_id FROM publication_outbox WHERE id=$1',[id])).rows[0]).toEqual({status:'published',external_id:'987654321',revision_id:revisionId});
+    expect((await db.query('SELECT details FROM audit_log')).rows[0].details).toMatchObject({verified:true,accountId,revisionId,templateVersion:'game-final-screening-v4-names'});
+    expect(requests.map(request=>request.method)).toEqual(['GET']);expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(0);
+  });
+
+  it.each(['wrong-author','changed-text','legacy-version','unknown-version','embedded-url','changed-revision'])('keeps URL-free v4 %s uncertain without resending',async failure=>{
+    const preview=await publishing.buildAutoPostPreview(gameId),text=failure==='embedded-url'?labeledText:preview.apiText,id=await makeOutbox('unknown_outcome',text);
+    const version=failure==='legacy-version'?'game-final-screening-v3-names':failure==='unknown-version'?'unknown-template':'game-final-screening-v4-names';
+    await db.query('UPDATE publication_outbox SET template_version=$2 WHERE id=$1',[id,version]);
+    handler=async()=>{
+      if(failure==='changed-revision'){
+        const nextRevision=randomUUID();
+        await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'reconcile-race',statistical_status,charting_status,'synthetic',summary,analysis,snapshot_ids,game_json FROM analysis_revisions WHERE id=$2`,[nextRevision,revisionId]);
+        await db.query('UPDATE publication_outbox SET revision_id=$2 WHERE id=$1',[id,nextRevision]);
+      }
+      return postResponse({text:failure==='changed-text'?`${text}\nChanged`:text,author_id:failure==='wrong-author'?'999':accountId,entities:{urls:[]}});
+    };
+    await expect(publishing.reconcilePublication(id,'posted','987654321',adminId)).rejects.toThrow();
+    expect((await db.query('SELECT status,external_id FROM publication_outbox WHERE id=$1',[id])).rows[0]).toEqual({status:'unknown_outcome',external_id:null});
+    expect(requests.map(request=>request.method)).toEqual(['GET']);expect((await db.query('SELECT count(*)::int n FROM publication_attempts')).rows[0].n).toBe(0);
+  });
+
   it.each(['changed-remote-footer', 'different-revision-url', 'different-footer', 'trailing-text'])('rejects a labeled post with %s and keeps the outcome uncertain', async failure => {
     const text = failure === 'different-revision-url' ? labeledText.replace('?revision=1', '?revision=2')
       : failure === 'different-footer' ? labeledText.replace('#UnderReview', '#Other')
@@ -160,7 +188,7 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     expect(await publishing.getPublishingSettings()).toEqual(settings);
     expect(await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true})).toBeNull();
     expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(1);
-    handler=async(url,init)=>{if(url===reportUrl)return new Response('synthetic report');expect(url).toBe('https://api.x.com/2/tweets');expect(JSON.parse(String(init?.body))).toEqual({text:expected.apiText});return Response.json({data:{id:'987654321'}},{status:201});};
+    handler=async(url,init)=>{if(url===reportUrl)return new Response('synthetic report');expect(url).toBe('https://api.x.com/2/tweets');expect(JSON.parse(String(init?.body))).toEqual({text:expected.apiText});expect(expected.apiText).not.toMatch(/https?:\/\/|See the Review:/);return Response.json({data:{id:'987654321'}},{status:201});};
     await publishing.publishOutbox(id);expect((await db.query('SELECT status FROM publication_outbox WHERE id=$1',[id])).rows[0].status).toBe('published');
     await publishing.maybeAutomaticDraft(gameId);expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(1);
   });
@@ -217,7 +245,7 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     const newRevision=randomUUID();
     await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'corrected-final',statistical_status,charting_status,'corrected final',summary,jsonb_set(jsonb_set(analysis,'{gameAudit,profiles,0,pointsFor}','21'),'{gameAudit,profiles,1,pointsAgainst}','21'),snapshot_ids,jsonb_set(game_json,'{homeScore}','21') FROM analysis_revisions WHERE id=$2`,[newRevision,revisionId]);
     await publishing.maybeAutomaticDraft(gameId);
-    const live=(await db.query("SELECT revision_id,text FROM publication_outbox WHERE mode='live'")).rows[0];expect(live.revision_id).toBe(newRevision);expect(live.text).toContain('TST 20 — DEMO 21');expect(live.text.endsWith('?revision=2\n\n#NFL #UnderReview')).toBe(true);
+    const live=(await db.query("SELECT revision_id,text FROM publication_outbox WHERE mode='live'")).rows[0];expect(live.revision_id).toBe(newRevision);expect(live.text).toContain('TST 20 — DEMO 21');expect(live.text.endsWith('\n\n#NFL #UnderReview')).toBe(true);expect(live.text).not.toMatch(/https?:\/\/|See the Review:/);
     expect((await db.query('SELECT text FROM publication_outbox WHERE id=$1',[old.id])).rows[0].text).toContain('TST 20 — DEMO 17');expect(requests).toHaveLength(0);
   });
   it('queues automatic team names while retaining the manual handle preview',async()=>{
@@ -225,14 +253,14 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     expect(preview.text).toContain('Week 1: @Packers 20 — @NYJets 17');expect(preview.apiText).toContain('Week 1: Packers 20 — Jets 17');
     await publishing.maybeAutomaticDraft(gameId);
     const rows=(await db.query('SELECT mode,text,template_version FROM publication_outbox ORDER BY mode')).rows;
-    expect(rows).toEqual([{mode:'dry_run',text:preview.text,template_version:'game-final-screening-v3'},{mode:'live',text:preview.apiText,template_version:'game-final-screening-v3-names'}]);expect(requests).toHaveLength(0);
+    expect(rows).toEqual([{mode:'dry_run',text:preview.text,template_version:'game-final-screening-v4'},{mode:'live',text:preview.apiText,template_version:'game-final-screening-v4-names'}]);expect(rows.every(row=>!row.text.includes('https://')&&!row.text.includes('See the Review:'))).toBe(true);expect(requests).toHaveLength(0);
   });
   it.each(['initial','update','correction'] as const)('renders approved manual API %s posts with names without rewriting their previews',async kind=>{
     await useNflTeamCodes();
     if(kind!=='initial')await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'manual-update',statistical_status,charting_status,'manual update',summary,analysis,snapshot_ids,game_json FROM analysis_revisions WHERE id=$2`,[randomUUID(),revisionId]);
     const draft=await publishing.createDraft(gameId,kind);expect(draft.text).toContain('@Packers');
     const id=await publishing.approveDraft(draft.id,adminId),live=(await db.query('SELECT text,template_version FROM publication_outbox WHERE id=$1',[id])).rows[0];
-    expect(live.text).toContain('Week 1: Packers 20 — Jets 17');expect(live.text).not.toContain('@');expect(live.template_version).toBe('game-final-screening-v3-names');
+    expect(live.text).toContain('Week 1: Packers 20 — Jets 17');expect(live.text).not.toContain('@');expect(live.text).not.toMatch(/https?:\/\/|See the Review:/);expect(live.template_version).toBe('game-final-screening-v4-names');
     if(kind!=='initial')expect(live.text).toContain(kind==='correction'?'Correction:':'Update:');
     expect((await db.query('SELECT text FROM publication_outbox WHERE id=$1',[draft.id])).rows[0].text).toBe(draft.text);expect(requests).toHaveLength(0);
   });
@@ -240,7 +268,7 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     await useNflTeamCodes();const draft=await historicalDraft();const id=await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true});
     expect(draft.text).toContain('@Packers');const live=(await db.query('SELECT text,manual_historical_initial FROM publication_outbox WHERE id=$1',[id])).rows[0];expect(live.text).toContain('Packers 20 — Jets 17');expect(live.text).not.toContain('@');expect(live.manual_historical_initial).toBe(true);expect(requests).toHaveLength(0);
   });
-  it.each(['game-final-screening-v2','game-final-screening-v3'])('stops stale %s live rows before network access and never upgrades them through a newer automatic revision',async version=>{
+  it.each(['game-final-screening-v2','game-final-screening-v3','game-final-screening-v3-names'])('stops stale %s live rows before network access and never upgrades them through a newer automatic revision',async version=>{
     const id=await makeOutbox('approved');await db.query('UPDATE publication_outbox SET template_version=$2,queued_automatically=true WHERE id=$1',[id,version]);
     const before=(await db.query('SELECT text,revision_id FROM publication_outbox WHERE id=$1',[id])).rows[0];
     await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'newer-template',statistical_status,charting_status,'new revision',summary,analysis,snapshot_ids,game_json FROM analysis_revisions WHERE id=$2`,[randomUUID(),revisionId]);

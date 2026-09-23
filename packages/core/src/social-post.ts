@@ -4,7 +4,7 @@ import { getGameVerdict } from './consumer-summary.js';
 import type { EvidenceDraft } from './summaries.js';
 import { teamSocialHandle, teamShortName } from './team-social.js';
 
-export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v3';
+export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v4';
 export const SOCIAL_API_TEMPLATE_VERSION = `${SOCIAL_TEMPLATE_VERSION}-names`;
 export type SocialRecipientStyle = 'handles' | 'names';
 const headings = {1:'🟢 FAIR — 1/5',2:'🟡 DEBATABLE — 2/5',3:'🟠 HMM — 3/5',4:'🔴 SUS — 4/5',5:'🚨🚨 RIGGED? 🚨🚨'} as const;
@@ -14,12 +14,12 @@ const conditions: Record<string, string> = {
   'Negative turnover margin': 'losing the turnover battle',
 };
 /** Original, deterministic prose derived from the same validated editorial rating as the report. */
-export function renderSocialPost(game: Game, analysis: AnalysisResult, reportUrl: string, kind: 'initial' | 'correction' | 'update' = 'initial', recipientStyle: SocialRecipientStyle = 'handles'): EvidenceDraft {
+export function renderSocialPost(game: Game, analysis: AnalysisResult, _reportUrl: string, kind: 'initial' | 'correction' | 'update' = 'initial', recipientStyle: SocialRecipientStyle = 'handles'): EvidenceDraft {
   const verdict = getGameVerdict(analysis.gameAudit);
   const heading = verdict.rating ? headings[verdict.rating] : '⚪ UNRATED';
   const teamLabel = recipientStyle === 'names' ? teamShortName : teamSocialHandle;
   const prefix = `Week ${game.week}: ${teamLabel(game.awayTeam) ?? game.awayTeam} ${game.awayScore} — ${teamLabel(game.homeTeam) ?? game.homeTeam} ${game.homeScore}\n\n${kind === 'initial' ? '' : kind === 'correction' ? 'Correction: ' : 'Update: '}${heading}`;
-  const suffix = `\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`;
+  const suffix = '\n\n#NFL #UnderReview';
   let findings: string[] = [];
   let evidenceIds: string[] = [];
   const comparison = verdict.comparison;
