@@ -173,7 +173,7 @@ export async function listGames(filters:{season?:number;week?:number;team?:strin
  if(filters.week){values.push(filters.week);clauses.push(`g.week=$${values.length}`);}
  if(filters.team){values.push(filters.team);clauses.push(`(g.home_team=$${values.length} OR g.away_team=$${values.length})`);}
  if(filters.publishedOnly)clauses.push('r.number IS NOT NULL');
- const rows=(await query(`SELECT g.game_json,r.* FROM games g LEFT JOIN LATERAL(SELECT number,statistical_status,charting_status,review_status,summary,created_at,analysis->'gameAudit' AS game_audit FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true ${clauses.length?'WHERE '+clauses.join(' AND '):''} ORDER BY g.week DESC,g.kickoff_at DESC NULLS LAST LIMIT 400`,values)).rows;
+ const rows=(await query(`SELECT g.game_json,r.* FROM games g LEFT JOIN LATERAL(SELECT number,statistical_status,charting_status,review_status,summary,created_at,analysis->'gameAudit' AS game_audit FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true ${clauses.length?'WHERE '+clauses.join(' AND '):''} ORDER BY g.season DESC,g.week DESC,g.kickoff_at DESC NULLS LAST LIMIT 400`,values)).rows;
  return rows.map(r=>({...r.game_json,statisticalStatus:r.statistical_status??'awaiting_data',chartingStatus:r.charting_status??'unavailable',reviewStatus:r.review_status??'not_reviewed',finding:r.summary??null,updatedAt:r.created_at?.toISOString()??null,revisionNumber:r.number??null,gameAudit:r.game_audit??null}));
 }
 function mapDraft(r:Record<string,any>):Draft{return {id:r.id,gameId:r.game_id,revisionId:r.revision_id,text:r.text,status:r.status,kind:r.kind,mode:r.mode,createdAt:r.created_at.toISOString(),externalId:r.external_id,reason:r.reason};}

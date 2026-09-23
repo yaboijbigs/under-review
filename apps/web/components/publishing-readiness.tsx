@@ -6,7 +6,7 @@ export async function PublishingReadiness({games}:{games:GameCard[]}){
  let readiness:Awaited<ReturnType<typeof getPublishingReadiness>>;
  try{readiness=await getPublishingReadiness();}catch{return <div className="notice">X setup status is temporarily unavailable.</div>;}
  let preview:Awaited<ReturnType<typeof buildAutoPostPreview>>|null=null;
- for(const game of games.slice(0,3)){try{preview=await buildAutoPostPreview(game.id);break;}catch{}}
+ for(const game of games.filter(game=>game.revisionNumber!==null).slice(0,3)){try{preview=await buildAutoPostPreview(game.id);break;}catch{}}
  return <div className="publishing-readiness admin-columns equal">
   <div className="admin-panel"><h3>{readiness.automaticReady?'Automatic posts are ready':'Set up automatic game posts'}</h3>
    <p>Account: <strong>{readiness.expectedAccount?`@${readiness.expectedAccount}`:readiness.selectedAccount?`@${readiness.selectedAccount.username}`:'Choose your X account'}</strong></p>
