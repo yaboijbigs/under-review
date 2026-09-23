@@ -76,6 +76,7 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:4380
           SMOKE_AUDIT_GAME_ID: 2099_01_GB_MIN
+          SMOKE_SEASON: '2099'
           SMOKE_MARKET_EXPECTED: 'true'
         run: npx playwright test --config apps/web/playwright.config.ts apps/web/tests/rating-feedback.spec.ts --workers 2 --output artifacts/feedback-browser --reporter line
       - name: Preserve browser evidence and preview logs

@@ -32,8 +32,10 @@ describe.skipIf(process.env.RUN_DB_TESTS!=='1')('published game listing (isolate
    FROM generate_series(1,401) n`);
   const ordinary=await repository.listGames({season:2099});
   expect(ordinary).toHaveLength(400);expect(ordinary.some(row=>row.id===game.id)).toBe(false);
+  expect(ordinary.every(row=>row.revisionId===null)).toBe(true);
   const published=await repository.listGames({season:2099,publishedOnly:true});
   expect(published.map(row=>row.id)).toEqual([game.id]);expect(published[0].revisionNumber).toBe(1);
+  expect(published[0].revisionId).toBe((await db.query('SELECT id FROM analysis_revisions WHERE game_id=$1 AND number=1',[game.id])).rows[0].id);
   expect(await repository.listGames({season:2099,week:2,publishedOnly:true})).toEqual([]);
   expect(await repository.listGames({season:2099,team:'OTHER',publishedOnly:true})).toEqual([]);
  });

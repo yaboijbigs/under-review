@@ -12,11 +12,11 @@ Momentum charts connect available win-probability estimates without inventing in
 
 The versioned profile rules check seven combinations of offense below 200 yards, at least 100 penalty yards, and negative turnover margin. The frozen reference contains 7,256 games from 1999–2025, with target comparisons restricted to earlier seasons. Historical outlier and unusual-profile labels are descriptive product thresholds; sparse samples retain their exact counts. See [data provenance and reproduction](analytics/GAME_PROFILES.md) and the [development evaluation](benchmarks/game-audit/README.md).
 
-Visitors can agree or disagree with a report, suggest a rating on the Fair → RIGGED? scale, and leave a private explanation for reviewers. Responses are tied to the report version and rating rules; they never alter the calculated rating. A signed browser cookie allows updates to the same response without an account.
+Visitors can vote from homepage game cards or a report. Choosing a thumb opens the Fair → RIGGED? slider and an optional explanation. New submissions are visibly labeled public and appear on the game page with their report version and rating context. Earlier private feedback remains private unless its author explicitly resubmits it. Responses never alter the calculated rating; a signed browser cookie allows updates without an account.
 
 Reports also compare the recorded closing spread with the final margin using 7,276 prior-season games. An unusually large miss can raise a rating to Debatable or Hmm; spread alone cannot produce Sus or RIGGED?. See [spread methodology and source attribution](analytics/SPREAD_METHOD.md).
 
-Automatic X posts use the report’s rating and supporting evidence. Activation records a future-kickoff cutoff, one initial post per game/account is enforced, and corrections remain manual. The admin page includes setup readiness and a preview. See [publishing operations](OPERATIONS.md); OAuth credentials stay in the private server environment.
+Automatic X posts use the report’s rating and supporting evidence. Activation records a future-kickoff cutoff, one initial post per game/account is enforced, and corrections remain manual. An administrator can explicitly authorize an individual historical game's first post without making the rest of the archive eligible. The admin page includes setup readiness and previews. See [publishing operations](OPERATIONS.md); OAuth credentials stay in the private server environment.
 
 ## Start locally
 

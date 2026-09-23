@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { GameCard as CardData, Metric, EvidenceEvent, Review, AnalysisResult } from "@under-review/core/contracts";
 import { getGameVerdict } from "@under-review/core/consumer-summary";
 import { dateTime, first, gameView, human, num, record, records, safeLink, statusTone, str, teamName, type RecordValue } from "@/lib/presentation";
+import { RatingFeedback } from "@/components/rating-feedback";
 
 export function Status({value, label}: {value: unknown; label?: string}) { return <span className={`status ${statusTone(value)}`}><span aria-hidden="true" />{label || human(value)}</span>; }
 export function PageIntro({eyebrow, title, children}: {eyebrow: string; title: string; children?: ReactNode}) { return <div className="page-intro"><p className="eyebrow">{eyebrow}</p><h1>{title}</h1>{children && <div className="intro-copy">{children}</div>}</div>; }
@@ -20,6 +21,7 @@ export function GameCard({game}: {game: CardData}) {
     </Link>
     <div className="card-finding"><p>{verdict.rating && verdict.rating <= 2 ? verdict.summary : verdict.reasons[0] || verdict.summary}</p></div>
     <div className="card-bottom"><span>{verdict.reviewCount ? `${verdict.reviewCount} key ${verdict.reviewCount === 1 ? "play" : "plays"}` : ""}</span><Link prefetch={false} href={href}>See why <span aria-hidden="true">↗</span></Link></div>
+    {verdict.rating&&game.revisionId&&game.revisionNumber&&<RatingFeedback key={`${game.revisionId}:${verdict.rulesVersion}`} compact gameId={game.id} revisionId={game.revisionId} revisionNumber={game.revisionNumber} rating={verdict.rating} rulesVersion={verdict.rulesVersion}/>}
   </article>;
 }
 export function Freshness({value, label = "Last processed"}: {value: unknown; label?: string}) { return <span className="freshness">{label} <time>{dateTime(value)}</time></span>; }

@@ -26,6 +26,10 @@ async function makeOutbox(status = 'unknown_outcome', text = intendedText) {
 function postResponse(overrides: Record<string, unknown> = {}) {
   return Response.json({ data: { id: '987654321', author_id: accountId, text: intendedText.replace(reportUrl, 'https://t.co/AbC123'), entities: { urls: [{ url: 'https://t.co/AbC123', expanded_url: reportUrl }] }, ...overrides } });
 }
+async function historicalDraft(){
+  await db.query("UPDATE games SET publication_eligible=false,kickoff_at='1999-09-01',first_validated_at='1999-09-02' WHERE id=$1",[gameId]);
+  return publishing.createDraft(gameId);
+}
 
 describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP mocked)', () => {
   beforeAll(async () => {
@@ -111,6 +115,65 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     vi.stubEnv('X_EXPECTED_USERNAME','riggednflmoment');expect((await publishing.getPublishingReadiness()).automaticReady).toBe(false);
     vi.stubEnv('X_REDIRECT_URI','https://attacker.example/callback');expect((await publishing.getPublishingReadiness()).connectionReady).toBe(false);
     await expect(publishing.beginXConnection(adminId)).rejects.toThrow('exact callback');expect(requests).toHaveLength(0);
+  });
+
+  it('requires a separate administrator authorization; automatic and ordinary approval keep the cutoff',async()=>{
+    const draft=await historicalDraft();
+    await expect(publishing.approveDraft(draft.id,adminId)).rejects.toThrow('Historical backfills');
+    await expect(publishing.approveDraft(draft.id,reviewerId,{authorizeHistoricalInitial:true})).rejects.toThrow('Administrator');
+    await publishing.maybeAutomaticDraft(gameId);
+    expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(0);expect(requests).toHaveLength(0);
+  });
+
+  it('records only the selected historical initial post, using fresh canonical text and atomic queueing',async()=>{
+    const draft=await historicalDraft();const settings=await publishing.getPublishingSettings();
+    await db.query("UPDATE publication_outbox SET text='Outdated stored preview',template_version='old-template' WHERE id=$1",[draft.id]);
+    const expected=await publishing.buildAutoPostPreview(gameId);
+    const id=await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true});
+    expect((await db.query('SELECT manual_historical_initial,queued_automatically,approved_by,text,template_version FROM publication_outbox WHERE id=$1',[id])).rows[0]).toEqual({manual_historical_initial:true,queued_automatically:false,approved_by:adminId,text:expected.text,template_version:expected.templateVersion});
+    expect((await db.query('SELECT details FROM audit_log WHERE target=$1',[id])).rows[0].details).toMatchObject({manualHistoricalInitial:true,automatic:false,accountId,revisionId});
+    expect((await db.query('SELECT publication_eligible FROM games WHERE id=$1',[gameId])).rows[0].publication_eligible).toBe(false);
+    expect(await publishing.getPublishingSettings()).toEqual(settings);
+    expect(await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true})).toBeNull();
+    expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(1);
+    handler=async(url,init)=>{if(url===reportUrl)return new Response('synthetic report');expect(url).toBe('https://api.x.com/2/tweets');expect(JSON.parse(String(init?.body))).toEqual({text:expected.text});return Response.json({data:{id:'987654321'}},{status:201});};
+    await publishing.publishOutbox(id);expect((await db.query('SELECT status FROM publication_outbox WHERE id=$1',[id])).rows[0].status).toBe('published');
+    await publishing.maybeAutomaticDraft(gameId);expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(1);
+  });
+
+  it.each(['published','unknown_outcome','cancelled'])('never replaces a %s initial publication with historical authorization',async status=>{
+    const existing=await makeOutbox(status);const draft=await historicalDraft();
+    expect(await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true})).toBeNull();
+    expect((await db.query('SELECT status,manual_historical_initial,text FROM publication_outbox WHERE id=$1',[existing])).rows[0]).toEqual({status,manual_historical_initial:false,text:intendedText});
+    expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(0);expect(requests).toHaveLength(0);
+  });
+
+  it.each([401,429])('retains historical authorization through an explicit HTTP %i retry',async status=>{
+    const draft=await historicalDraft();const id=await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true});let submissions=0;
+    handler=async url=>{if(url===reportUrl)return new Response('synthetic report');if(url.endsWith('/oauth2/token'))return Response.json({access_token:'synthetic-fresh',refresh_token:'synthetic-refresh',expires_in:3600});expect(url).toBe('https://api.x.com/2/tweets');return ++submissions===1?new Response(null,{status}):Response.json({data:{id:'987654321'}},{status:201});};
+    await publishing.publishOutbox(id);expect((await db.query('SELECT status,manual_historical_initial FROM publication_outbox WHERE id=$1',[id])).rows[0]).toEqual({status:'approved',manual_historical_initial:true});
+    expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(2);
+    await publishing.publishOutbox(id);expect((await db.query('SELECT status FROM publication_outbox WHERE id=$1',[id])).rows[0].status).toBe('published');expect(submissions).toBe(2);
+  });
+
+  it('does not retry an ambiguous historical submission even after another explicit approval',async()=>{
+    const draft=await historicalDraft();const id=await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true});
+    handler=async url=>url===reportUrl?new Response('synthetic report'):new Response(null,{status:503});
+    await publishing.publishOutbox(id);expect(await publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true})).toBeNull();await publishing.publishOutbox(id);
+    expect((await db.query('SELECT status,manual_historical_initial FROM publication_outbox WHERE id=$1',[id])).rows[0]).toEqual({status:'unknown_outcome',manual_historical_initial:true});
+    expect(requests.filter(request=>request.method==='POST')).toHaveLength(1);expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(1);
+  });
+
+  it.each(['kill-switch','draft-only','unrated'])('keeps the %s guard for explicit historical approval',async guard=>{
+    const draft=await historicalDraft();
+    if(guard==='unrated')await db.query("UPDATE analysis_revisions SET analysis='{}' WHERE id=$1",[revisionId]);
+    else await db.query("UPDATE settings SET value=jsonb_set(value,$1,$2) WHERE key='publishing'",[guard==='kill-switch'?'{killSwitch}':'{mode}',guard==='kill-switch'?'true':'"draft-only"']);
+    await expect(publishing.approveDraft(draft.id,adminId,{authorizeHistoricalInitial:true})).rejects.toThrow();expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(0);expect(requests).toHaveLength(0);
+  });
+
+  it('enforces the persisted manual-only authorization invariant in PostgreSQL',async()=>{
+    const id=await makeOutbox('approved');await expect(db.query('UPDATE publication_outbox SET manual_historical_initial=true WHERE id=$1',[id])).rejects.toThrow('manual_historical_initial_requires_approval');
+    const draft=await historicalDraft();await expect(db.query('UPDATE publication_outbox SET manual_historical_initial=true,approved_by=$2 WHERE id=$1',[draft.id,adminId])).rejects.toThrow('manual_historical_initial_requires_approval');
   });
 
   it('atomically queues one initial post per game/account and does not post revisions automatically',async()=>{

@@ -46,4 +46,30 @@ describe.skipIf(process.env.RUN_DB_TESTS!=='1')('visitor feedback constraints an
   expect((await db.query('SELECT analysis FROM analysis_revisions WHERE id=$1',[revisionId])).rows[0].analysis).toEqual(before);
   expect((await feedback.listVisitorFeedback())[0]).toMatchObject({revisionNumber:1,modelRating:1,rating:5,comment:'<script>Untrusted text stays private</script>'});
  });
+ it('keeps legacy comments private until explicit public resubmission and permits withdrawal',async()=>{
+  // Simulate a legacy writer without any knowledge of the new consent column.
+  await db.query("INSERT INTO visitor_feedback(id,game_id,revision_id,rules_version,visitor_id,agreement,rating,model_rating,comment) VALUES($1,$2,$3,$4,$5,'agree',1,1,'Originally private.')",[randomUUID(),gameId,revisionId,SUSPICION_RULES_VERSION,visitor]);
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toEqual({entries:[],nextCursor:null});
+  await feedback.saveVisitorFeedback(gameId,visitor,submission);expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toHaveLength(0);
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,comment:'Now explicitly public.',public:true});
+  expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toEqual([expect.objectContaining({public:true,comment:'Now explicitly public.',revisionId,revisionNumber:1,modelRating:1})]);
+  expect(await feedback.getVisitorFeedback(gameId,revisionId,SUSPICION_RULES_VERSION,visitor)).toMatchObject({public:true});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,public:false});expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toHaveLength(0);
+  expect((await db.query('SELECT count(*)::integer AS n FROM visitor_feedback')).rows[0].n).toBe(1);
+ });
+ it('paginates consented feedback across revisions without skipping tied timestamps or exposing identifiers',async()=>{
+  for(const [index,id] of [visitor,'b'.repeat(64),'c'.repeat(64),'d'.repeat(64)].entries())await feedback.saveVisitorFeedback(gameId,id,{...submission,revisionId:index%2===0?revisionId:nextRevisionId,comment:`Public ${index}`,public:true});
+  await feedback.saveVisitorFeedback(gameId,'e'.repeat(64),{...submission,comment:'Private do not expose'});
+  await db.query("UPDATE visitor_feedback SET updated_at='2026-09-23T01:02:03.123456Z'");
+  const first=await feedback.listPublicVisitorFeedback(gameId,{limit:2}),second=await feedback.listPublicVisitorFeedback(gameId,{limit:2,cursor:first.nextCursor});
+  expect(first.entries).toHaveLength(2);expect(second.entries).toHaveLength(2);expect(second.nextCursor).toBeNull();
+  const all=[...first.entries,...second.entries];expect(new Set(all.map(entry=>entry.id)).size).toBe(4);expect(new Set(all.map(entry=>entry.revisionNumber))).toEqual(new Set([1,2]));
+  expect(JSON.stringify(all)).not.toContain('Private do not expose');expect(JSON.stringify(all)).not.toContain(visitor);expect(Object.keys(all[0]).sort()).toEqual(['agreement','comment','id','modelRating','public','rating','revisionId','revisionNumber','rulesVersion','updatedAt'].sort());
+  expect(await feedback.listPublicVisitorFeedback('2099_02_GB_MIN')).toEqual({entries:[],nextCursor:null});
+ });
+ it('does not publish a response for missing or unrated analysis',async()=>{
+  await expect(feedback.saveVisitorFeedback(gameId,visitor,{...submission,revisionId:randomUUID(),public:true})).rejects.toMatchObject({status:404});
+  await db.query("UPDATE analysis_revisions SET analysis='{}' WHERE id=$1",[revisionId]);await expect(feedback.saveVisitorFeedback(gameId,visitor,{...submission,public:true})).rejects.toMatchObject({status:409});
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toEqual({entries:[],nextCursor:null});
+ });
 });

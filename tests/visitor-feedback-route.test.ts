@@ -1,9 +1,11 @@
 import { beforeEach,describe,expect,it,vi } from 'vitest';
-const mocks=vi.hoisted(()=>({rate:vi.fn(),get:vi.fn(),save:vi.fn(),summary:vi.fn(),visitor:vi.fn(),log:vi.fn()}));
+const mocks=vi.hoisted(()=>({rate:vi.fn(),get:vi.fn(),save:vi.fn(),summary:vi.fn(),visitor:vi.fn(),publicList:vi.fn(),log:vi.fn()}));
 vi.mock('@under-review/core/auth',()=>({consumeRateLimit:mocks.rate,trustedOrigin:(origin:string|null)=>origin==='https://underreview.example'}));
 vi.mock('@under-review/core/config',()=>({config:{sessionSecret:'feedback-tests-only-'.repeat(3),siteUrl:'https://underreview.example'},log:mocks.log}));
-vi.mock('@under-review/core/visitor-feedback',async importOriginal=>({...await importOriginal<typeof import('../packages/core/src/visitor-feedback.js')>(),getVisitorFeedback:mocks.get,saveVisitorFeedback:mocks.save,getFeedbackSummary:mocks.summary,feedbackVisitorId:mocks.visitor}));
+vi.mock('@under-review/core/visitor-feedback',async importOriginal=>({...await importOriginal<typeof import('../packages/core/src/visitor-feedback.js')>(),getVisitorFeedback:mocks.get,saveVisitorFeedback:mocks.save,getFeedbackSummary:mocks.summary,feedbackVisitorId:mocks.visitor,listPublicVisitorFeedback:mocks.publicList}));
 import { GET,POST } from '../apps/web/app/api/games/[gameId]/feedback/route.js';
+import { GET as PUBLIC_GET } from '../apps/web/app/api/games/[gameId]/feedback/public/route.js';
+import { FeedbackError } from '../packages/core/src/visitor-feedback.js';
 import { SUSPICION_RULES_VERSION } from '../packages/core/src/consumer-summary.js';
 const context={params:Promise.resolve({gameId:'2026_01_GB_MIN'})};
 const input={revisionId:'c1111111-1111-4111-8111-111111111111',rulesVersion:SUSPICION_RULES_VERSION,agreement:'agree',rating:4,modelRating:4,comment:''};
@@ -16,8 +18,18 @@ describe('visitor feedback route boundaries',()=>{
  it('rejects malformed JSON, invalid ratings, and unrecognized fields',async()=>{for(const body of ['{bad',{...input,rating:9},{...input,visitorId:'fake'}])expect((await POST(request(body),context)).status).toBe(400);expect(mocks.save).not.toHaveBeenCalled();});
  it('explains a changed rules version without recording a response',async()=>{const response=await POST(request({...input,rulesVersion:'previous-rules'}),context);expect(response.status).toBe(409);expect(await response.json()).toMatchObject({error:expect.stringContaining('Reload the report')});expect(mocks.save).not.toHaveBeenCalled();});
  it('rate limits updates without saving or reporting success',async()=>{mocks.rate.mockResolvedValue(false);const response=await POST(request(),context);expect(response.status).toBe(429);expect(response.headers.get('retry-after')).toBe('60');expect(mocks.save).not.toHaveBeenCalled();});
- it('saves only validated input and never caches the caller response',async()=>{const response=await POST(request(),context);expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toContain('no-store');expect(mocks.save).toHaveBeenCalledWith('2026_01_GB_MIN','a'.repeat(64),input);expect(await response.json()).toMatchObject({summary:{total:1}});});
+ it.each([undefined,false,true])('saves only validated input with explicit visibility %s and never caches the caller response',async visibility=>{const response=await POST(request({...input,...(visibility===undefined?{}:{public:visibility})}),context);expect(response.status).toBe(200);expect(response.headers.get('cache-control')).toContain('no-store');expect(mocks.save).toHaveBeenCalledWith('2026_01_GB_MIN','a'.repeat(64),{...input,public:visibility??false});expect(await response.json()).toMatchObject({summary:{total:1}});});
  it('does not return other visitors’ text or an aggregate before the caller has voted',async()=>{const response=await GET(new Request(`https://underreview.example/api/games/2026_01_GB_MIN/feedback?revisionId=${input.revisionId}&rulesVersion=${input.rulesVersion}`),context);expect(await response.json()).toEqual({feedback:null,summary:null});expect(mocks.summary).not.toHaveBeenCalled();});
  it('initializes a signed host-only HttpOnly cookie without exposing its value in JSON',async()=>{mocks.visitor.mockReturnValueOnce(null).mockReturnValue('a'.repeat(64));const response=await GET(new Request(`https://underreview.example/api/games/2026_01_GB_MIN/feedback?revisionId=${input.revisionId}&rulesVersion=${input.rulesVersion}`),context);expect(response.status).toBe(200);expect(response.headers.get('set-cookie')).toMatch(/^__Host-ur_feedback=[A-Za-z0-9_-]{43}\.[A-Za-z0-9_-]{43}; Path=\/; HttpOnly; SameSite=Lax; Max-Age=15552000; Secure$/);expect(await response.json()).toEqual({feedback:null,summary:null});});
  it('rejects cross-site reads and malformed revision references',async()=>{const url=`https://underreview.example/api/games/2026_01_GB_MIN/feedback?revisionId=${input.revisionId}&rulesVersion=${input.rulesVersion}`;expect((await GET(new Request(url,{headers:{'sec-fetch-site':'cross-site'}}),context)).status).toBe(403);expect((await GET(new Request('https://underreview.example/api/games/a/feedback'),context)).status).toBe(400);expect(mocks.get).not.toHaveBeenCalled();});
+ it('reads public feedback without cookies, revision input, or private visitor lookup',async()=>{
+  const page={entries:[{id:'public-entry',agreement:'disagree',rating:3,comment:'Public view.',revisionNumber:1,modelRating:1}],nextCursor:'next-page'};mocks.publicList.mockResolvedValue(page);
+  const response=await PUBLIC_GET(new Request('https://underreview.example/api/games/2026_01_GB_MIN/feedback/public?limit=10&cursor=after'),context);
+  expect(response.status).toBe(200);expect(await response.json()).toEqual(page);expect(response.headers.get('set-cookie')).toBeNull();expect(response.headers.get('vary')).toBeNull();expect(response.headers.get('cache-control')).toContain('no-store');
+  expect(mocks.publicList).toHaveBeenCalledWith('2026_01_GB_MIN',{limit:10,cursor:'after'});expect(mocks.visitor).not.toHaveBeenCalled();expect(mocks.get).not.toHaveBeenCalled();expect(mocks.summary).not.toHaveBeenCalled();
+ });
+ it('bounds public reading through rate limits and returns safe validation failures',async()=>{
+  mocks.rate.mockResolvedValueOnce(false);expect((await PUBLIC_GET(new Request('https://underreview.example/api/games/a/feedback/public'),context)).status).toBe(429);expect(mocks.publicList).not.toHaveBeenCalled();
+  mocks.publicList.mockRejectedValue(new FeedbackError(400,'This feedback page reference is invalid.'));expect((await PUBLIC_GET(new Request('https://underreview.example/api/games/a/feedback/public?cursor=bad'),context)).status).toBe(400);
+ });
 });

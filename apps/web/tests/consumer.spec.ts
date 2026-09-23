@@ -147,6 +147,7 @@ test("momentum connects estimates and distinguishes experimental overtime from r
   await page.goto(`/games/${gameId}`);
   await reportReady(page);
   const chart=page.locator('.wp-chart');
+  await chart.getByText('About this chart',{exact:true}).click();
   await expect(chart.locator('.chart-legend')).toContainText('Before-play estimates');
   await expect(chart.locator('.chart-coverage')).toContainText('model estimates');
   await expect(chart.locator('.chart-overtime-note')).toContainText('Overtime is shaded.');

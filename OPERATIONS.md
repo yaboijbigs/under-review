@@ -152,6 +152,10 @@ Automatic delivery waits for a numeric game rating (1–5); an Unrated preview d
 
 The `game-final-screening-v2` templates use the five emoji rating headings, an away/home score line, a supported finding, `See the Review:`, and `#NFL #UnderReview`. Debatable reports with review candidates show their count; a spread-only Debatable report explains the spread instead. Sus describes a strong fairness concern, and RIGGED? requires both qualifying evidence types. Text is checked using X's weighted 280-character limit; shorter complete finding variants preserve the evidence, full revision link, and hashtags. Manual corrections and updates retain their explicit prefixes.
 
+For an explicitly requested historical first post, prepare the current game's initial draft, review its exact text, and use the separate historical approval control. Its confirmation authorizes only that game/account row to bypass the automatic kickoff cutoff. It still requires live deployment settings, the intended connected account, automatic mode, a released kill switch, a complete rating, and duplicate protection. Historical approvals do not reset activation, authorize other games, or retry published/uncertain submissions.
+
+Visitor feedback submitted by the current public form is published on its game page. Migration 007 leaves all earlier feedback private; only an explicit public resubmission changes that. The public reader returns bounded pages of anonymous feedback and report-version context, never visitor hashes, network identifiers, or private comments. Treat explanations as untrusted plain text and keep them out of automated posts.
+
 No test, credential check, or deployment readiness check should submit a real X post. Live API delivery and OAuth authorization must be distinguished from mocked publishing tests and dry-run drafts in the release report.
 
 ## Verified checks and release record

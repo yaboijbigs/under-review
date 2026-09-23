@@ -83,24 +83,34 @@ export async function setKillSwitch(enabled:boolean,userId:string){
  const activatedAt=!enabled&&current.killSwitch?new Date().toISOString():current.activatedAt;
  await query("UPDATE settings SET value=$1,updated_at=now() WHERE key='publishing'",[JSON.stringify({...current,killSwitch:enabled,activatedAt})]);await audit(userId,'publishing.kill_switch',null,{enabled,activatedAt});
 }
-export async function approveDraft(id:string,userId:string){
+export async function approveDraft(id:string,userId:string,{authorizeHistoricalInitial=false}:{authorizeHistoricalInitial?:boolean}={}){
  const row=(await query("SELECT * FROM publication_outbox WHERE id=$1 AND mode='dry_run'",[id])).rows[0];if(!row)throw new Error('Draft not found.');
  const settings=await getPublishingSettings();
+ if(authorizeHistoricalInitial){
+  if(row.kind!=='initial')throw new Error('Historical authorization applies only to a game’s initial post.');
+  if(!(await query("SELECT 1 FROM users WHERE id=$1 AND role='admin'",[userId])).rowCount)throw new Error('Administrator access is required for a historical initial post.');
+  if(config.staging||!config.livePostingAllowed||settings.mode!=='automatic'||settings.killSwitch)throw new Error('Live publishing must be enabled before approving a historical initial post.');
+  const report=await getReport(row.game_id);if(!report||getGameVerdict(report.revision.analysis.gameAudit).rating===null)throw new Error('A complete current game rating is required for historical publication.');
+  const fresh=renderSocialPost(report.game,report.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${report.revision.number}`);
+  if(!validateSocialPost(fresh.text,fresh))throw new Error('Current historical post failed validation.');
+  return queueLive({...row,revision_id:report.revision.id,text:fresh.text,evidence_ids:fresh.evidenceIds,template_version:SOCIAL_TEMPLATE_VERSION},userId,settings,true);
+ }
  if(config.staging||!config.livePostingAllowed||settings.mode!=='automatic'||settings.killSwitch){
   await query("UPDATE publication_outbox SET status='approved',approved_by=$2,updated_at=now(),reason='Approved preview only; live publishing remains disabled.' WHERE id=$1",[id,userId]);await audit(userId,'draft.approved_preview',id);return id;
  }
  return queueLive(row,userId,settings);
 }
-async function queueLive(row:Record<string,any>,userId:string|null,settings:PublishingSettings){
+async function queueLive(row:Record<string,any>,userId:string|null,settings:PublishingSettings,manualHistoricalInitial=false){
  return transaction(async client=>{
   const latest=(await client.query("SELECT value FROM settings WHERE key='publishing' FOR UPDATE")).rows[0].value as PublishingSettings;
   if(config.staging||!config.livePostingAllowed||latest.mode!=='automatic'||latest.killSwitch||latest.accountId!==settings.accountId||latest.activatedAt!==settings.activatedAt)throw new Error('Publishing settings changed; no post queued.');
   const account=(await client.query('SELECT username FROM oauth_accounts WHERE id=$1',[latest.accountId])).rows[0];if(!account)throw new Error('Connected X account missing.');assertIntendedAccount(account.username);
   const game=(await client.query('SELECT publication_eligible,first_validated_at,kickoff_at FROM games WHERE id=$1',[row.game_id])).rows[0];
-  const reason=row.kind==='initial'?initialPublicationIneligibility(game,latest):null;if(reason){if(userId)throw new Error(reason);return null;}
-  if(userId===null&&(await client.query('SELECT id FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC LIMIT 1',[row.game_id])).rows[0]?.id!==row.revision_id)throw new Error('A newer report is ready; retry with the current automatic preview.');
-  const id=randomUUID();const result=await client.query(`INSERT INTO publication_outbox(id,game_id,revision_id,account_id,kind,mode,status,text,evidence_ids,approved_by,template_version,queued_automatically)
-   VALUES($1,$2,$3,$4,$5,'live','approved',$6,$7,$8,$9,$10) ON CONFLICT DO NOTHING RETURNING id`,[id,row.game_id,row.revision_id,latest.accountId,row.kind,row.text,JSON.stringify(row.evidence_ids),userId,row.template_version??null,userId===null]);
+  if(manualHistoricalInitial&&(!userId||row.kind!=='initial'||!game?.first_validated_at||!(await client.query("SELECT 1 FROM users WHERE id=$1 AND role='admin'",[userId])).rowCount))throw new Error('A validated final report and explicit administrator authorization are required.');
+  const reason=row.kind==='initial'?initialPublicationIneligibility(game,latest):null;if(reason&&!manualHistoricalInitial){if(userId)throw new Error(reason);return null;}
+  if((userId===null||manualHistoricalInitial)&&(await client.query('SELECT id FROM analysis_revisions WHERE game_id=$1 ORDER BY number DESC LIMIT 1',[row.game_id])).rows[0]?.id!==row.revision_id)throw new Error('A newer report is ready; retry with the current preview.');
+  const id=randomUUID();const result=await client.query(`INSERT INTO publication_outbox(id,game_id,revision_id,account_id,kind,mode,status,text,evidence_ids,approved_by,template_version,queued_automatically,manual_historical_initial)
+   VALUES($1,$2,$3,$4,$5,'live','approved',$6,$7,$8,$9,$10,$11) ON CONFLICT DO NOTHING RETURNING id`,[id,row.game_id,row.revision_id,latest.accountId,row.kind,row.text,JSON.stringify(row.evidence_ids),userId,row.template_version??null,userId===null,manualHistoricalInitial]);
   if(!result.rowCount&&userId===null){
    const pending=(await client.query("SELECT id,revision_id FROM publication_outbox WHERE game_id=$1 AND account_id=$2 AND kind='initial' AND mode='live' AND status='approved' AND queued_automatically=true FOR UPDATE",[row.game_id,latest.accountId])).rows[0];
    // A previously queued rating may have been withdrawn before delivery. Resume only
@@ -112,7 +122,7 @@ async function queueLive(row:Record<string,any>,userId:string|null,settings:Publ
   }
   if(result.rowCount){
    await client.query("INSERT INTO jobs(id,kind,game_id,job_key,payload) VALUES($1,'publish',$2,$3,$4) ON CONFLICT(job_key) DO NOTHING",[randomUUID(),row.game_id,`publish:${id}`,JSON.stringify({outboxId:id})]);
-   await client.query('INSERT INTO audit_log(user_id,action,target,details) VALUES($1,$2,$3,$4)',[userId,'publication.queued',id,JSON.stringify({automatic:userId===null,accountId:latest.accountId,activatedAt:latest.activatedAt})]);
+   await client.query('INSERT INTO audit_log(user_id,action,target,details) VALUES($1,$2,$3,$4)',[userId,'publication.queued',id,JSON.stringify({automatic:userId===null,manualHistoricalInitial,accountId:latest.accountId,activatedAt:latest.activatedAt,revisionId:row.revision_id,templateVersion:row.template_version??null})]);
   }
   return result.rows[0]?.id??null;
  });
@@ -188,7 +198,8 @@ export async function publishOutbox(id:string){
    Object.assign(row,{revision_id:current.revision.id,number:current.revision.number,text:fresh.text});
   }
  }
- if(row.kind==='initial'){
+ if(row.manual_historical_initial&&(!row.approved_by||row.queued_automatically||row.kind!=='initial'||!(await query("SELECT 1 FROM users WHERE id=$1 AND role='admin'",[row.approved_by])).rowCount))throw new Error('Historical publication is missing its explicit administrator authorization.');
+ if(row.kind==='initial'&&!row.manual_historical_initial){
   const game=(await query<PublicationGame>('SELECT publication_eligible,first_validated_at,kickoff_at FROM games WHERE id=$1',[row.game_id])).rows[0];const reason=initialPublicationIneligibility(game,settings);
   if(reason){await query("UPDATE publication_outbox SET status='cancelled',reason=$2,updated_at=now() WHERE id=$1 AND status='approved'",[id,reason]);return;}
  }

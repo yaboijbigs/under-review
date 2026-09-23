@@ -2,7 +2,7 @@ import { afterEach,beforeEach,describe,expect,it,vi } from 'vitest';
 const mocks=vi.hoisted(()=>({query:vi.fn()}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query}));
 import { config } from '../packages/core/src/config.js';
-import { createFeedbackToken,feedbackVisitorId,feedbackCookie,feedbackClientKey,parseFeedbackSubmission,saveVisitorFeedback,getVisitorFeedback,getFeedbackSummary,listVisitorFeedback } from '../packages/core/src/visitor-feedback.js';
+import { createFeedbackToken,feedbackVisitorId,feedbackCookie,feedbackClientKey,parseFeedbackSubmission,saveVisitorFeedback,getVisitorFeedback,getFeedbackSummary,listVisitorFeedback,listPublicVisitorFeedback } from '../packages/core/src/visitor-feedback.js';
 import { SUSPICION_RULES_VERSION } from '../packages/core/src/consumer-summary.js';
 import type { GameAudit,GameProfile } from '../packages/core/src/contracts.js';
 
@@ -13,7 +13,7 @@ const audit:GameAudit={version:'test',status:'no_flag_found',headline:'Test',pro
 const submission={revisionId,rulesVersion:SUSPICION_RULES_VERSION,agreement:'agree',rating:1,modelRating:1,comment:' My view. '};
 const row={agreement:'agree',rating:1,comment:'My view.',updated_at:new Date('2026-09-23T00:00:00Z')};
 
-describe('private visitor feedback',()=>{
+describe('visitor feedback privacy and validation',()=>{
  beforeEach(()=>{mocks.query.mockReset();config.sessionSecret='feedback-tests-only-'.repeat(3);config.siteUrl='https://underreview.example';vi.stubEnv('TRUST_CLOUDFLARE_CLIENT_IP','false');});
  afterEach(()=>{config.sessionSecret=previousSecret;config.siteUrl=previousUrl;vi.unstubAllEnvs();});
  it('uses distinct signed browser tokens and stores only their hashes',()=>{
@@ -27,14 +27,15 @@ describe('private visitor feedback',()=>{
   expect(feedbackClientKey(request('203.0.113.1'))).toBe(feedbackClientKey(request('203.0.113.2')));
   vi.stubEnv('TRUST_CLOUDFLARE_CLIENT_IP','true');const key=feedbackClientKey(request('203.0.113.1'));expect(key).not.toContain('203.0.113.1');expect(key).not.toBe(feedbackClientKey(request('203.0.113.2')));expect(feedbackClientKey(request('2001:0DB8:0:0:0:0:0:1'))).toBe(feedbackClientKey(request('2001:db8::1')));
  });
- it.each([{rating:0},{rating:6},{rating:2.5},{rating:'4'},{agreement:'maybe'},{comment:'x'.repeat(1001)},{comment:'bad\u0000text'},{revisionId:'not-a-uuid'},{rulesVersion:'future-v99'},{visitorId:'injected'},{modelRating:null}])('rejects invalid input %j',change=>expect(()=>parseFeedbackSubmission({...submission,...change})).toThrow());
+ it.each([{rating:0},{rating:6},{rating:2.5},{rating:'4'},{agreement:'maybe'},{comment:'x'.repeat(1001)},{comment:'bad\u0000text'},{revisionId:'not-a-uuid'},{rulesVersion:'future-v99'},{visitorId:'injected'},{modelRating:null},{public:'true'},{public:1}])('rejects invalid input %j',change=>expect(()=>parseFeedbackSubmission({...submission,...change})).toThrow());
+ it('requires explicit public consent and accepts explicit withdrawal',()=>{expect(parseFeedbackSubmission(submission).public).toBe(false);expect(parseFeedbackSubmission({...submission,public:true}).public).toBe(true);expect(parseFeedbackSubmission({...submission,public:false}).public).toBe(false);});
  it('stores explanations as text without treating their markup as trusted HTML',()=>expect(parseFeedbackSubmission({...submission,comment:' <script>alert(1)</script>\r\nMy view. '}).comment).toBe('<script>alert(1)</script>\nMy view.'));
  it('binds the submitted rating to the actual immutable report and upserts one visitor response',async()=>{
   mocks.query.mockResolvedValueOnce({rows:[{audit}]}).mockResolvedValueOnce({rows:[row]});
-  expect(await saveVisitorFeedback(profile.gameId,visitorId,submission)).toEqual({agreement:'agree',rating:1,comment:'My view.',updatedAt:'2026-09-23T00:00:00.000Z'});
+  expect(await saveVisitorFeedback(profile.gameId,visitorId,submission)).toEqual({agreement:'agree',rating:1,comment:'My view.',updatedAt:'2026-09-23T00:00:00.000Z',public:false});
   expect(mocks.query.mock.calls[0][1]).toEqual([revisionId,profile.gameId]);
   expect(mocks.query.mock.calls[1][0]).toContain('ON CONFLICT(game_id,revision_id,rules_version,visitor_id) DO UPDATE');
-  expect(mocks.query.mock.calls[1][1].slice(1)).toEqual([profile.gameId,revisionId,SUSPICION_RULES_VERSION,visitorId,'agree',1,1,'My view.']);
+  expect(mocks.query.mock.calls[1][1].slice(1)).toEqual([profile.gameId,revisionId,SUSPICION_RULES_VERSION,visitorId,'agree',1,1,'My view.',false]);
  });
  it('rejects stale displayed ratings and missing or unrated reports before inserting',async()=>{
   mocks.query.mockResolvedValue({rows:[{audit}]});await expect(saveVisitorFeedback(profile.gameId,visitorId,{...submission,modelRating:4})).rejects.toMatchObject({status:409});expect(mocks.query).toHaveBeenCalledTimes(1);
@@ -47,4 +48,13 @@ describe('private visitor feedback',()=>{
   expect(await getFeedbackSummary(profile.gameId,revisionId,SUSPICION_RULES_VERSION)).toEqual({total:5,agree:2,disagree:3,ratings:[{rating:1,count:2},{rating:2,count:0},{rating:3,count:0},{rating:4,count:3},{rating:5,count:0}]});
  });
  it('bounds the operator listing and omits visitor identifiers',async()=>{mocks.query.mockResolvedValue({rows:[{...row,id:revisionId,game_id:profile.gameId,revision_id:revisionId,number:3,model_rating:1,rules_version:SUSPICION_RULES_VERSION,visitor_id:visitorId}]});const result=await listVisitorFeedback(999);expect(mocks.query.mock.calls[0][1]).toEqual([100]);expect(result[0]).not.toHaveProperty('visitorId');expect(result[0]).not.toHaveProperty('visitor_id');});
+ it('public listing bounds pages, selects consented rows and projects only public revision context',async()=>{
+  const publicRow={...row,id:revisionId,revision_id:revisionId,number:3,model_rating:1,rules_version:SUSPICION_RULES_VERSION,is_public:true,cursor_updated_at:'2026-09-23T00:00:00.123456Z',visitor_id:visitorId,ip:'203.0.113.1'};
+  mocks.query.mockResolvedValue({rows:[publicRow,publicRow]});const page=await listPublicVisitorFeedback(profile.gameId,{limit:1});
+  expect(page.entries).toEqual([{agreement:'agree',rating:1,comment:'My view.',updatedAt:'2026-09-23T00:00:00.000Z',public:true,id:revisionId,revisionId,revisionNumber:3,modelRating:1,rulesVersion:SUSPICION_RULES_VERSION}]);
+  expect(mocks.query.mock.calls[0][0]).toContain('f.is_public=true');expect(mocks.query.mock.calls[0][1]).toEqual([profile.gameId,2]);
+  expect(page.nextCursor).not.toBeNull();mocks.query.mockResolvedValue({rows:[]});expect(await listPublicVisitorFeedback(profile.gameId,{limit:1,cursor:page.nextCursor})).toEqual({entries:[],nextCursor:null});
+  expect(mocks.query.mock.calls[1][1]).toEqual([profile.gameId,2,'2026-09-23T00:00:00.123456Z',revisionId]);
+ });
+ it.each([{limit:0},{limit:51},{limit:1.5},{cursor:''},{cursor:'!invalid'},{cursor:'x'.repeat(257)},{cursor:Buffer.from(JSON.stringify(['not-a-date',revisionId])).toString('base64url')}])('rejects invalid public pagination %j before querying',async options=>{await expect(listPublicVisitorFeedback(profile.gameId,options)).rejects.toMatchObject({status:400});expect(mocks.query).not.toHaveBeenCalled();});
 });

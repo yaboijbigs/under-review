@@ -9,12 +9,14 @@ import type { GameAudit } from './contracts.js';
 export const FEEDBACK_COOKIE='ur_feedback';
 export const FEEDBACK_COMMENT_LIMIT=1000;
 export type FeedbackRating=1|2|3|4|5;
-export interface VisitorFeedback {agreement:'agree'|'disagree';rating:FeedbackRating;comment:string;updatedAt:string}
+export interface VisitorFeedback {agreement:'agree'|'disagree';rating:FeedbackRating;comment:string;updatedAt:string;public:boolean}
 export interface VisitorFeedbackRecord extends VisitorFeedback {id:string;gameId:string;revisionId:string;revisionNumber:number;modelRating:FeedbackRating;rulesVersion:string}
+export interface PublicVisitorFeedback extends VisitorFeedback {id:string;revisionId:string;revisionNumber:number;modelRating:FeedbackRating;rulesVersion:string}
+export interface PublicFeedbackPage {entries:PublicVisitorFeedback[];nextCursor:string|null}
 export interface FeedbackSummary {total:number;agree:number;disagree:number;ratings:{rating:FeedbackRating;count:number}[]}
 export class FeedbackError extends Error {constructor(public status:number,message:string){super(message);}}
 const revisionSchema=z.object({revisionId:z.uuid(),rulesVersion:z.literal(SUSPICION_RULES_VERSION)});
-const submissionSchema=revisionSchema.extend({agreement:z.enum(['agree','disagree']),rating:z.number().int().min(1).max(5),modelRating:z.number().int().min(1).max(5),comment:z.string().max(FEEDBACK_COMMENT_LIMIT).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)).transform(value=>value.replaceAll('\r\n','\n').trim())}).strict();
+const submissionSchema=revisionSchema.extend({agreement:z.enum(['agree','disagree']),rating:z.number().int().min(1).max(5),modelRating:z.number().int().min(1).max(5),comment:z.string().max(FEEDBACK_COMMENT_LIMIT).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)).transform(value=>value.replaceAll('\r\n','\n').trim()),public:z.boolean().default(false)}).strict();
 export type FeedbackSubmission=z.infer<typeof submissionSchema>;
 function currentRules(input:unknown){if(input&&typeof input==='object'&&'rulesVersion' in input&&typeof input.rulesVersion==='string'&&input.rulesVersion!==SUSPICION_RULES_VERSION)throw new FeedbackError(409,'The rating rules have changed. Reload the report before sending feedback.');}
 export function parseFeedbackRevision(input:unknown){currentRules(input);const result=revisionSchema.safeParse(input);if(!result.success)throw new FeedbackError(400,'This report reference is invalid. Reload the report and try again.');return result.data;}
@@ -39,11 +41,11 @@ export function feedbackClientKey(request:Request):string {
  return 'feedback:network:'+createHmac('sha256',secret()).update(canonical).digest('hex');
 }
 function validGameId(gameId:string){if(!/^[A-Za-z0-9_-]{1,100}$/.test(gameId))throw new FeedbackError(400,'Invalid game.');}
-function publicFeedback(row:Record<string,any>):VisitorFeedback {return {agreement:row.agreement,rating:row.rating,comment:row.comment,updatedAt:new Date(row.updated_at).toISOString()};}
+function feedbackFields(row:Record<string,any>):VisitorFeedback {return {agreement:row.agreement,rating:row.rating,comment:row.comment,updatedAt:new Date(row.updated_at).toISOString(),public:row.is_public===true};}
 export async function getVisitorFeedback(gameId:string,revisionId:string,rulesVersion:string,visitorId:string):Promise<VisitorFeedback|null> {
  validGameId(gameId);parseFeedbackRevision({revisionId,rulesVersion});
- const row=(await query('SELECT agreement,rating,comment,updated_at FROM visitor_feedback WHERE game_id=$1 AND revision_id=$2 AND rules_version=$3 AND visitor_id=$4',[gameId,revisionId,rulesVersion,visitorId])).rows[0];
- return row?publicFeedback(row):null;
+ const row=(await query('SELECT agreement,rating,comment,updated_at,is_public FROM visitor_feedback WHERE game_id=$1 AND revision_id=$2 AND rules_version=$3 AND visitor_id=$4',[gameId,revisionId,rulesVersion,visitorId])).rows[0];
+ return row?feedbackFields(row):null;
 }
 export async function saveVisitorFeedback(gameId:string,visitorId:string,input:unknown):Promise<VisitorFeedback> {
  validGameId(gameId);if(!/^[a-f0-9]{64}$/.test(visitorId))throw new FeedbackError(401,'Please reload the report before sending feedback.');
@@ -52,11 +54,11 @@ export async function saveVisitorFeedback(gameId:string,visitorId:string,input:u
  if(!revision)throw new FeedbackError(404,'This report version is unavailable. Reload the report and try again.');
  const verdict=getGameVerdict(revision.audit as GameAudit|undefined);
  if(verdict.rating===null||verdict.rulesVersion!==submission.rulesVersion||verdict.rating!==submission.modelRating)throw new FeedbackError(409,'The rating has changed or is unavailable. Reload the report before sending feedback.');
- const row=(await query(`INSERT INTO visitor_feedback(id,game_id,revision_id,rules_version,visitor_id,agreement,rating,model_rating,comment)
- VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)
- ON CONFLICT(game_id,revision_id,rules_version,visitor_id) DO UPDATE SET agreement=EXCLUDED.agreement,rating=EXCLUDED.rating,comment=EXCLUDED.comment,updated_at=now()
- RETURNING agreement,rating,comment,updated_at`,[randomUUID(),gameId,submission.revisionId,submission.rulesVersion,visitorId,submission.agreement,submission.rating,verdict.rating,submission.comment])).rows[0];
- return publicFeedback(row);
+ const row=(await query(`INSERT INTO visitor_feedback(id,game_id,revision_id,rules_version,visitor_id,agreement,rating,model_rating,comment,is_public)
+ VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+ ON CONFLICT(game_id,revision_id,rules_version,visitor_id) DO UPDATE SET agreement=EXCLUDED.agreement,rating=EXCLUDED.rating,comment=EXCLUDED.comment,is_public=EXCLUDED.is_public,updated_at=now()
+ RETURNING agreement,rating,comment,updated_at,is_public`,[randomUUID(),gameId,submission.revisionId,submission.rulesVersion,visitorId,submission.agreement,submission.rating,verdict.rating,submission.comment,submission.public])).rows[0];
+ return feedbackFields(row);
 }
 export async function getFeedbackSummary(gameId:string,revisionId:string,rulesVersion:string):Promise<FeedbackSummary> {
  validGameId(gameId);parseFeedbackRevision({revisionId,rulesVersion});
@@ -65,9 +67,32 @@ export async function getFeedbackSummary(gameId:string,revisionId:string,rulesVe
  for(const row of rows){summary.total+=row.count;summary[row.agreement as 'agree'|'disagree']+=row.count;summary.ratings[row.rating-1].count+=row.count;}
  return summary;
 }
-/** Operator-only reader. Do not expose comments or visitor identifiers through public routes. */
+/** Public comments require explicit per-submission consent. Legacy rows remain private;
+ * resubmitting with public:false also removes a previously public entry from this list.
+ * Text is untrusted plaintext. The cursor contains only its public timestamp/record ID. */
+export async function listPublicVisitorFeedback(gameId:string,options:{limit?:number;cursor?:string|null}={}):Promise<PublicFeedbackPage> {
+ validGameId(gameId);
+ const limit=options.limit??20;
+ if(!Number.isInteger(limit)||limit<1||limit>50)throw new FeedbackError(400,'Choose a feedback page size from 1 to 50.');
+ let after:[string,string]|null=null;
+ if(options.cursor!==undefined&&options.cursor!==null){
+  try{
+   if(options.cursor.length>256||!/^[A-Za-z0-9_-]+$/.test(options.cursor))throw new Error();
+   const decoded=Buffer.from(options.cursor,'base64url');if(decoded.toString('base64url')!==options.cursor)throw new Error();
+   after=z.tuple([z.iso.datetime({precision:6}),z.uuid()]).parse(JSON.parse(decoded.toString('utf8')));
+  }catch{throw new FeedbackError(400,'This feedback page reference is invalid.');}
+ }
+ const rows=(await query(`SELECT f.id,f.revision_id,f.rules_version,f.agreement,f.rating,f.model_rating,f.comment,f.updated_at,f.is_public,r.number,
+ to_char(f.updated_at AT TIME ZONE 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS cursor_updated_at
+ FROM visitor_feedback f JOIN analysis_revisions r ON r.id=f.revision_id AND r.game_id=f.game_id
+ WHERE f.game_id=$1 AND f.is_public=true ${after?'AND (f.updated_at,f.id)<($3::timestamptz,$4::uuid)':''}
+ ORDER BY f.updated_at DESC,f.id DESC LIMIT $2`,after?[gameId,limit+1,...after]:[gameId,limit+1])).rows;
+ const page=rows.slice(0,limit),last=page.at(-1);
+ return {entries:page.map(row=>({...feedbackFields(row),id:row.id,revisionId:row.revision_id,revisionNumber:row.number,modelRating:row.model_rating,rulesVersion:row.rules_version})),nextCursor:rows.length>limit&&last?Buffer.from(JSON.stringify([last.cursor_updated_at,last.id])).toString('base64url'):null};
+}
+/** Operator-only reader includes private comments but never visitor identifiers. */
 export async function listVisitorFeedback(limit=50):Promise<VisitorFeedbackRecord[]> {
- const rows=(await query(`SELECT f.id,f.game_id,f.revision_id,f.rules_version,f.agreement,f.rating,f.model_rating,f.comment,f.updated_at,r.number
+ const rows=(await query(`SELECT f.id,f.game_id,f.revision_id,f.rules_version,f.agreement,f.rating,f.model_rating,f.comment,f.updated_at,f.is_public,r.number
  FROM visitor_feedback f JOIN analysis_revisions r ON r.id=f.revision_id ORDER BY f.updated_at DESC LIMIT $1`,[Math.min(100,Math.max(1,Number.isInteger(limit)?limit:50))])).rows;
- return rows.map(row=>({...publicFeedback(row),id:row.id,gameId:row.game_id,revisionId:row.revision_id,revisionNumber:row.number,modelRating:row.model_rating,rulesVersion:row.rules_version}));
+ return rows.map(row=>({...feedbackFields(row),id:row.id,gameId:row.game_id,revisionId:row.revision_id,revisionNumber:row.number,modelRating:row.model_rating,rulesVersion:row.rules_version}));
 }
