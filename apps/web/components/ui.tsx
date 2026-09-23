@@ -21,7 +21,7 @@ export function GameCard({game}: {game: CardData}) {
     </Link>
     <div className="card-finding"><p>{verdict.rating && verdict.rating <= 2 ? verdict.summary : verdict.reasons[0] || verdict.summary}</p></div>
     <div className="card-bottom"><span>{verdict.reviewCount ? `${verdict.reviewCount} key ${verdict.reviewCount === 1 ? "play" : "plays"}` : ""}</span><Link prefetch={false} href={href}>See why <span aria-hidden="true">↗</span></Link></div>
-    {verdict.rating&&game.revisionId&&game.revisionNumber&&<RatingFeedback key={`${game.revisionId}:${verdict.rulesVersion}`} compact gameId={game.id} revisionId={game.revisionId} revisionNumber={game.revisionNumber} rating={verdict.rating} rulesVersion={verdict.rulesVersion}/>}
+    {verdict.rating&&game.revisionId&&game.revisionNumber?<RatingFeedback key={`${game.revisionId}:${verdict.rulesVersion}`} compact initialCount={game.publicFeedbackCount??0} gameId={game.id} revisionId={game.revisionId} revisionNumber={game.revisionNumber} rating={verdict.rating} rulesVersion={verdict.rulesVersion}/>:<a className="feedback-unrated-link" href={`${href}#fan-feedback`}>See Public Feedback ({game.publicFeedbackCount??0})</a>}
   </article>;
 }
 export function Freshness({value, label = "Last processed"}: {value: unknown; label?: string}) { return <span className="freshness">{label} <time>{dateTime(value)}</time></span>; }

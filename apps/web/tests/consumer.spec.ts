@@ -104,8 +104,8 @@ test("report verdict and completed automation are separate from human review",as
   await expect(page.locator('#provenance > details')).not.toHaveAttribute('open');
   await page.getByRole('link',{name:'Data & updates',exact:true}).click();
   await expect(page.locator('#provenance > details')).toHaveAttribute('open','');
-  await expect(page.getByRole('heading',{name:'Human officiating review',exact:true})).toBeVisible();
-  await expect(page.locator('.report-status-explained')).toContainText('The automatic scan is complete');
+  await expect(page.getByRole('heading',{name:'Automatic analysis',exact:true})).toBeVisible();
+  await expect(page.locator('.report-status-explained')).toContainText('This report was generated automatically');
   const candidate=page.locator('.review-candidate').last();
   if(await candidate.count()){
     const id=await candidate.getAttribute('id');
@@ -121,21 +121,25 @@ test("report verdict and completed automation are separate from human review",as
   await page.screenshot({path:testInfo.outputPath('consumer-play-link.png')});
 });
 
-test("different outcomes are not all presented as suspicious or clean",async({page})=>{
-  test.skip(process.env.SMOKE_CONSUMER_CASES!=='true','Use the real local reports named in this regression check.');
-  for(const item of [
-    {id:'2026_02_GB_NYJ',level:'sus',title:'Sus'},
-    {id:'2026_01_CLE_JAX',level:'fair',title:'Fair'},
-    {id:'2026_01_TB_CIN',level:'limited',title:'Unrated'},
-    {id:'2026_01_NE_SEA',level:'limited',title:'Unrated'},
-    {id:'2026_02_IND_KC',level:'debatable',title:'Debatable'},
-  ]){
-    await page.goto(`/games/${item.id}`);
-    await expect(page.locator('.game-verdict')).toHaveAttribute('data-verdict',item.level);
-    await expect(page.locator('#verdict-title')).toHaveText(item.title);
-    await expect(page.locator('.analysis-complete')).toBeVisible();
+test("published ratings keep their labels and meters consistent as data improves",async({page})=>{
+  test.skip(process.env.SMOKE_CONSUMER_CASES!=='true','Use the real ingested reports named in this regression check.');
+  const labels:Record<string,string>={extreme:'RIGGED?',sus:'Sus',hmm:'Hmm',debatable:'Debatable',fair:'Fair',limited:'Unrated'};
+  for(const id of ['2026_02_GB_NYJ','2026_01_CLE_JAX','2026_01_TB_CIN','2026_01_NE_SEA','2026_02_IND_KC']){
+    await page.goto(`/games/${id}`);
+    await reportReady(page);
+    const verdict=page.locator('.game-verdict'),level=await verdict.getAttribute('data-verdict'),rating=await verdict.getAttribute('data-rating');
+    expect(Object.keys(labels)).toContain(level);
+    await expect(page.locator('#verdict-title')).toHaveText(labels[level!]);
+    const selected=verdict.locator('.rating-scale [aria-current="step"]');
+    if(rating==='unrated'){await expect(selected).toHaveCount(0);await expect(verdict).toHaveAttribute('data-verdict','limited');}
+    else {await expect(selected).toHaveCount(1);await expect(selected).toHaveAttribute('data-level',rating!);await expect(selected).toContainText(labels[level!]);}
   }
-  await page.goto('/games/2026_02_NYG_LA');
+});
+
+test('an awaiting game explains automatic processing without a premature rating',async({page})=>{
+  const gameId=process.env.SMOKE_AWAITING_GAME_ID;
+  test.skip(!gameId,'Set SMOKE_AWAITING_GAME_ID to a game that has not yet been analyzed.');
+  await page.goto(`/games/${gameId}`);
   await expect(page.getByRole('heading',{name:'This game will be analyzed automatically'})).toBeVisible();
   await expect(page.getByText(/you do not need to request a review or press a button/)).toBeVisible();
   await expect(page.locator('.game-verdict')).toHaveCount(0);
@@ -199,19 +203,19 @@ test("a sequence of drive-extending penalties stays grouped and inspectable",asy
   test.skip(!gameId,'Set SMOKE_DRIVE_SEQUENCE_GAME_ID to the real GB-MIN drive-sequence report.');
   await page.goto(`/games/${gameId}`);
   await reportReady(page);
-  await expect(page.locator('.game-verdict')).toHaveAttribute('data-rating','4');
-  await expect(page.locator('#verdict-title')).toHaveText('Sus');
+  expect(Number(await page.locator('.game-verdict').getAttribute('data-rating'))).toBeGreaterThanOrEqual(4);
   await expect(page.locator('.verdict-reasons')).toContainText('Minnesota Vikings received 3 first downs');
   await expect(page.locator('.rating-play-links a')).toHaveCount(3);
   const group=page.locator('.audit-context-grid article').filter({hasText:'Drive extending penalties'});
   await expect(group).toBeVisible();
   await expect(group).toContainText('MIN received 3 first downs from GB penalties');
+  await page.locator('#needs-review > details > summary').click();
   for(const playId of ['3411','3489','3592']){
     await expect(page.locator(`.rating-play-links a[href="#play-${playId}"]`)).toBeVisible();
     await expect(group.locator(`a[href="#play-${playId}"]`)).toBeVisible();
     const candidate=page.locator(`.review-candidate[data-play-id="${playId}"]`);
     await expect(candidate).toHaveCount(1);
-    await expect(candidate.locator('.candidate-priority')).toHaveText('High review priority');
+    await expect(candidate.locator('.candidate-priority')).toHaveText('Recorded game event');
     await expect(candidate.locator('.candidate-reasons')).toContainText('review the sequence together');
   }
   await group.locator('a[href="#play-3411"]').click();

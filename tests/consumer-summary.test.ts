@@ -63,7 +63,7 @@ describe('consumer game verdicts',()=>{
  });
  it('recognizes canonical and legacy Rams abbreviations',()=>{expect(teamName('LA')).toBe('Los Angeles Rams');expect(teamName('LAR')).toBe(teamName('LA'));});
  it.each([[2,'hmm',3],[3,'sus',4],[4,'sus',4]] as const)('rates a validated %i-play cluster as %s', (n,level,rating)=>{
-  const a=audit(3);addCluster(a,n);expect(getGameVerdict(a)).toMatchObject({level,rating,cluster:{team:'GB',playIds:a.context[0].playIds},rulesVersion:SUSPICION_RULES_VERSION});
+  const a=audit(3);addCluster(a,n);expect(getGameVerdict(a)).toMatchObject({level,rating,cluster:{team:'GB',playIds:a.context[0].playIds},rulesVersion:'game-suspicion-v2'});
  });
  it('requires the historical outlier and cluster to benefit the same winner for the top tier',()=>{
   const a=audit();addCluster(a,3);expect(getGameVerdict(a)).toMatchObject({level:'extreme',rating:5,label:'RIGGED?'});

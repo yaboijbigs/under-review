@@ -5,6 +5,7 @@ import { reportSummary } from './summaries.js';
 import { analysisSchema,type AnalysisResult,type Draft,type Game,type GameCard,type GameReport,type Revision,type Review,type SourceSnapshot } from './contracts.js';
 import type pg from 'pg';
 import { validateGameData,type ProviderRow } from './normalize.js';
+import { getPublicFeedbackCounts } from './visitor-feedback.js';
 
 export function stableJson(value:unknown):string{
  if(value===undefined)return 'null';
@@ -15,7 +16,7 @@ export function stableJson(value:unknown):string{
 export const contentHash=(value:unknown)=>createHash('sha256').update(stableJson(value)).digest('hex');
 export function gameAuditCorrection(previous:AnalysisResult['gameAudit'],current:AnalysisResult['gameAudit']):boolean{
  if(!previous)return false;
- if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null)||previous.market?.status==='available';
+ if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null)||previous.market?.status==='available'||previous.expectations?.status==='supported';
  const fields=['totalYards','opponentYards','penalties','penaltyYards','turnoverMargin','nonOffensiveTouchdowns'] as const;
  const profileChanged=previous.profiles.some(p=>fields.some(key=>p[key]!==null&&p[key]!==current.profiles.find(n=>n.team===p.team)?.[key]));
  const marketFields=['expectedHomeMargin','actualHomeMargin','homeMarginError','absoluteError','favoredTeam','pickem','atsWinner','atsResult','favoriteCovered','underdogWon'] as const;
@@ -23,7 +24,9 @@ export function gameAuditCorrection(previous:AnalysisResult['gameAudit'],current
  const marketChanged=oldMarket?.status==='available'&&(!newMarket||newMarket.status!=='available'
   ||marketFields.some(key=>oldMarket[key]!==newMarket[key])
   ||(oldMarket.reference.tailRate!==null&&(['startSeason','endSeason','games','atLeastAsSurprising','tailRate','percentile'] as const).some(key=>oldMarket.reference[key]!==newMarket.reference[key])));
- return profileChanged||marketChanged||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
+ const expectationCorrection=previous.expectations?.status==='supported'&&previous.version===current.version
+  &&stableJson(previous.expectations)!==stableJson(current.expectations);
+ return profileChanged||marketChanged||expectationCorrection||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
 }
 function sourceEvent(event:Record<string,unknown>|undefined){if(!event)return null;const {reviewStatus,notes,...evidence}=event;return evidence;}
 export async function saveGames(games:Game[],publicationEligible=false){
@@ -141,7 +144,7 @@ async function persistAnalysis(game:Game,plays:Record<string,unknown>[],snapshot
   const auditCorrection=gameAuditCorrection(previous?.analysis?.gameAudit,analysis.gameAudit);
   const status=previous&&(numericalChanges.length||scoreChanged||auditCorrection)?'corrected':sourceKind==='raw'?'preliminary':'reconciled';
   const auditChanged=previous&&stableJson(previous.analysis.gameAudit)!==stableJson(analysis.gameAudit);
-  const changeSummary=restoreFromRevisionId?`Restored verified clean-source evidence from revision ${restoreFromRevisionId} after a later raw-data report. Original reports remain available; stale human reviews still require reassessment.`:!previous?'Initial evidence-backed report.':`${changes.length} metric records changed; ${numericalChanges.length} previously reported category findings changed. ${scoreChanged?'Final score corrected. ':''}${chartingStatus!==previous.charting_status?'Charting coverage updated. ':''}${auditCorrection?'Previously reported game profile or historical comparison corrected.':auditChanged?'Game profile audit and review priorities updated.':''}`.trim();
+  const changeSummary=restoreFromRevisionId?`Restored verified clean-source evidence from revision ${restoreFromRevisionId} after a later raw-data report. Original reports remain available; stale human reviews still require reassessment.`:!previous?'Initial evidence-backed report.':`${changes.length} metric records changed; ${numericalChanges.length} previously reported category findings changed. ${scoreChanged?'Final score corrected. ':''}${chartingStatus!==previous.charting_status?'Charting coverage updated. ':''}${auditCorrection?'Previously reported game profile or historical comparison corrected.':auditChanged?'Game rating and historical comparisons updated.':''}`.trim();
   const snapshotIds=snapshots.map(s=>s.id);
   await client.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json,source_kind)
   VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,[id,game.id,number,inputHash,status,chartingStatus,changeSummary,reportSummary(game,analysis),JSON.stringify(analysis),JSON.stringify(snapshotIds),JSON.stringify(game),sourceKind]);
@@ -174,7 +177,8 @@ export async function listGames(filters:{season?:number;week?:number;team?:strin
  if(filters.team){values.push(filters.team);clauses.push(`(g.home_team=$${values.length} OR g.away_team=$${values.length})`);}
  if(filters.publishedOnly)clauses.push('r.number IS NOT NULL');
  const rows=(await query(`SELECT g.game_json,r.* FROM games g LEFT JOIN LATERAL(SELECT id,number,statistical_status,charting_status,review_status,summary,created_at,analysis->'gameAudit' AS game_audit FROM analysis_revisions WHERE game_id=g.id ORDER BY number DESC LIMIT 1) r ON true ${clauses.length?'WHERE '+clauses.join(' AND '):''} ORDER BY g.season DESC,g.week DESC,g.kickoff_at DESC NULLS LAST LIMIT 400`,values)).rows;
- return rows.map(r=>({...r.game_json,statisticalStatus:r.statistical_status??'awaiting_data',chartingStatus:r.charting_status??'unavailable',reviewStatus:r.review_status??'not_reviewed',finding:r.summary??null,updatedAt:r.created_at?.toISOString()??null,revisionNumber:r.number??null,revisionId:r.id??null,gameAudit:r.game_audit??null}));
+ const feedbackCounts=await getPublicFeedbackCounts(rows.map(row=>row.game_json.id));
+ return rows.map(r=>({...r.game_json,statisticalStatus:r.statistical_status??'awaiting_data',chartingStatus:r.charting_status??'unavailable',reviewStatus:r.review_status??'not_reviewed',finding:r.summary??null,updatedAt:r.created_at?.toISOString()??null,revisionNumber:r.number??null,revisionId:r.id??null,gameAudit:r.game_audit??null,publicFeedbackCount:feedbackCounts[r.game_json.id]??0}));
 }
 function mapDraft(r:Record<string,any>):Draft{return {id:r.id,gameId:r.game_id,revisionId:r.revision_id,text:r.text,status:r.status,kind:r.kind,mode:r.mode,createdAt:r.created_at.toISOString(),externalId:r.external_id,reason:r.reason};}
 export async function getReport(gameId:string,revision?:number):Promise<GameReport|null>{

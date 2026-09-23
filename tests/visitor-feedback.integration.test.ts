@@ -9,8 +9,8 @@ const namespace=`ur_feedback_${randomUUID().replaceAll('-','')}`,originalDatabas
 let admin:pg.Client,db:typeof import('../packages/core/src/db.js'),feedback:typeof import('../packages/core/src/visitor-feedback.js'),connected=false;
 const gameId='2099_01_GB_MIN',revisionId=randomUUID(),nextRevisionId=randomUUID(),visitor='a'.repeat(64);
 const profile:GameProfile={gameId,season:2099,team:'GB',opponent:'MIN',pointsFor:21,pointsAgainst:17,totalYards:350,opponentYards:300,penalties:4,penaltyYards:30,turnoverMargin:1,nonOffensiveTouchdowns:0};
-const audit:GameAudit={version:'synthetic-test',status:'no_flag_found',headline:'Synthetic test only',profiles:[profile,{...profile,team:'MIN',opponent:'GB',pointsFor:17,pointsAgainst:21,totalYards:300,opponentYards:350,turnoverMargin:-1}],flags:[],reviewCandidates:[],context:[],reference:{version:'test',checksum:'a'.repeat(64),startSeason:1999,endSeason:2025,teamGames:2000},notes:[]};
-const submission={revisionId,rulesVersion:SUSPICION_RULES_VERSION,agreement:'agree',rating:1,modelRating:1,comment:'Synthetic private feedback.'};
+const audit:GameAudit={version:'under-review-game-audit-v4',status:'no_flag_found',headline:'Synthetic test only',profiles:[profile,{...profile,team:'MIN',opponent:'GB',pointsFor:17,pointsAgainst:21,totalYards:300,opponentYards:350,turnoverMargin:-1}],flags:[],reviewCandidates:[],context:[],reference:{version:'test',checksum:'a'.repeat(64),startSeason:1999,endSeason:2025,teamGames:2000},notes:[]};
+const submission={revisionId,rulesVersion:'game-suspicion-v2',agreement:'agree',rating:1,modelRating:1,comment:'Synthetic private feedback.'};
 describe.skipIf(process.env.RUN_DB_TESTS!=='1')('visitor feedback constraints and concurrent updates (isolated PostgreSQL schema)',()=>{
  beforeAll(async()=>{
   admin=new pg.Client({connectionString:originalDatabaseUrl,connectionTimeoutMillis:5000});await admin.connect();connected=true;if(!/^ur_feedback_[a-f0-9]{32}$/.test(namespace))throw new Error('Invalid test schema');await admin.query(`CREATE SCHEMA ${namespace}`);
@@ -23,15 +23,16 @@ describe.skipIf(process.env.RUN_DB_TESTS!=='1')('visitor feedback constraints an
  });
  afterAll(async()=>{await db?.pool.end();if(connected){if(!/^ur_feedback_[a-f0-9]{32}$/.test(namespace))throw new Error('Invalid cleanup');await admin.query(`DROP SCHEMA IF EXISTS ${namespace} CASCADE`);await admin.end();}config.databaseUrl=originalDatabaseUrl;});
  it('keeps concurrent submissions to one vote and permits an explicit update',async()=>{
-  await Promise.all(Array.from({length:8},()=>feedback.saveVisitorFeedback(gameId,visitor,submission)));
+  await Promise.all(Array.from({length:8},()=>feedback.saveVisitorFeedback(gameId,visitor,{...submission,public:true})));
   expect((await db.query('SELECT count(*)::integer AS count FROM visitor_feedback')).rows[0].count).toBe(1);
-  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,agreement:'disagree',rating:3,comment:'Changed my view.'});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,agreement:'disagree',rating:3,comment:'Changed my view.',public:true});
   expect(await feedback.getVisitorFeedback(gameId,revisionId,SUSPICION_RULES_VERSION,visitor)).toMatchObject({agreement:'disagree',rating:3,comment:'Changed my view.'});
   expect(await feedback.getFeedbackSummary(gameId,revisionId,SUSPICION_RULES_VERSION)).toMatchObject({total:1,agree:0,disagree:1});
  });
- it('separates visitors, report corrections and rules versions',async()=>{
-  await feedback.saveVisitorFeedback(gameId,visitor,submission);await feedback.saveVisitorFeedback(gameId,'b'.repeat(64),{...submission,agreement:'disagree',rating:2});await feedback.saveVisitorFeedback(gameId,visitor,{...submission,revisionId:nextRevisionId,rating:4});
-  expect(await feedback.getFeedbackSummary(gameId,revisionId,SUSPICION_RULES_VERSION)).toMatchObject({total:2,agree:1,disagree:1});expect(await feedback.getFeedbackSummary(gameId,nextRevisionId,SUSPICION_RULES_VERSION)).toMatchObject({total:1});
+ it('counts each browser once across report corrections while preserving revision context',async()=>{
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,public:true});await feedback.saveVisitorFeedback(gameId,'b'.repeat(64),{...submission,agreement:'disagree',rating:2,public:true});await feedback.saveVisitorFeedback(gameId,visitor,{...submission,revisionId:nextRevisionId,rating:4,public:true});
+  expect(await feedback.getFeedbackSummary(gameId,revisionId,SUSPICION_RULES_VERSION)).toMatchObject({total:2,agree:1,disagree:1,ratingCount:2,averageRating:3});expect(await feedback.getFeedbackSummary(gameId,nextRevisionId,SUSPICION_RULES_VERSION)).toMatchObject({total:2});
+  const publicPage=await feedback.listPublicVisitorFeedback(gameId);expect(publicPage.entries).toHaveLength(2);expect(publicPage.entries.find(entry=>entry.rating===4)?.revisionNumber).toBe(2);expect(await feedback.getPublicFeedbackCounts([gameId])).toEqual({[gameId]:2});
   await expect(feedback.saveVisitorFeedback(gameId,visitor,{...submission,rulesVersion:'old-rules'})).rejects.toMatchObject({status:409});
   expect(await feedback.getVisitorFeedback(gameId,revisionId,SUSPICION_RULES_VERSION,'c'.repeat(64))).toBeNull();
  });
@@ -48,8 +49,8 @@ describe.skipIf(process.env.RUN_DB_TESTS!=='1')('visitor feedback constraints an
  });
  it('keeps legacy comments private until explicit public resubmission and permits withdrawal',async()=>{
   // Simulate a legacy writer without any knowledge of the new consent column.
-  await db.query("INSERT INTO visitor_feedback(id,game_id,revision_id,rules_version,visitor_id,agreement,rating,model_rating,comment) VALUES($1,$2,$3,$4,$5,'agree',1,1,'Originally private.')",[randomUUID(),gameId,revisionId,SUSPICION_RULES_VERSION,visitor]);
-  expect(await feedback.listPublicVisitorFeedback(gameId)).toEqual({entries:[],nextCursor:null});
+  await db.query("INSERT INTO visitor_feedback(id,game_id,revision_id,rules_version,visitor_id,agreement,rating,model_rating,comment) VALUES($1,$2,$3,$4,$5,'agree',1,1,'Originally private.')",[randomUUID(),gameId,revisionId,submission.rulesVersion,visitor]);
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toMatchObject({entries:[],nextCursor:null,summary:{total:0,averageRating:null}});
   await feedback.saveVisitorFeedback(gameId,visitor,submission);expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toHaveLength(0);
   await feedback.saveVisitorFeedback(gameId,visitor,{...submission,comment:'Now explicitly public.',public:true});
   expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toEqual([expect.objectContaining({public:true,comment:'Now explicitly public.',revisionId,revisionNumber:1,modelRating:1})]);
@@ -60,16 +61,49 @@ describe.skipIf(process.env.RUN_DB_TESTS!=='1')('visitor feedback constraints an
  it('paginates consented feedback across revisions without skipping tied timestamps or exposing identifiers',async()=>{
   for(const [index,id] of [visitor,'b'.repeat(64),'c'.repeat(64),'d'.repeat(64)].entries())await feedback.saveVisitorFeedback(gameId,id,{...submission,revisionId:index%2===0?revisionId:nextRevisionId,comment:`Public ${index}`,public:true});
   await feedback.saveVisitorFeedback(gameId,'e'.repeat(64),{...submission,comment:'Private do not expose'});
+  await feedback.saveVisitorFeedback(gameId,'f'.repeat(64),{...submission,action:'thumb',rating:null,comment:'',public:true});
   await db.query("UPDATE visitor_feedback SET updated_at='2026-09-23T01:02:03.123456Z'");
   const first=await feedback.listPublicVisitorFeedback(gameId,{limit:2}),second=await feedback.listPublicVisitorFeedback(gameId,{limit:2,cursor:first.nextCursor});
-  expect(first.entries).toHaveLength(2);expect(second.entries).toHaveLength(2);expect(second.nextCursor).toBeNull();
+  expect(first.entries).toHaveLength(2);expect(second.entries).toHaveLength(2);expect(second.nextCursor).toBeNull();expect(first.summary.total).toBe(5);
   const all=[...first.entries,...second.entries];expect(new Set(all.map(entry=>entry.id)).size).toBe(4);expect(new Set(all.map(entry=>entry.revisionNumber))).toEqual(new Set([1,2]));
   expect(JSON.stringify(all)).not.toContain('Private do not expose');expect(JSON.stringify(all)).not.toContain(visitor);expect(Object.keys(all[0]).sort()).toEqual(['agreement','comment','id','modelRating','public','rating','revisionId','revisionNumber','rulesVersion','updatedAt'].sort());
-  expect(await feedback.listPublicVisitorFeedback('2099_02_GB_MIN')).toEqual({entries:[],nextCursor:null});
+  expect(await feedback.listPublicVisitorFeedback('2099_02_GB_MIN')).toMatchObject({entries:[],nextCursor:null,summary:{total:0,averageRating:null}});
  });
  it('does not publish a response for missing or unrated analysis',async()=>{
   await expect(feedback.saveVisitorFeedback(gameId,visitor,{...submission,revisionId:randomUUID(),public:true})).rejects.toMatchObject({status:404});
   await db.query("UPDATE analysis_revisions SET analysis='{}' WHERE id=$1",[revisionId]);await expect(feedback.saveVisitorFeedback(gameId,visitor,{...submission,public:true})).rejects.toMatchObject({status:409});
-  expect(await feedback.listPublicVisitorFeedback(gameId)).toEqual({entries:[],nextCursor:null});
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toMatchObject({entries:[],nextCursor:null,summary:{total:0,averageRating:null}});
+ });
+ it('saves a thumb alone, excludes it from the slider average, and enriches the same response',async()=>{
+  const thumb={...submission,action:'thumb',rating:null,comment:'',public:true};
+  expect(await feedback.saveVisitorFeedback(gameId,visitor,thumb)).toMatchObject({rating:null,comment:'',public:true});
+  expect(await feedback.getFeedbackSummary(gameId)).toMatchObject({total:1,agree:1,ratingCount:0,averageRating:null});
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toMatchObject({entries:[],nextCursor:null,summary:{total:1}});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,rating:null,comment:'A comment without a slider rating.',public:true});
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toMatchObject({entries:[{rating:null,comment:'A comment without a slider rating.'}],summary:{total:1,ratingCount:0}});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,rating:4,comment:'One explanation.',public:true});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...thumb,agreement:'disagree',revisionId:nextRevisionId});
+  expect(await feedback.getVisitorFeedback(gameId,nextRevisionId,SUSPICION_RULES_VERSION,visitor)).toMatchObject({agreement:'disagree',rating:4,comment:'One explanation.'});
+  await feedback.saveVisitorFeedback(gameId,'b'.repeat(64),thumb);
+  expect(await feedback.getFeedbackSummary(gameId)).toMatchObject({total:2,agree:1,disagree:1,ratingCount:1,averageRating:4});
+  expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toHaveLength(1);
+ });
+ it('removing the latest comment never resurfaces an earlier explanation',async()=>{
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,comment:'Earlier explanation.',public:true});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,revisionId:nextRevisionId,comment:'',rating:null,public:true});
+  expect(await feedback.listPublicVisitorFeedback(gameId)).toMatchObject({entries:[],nextCursor:null,summary:{total:1,agree:1,ratingCount:0}});
+ });
+ it('serializes simultaneous thumbs across revisions without multiplying public responses or losing details',async()=>{
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,rating:5,comment:'Keep this explanation.',public:true});
+  await Promise.all(Array.from({length:8},(_,index)=>feedback.saveVisitorFeedback(gameId,visitor,{...submission,action:'thumb',revisionId:index%2?nextRevisionId:revisionId,agreement:index%2?'agree':'disagree',rating:null,comment:'',public:true})));
+  expect(await feedback.getFeedbackSummary(gameId)).toMatchObject({total:1,ratingCount:1,averageRating:5});expect(await feedback.getPublicFeedbackCounts([gameId])).toEqual({[gameId]:1});
+  expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toEqual([expect.objectContaining({rating:5,comment:'Keep this explanation.'})]);
+ });
+ it('never makes an earlier private explanation public through a thumb click',async()=>{
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,comment:'Private legacy explanation.'});
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,action:'thumb',revisionId:nextRevisionId,public:true});
+  const page=await feedback.listPublicVisitorFeedback(gameId);expect(page.entries).toEqual([]);expect(page.summary.total).toBe(1);expect(JSON.stringify(page)).not.toContain('Private legacy explanation.');
+  await feedback.saveVisitorFeedback(gameId,visitor,{...submission,revisionId:nextRevisionId,public:false});
+  expect((await feedback.listPublicVisitorFeedback(gameId)).entries).toHaveLength(0);expect(await feedback.getFeedbackSummary(gameId)).toMatchObject({total:0});
  });
 });

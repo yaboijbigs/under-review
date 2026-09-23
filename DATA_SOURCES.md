@@ -48,6 +48,12 @@ The separate `analytics/models/game-profile-validation.json` fixture verifies `2
 
 The separate [overtime model](analytics/OVERTIME.md) transforms nflverse / nflfastR clean play-by-play into 2,136 eligible states from 131 regular-season games in 2017–2025. Its frozen reference embeds the original source URLs, SHA-256 hashes, attribution and CC BY 4.0 license. Transformations retain preplay state, derive possession-rule phases from already-observed events, and use final results only as historical outcome labels. The compact 2026 fixture is a prospective regression example, not training data. Estimates require at least 20 comparable, strictly prior-season games; unsupported rule phases remain unavailable. Recorded final outcomes are labeled separately from forecasts.
 
+### Expected performance and referee history
+
+The [frozen expectations reference](packages/core/reference/README.md) contains 6,947 regular-season games from 1999–2025. It combines the existing paired team statistics and schedule archives with a checksum-verified [officials release](https://github.com/nflverse/nflverse-data/releases/download/officials/officials.csv). The original officials bytes and retrieval metadata are retained under `packages/core/reference/`; the offline builder reproduces the transformed reference byte-for-byte.
+
+The officials snapshot includes 2026 Week 1 assignments but no Week 2 full crews. Current schedule-only assignments are labeled. Historical comparisons use prior seasons; conflicted referee joins are excluded. Referee statistics describe games led by the head official, not who threw individual flags. Team/referee win records remain descriptive context. See the reference README for chronological calibration, fixed shrinkage parameters, held-out residual diagnostics and explicit limitations.
+
 ## Data licenses are separate from software licenses
 
 - nflverse-data and nflverse-pbp repositories publish a [CC BY 4.0 data notice](https://raw.githubusercontent.com/nflverse/nflverse-data/main/LICENSE.md). Attribute **nflverse / nflfastR**, link the source and license, preserve supplied notices, and indicate transformations. Schedules additionally credit **Lee Sharpe**. [nfldata](https://github.com/nflverse/nfldata) itself has no detected license file or repository-license metadata; the application uses the schedule release published by nflverse-data and records this provenance, rather than inventing an MIT data license.

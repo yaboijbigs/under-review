@@ -3,6 +3,7 @@ import type { Game, GameAudit, GameAuditFlag, GameProfile, ReviewCandidate } fro
 import { getGameVerdict, SUSPICION_SCALE } from "@under-review/core/consumer-summary";
 import { auditLabel, human, referencePeriod, teamName } from "@/lib/presentation";
 import { MarketComparison } from "@/components/market-comparison";
+import { ExpectedPerformance } from "@/components/game-expectations";
 
 export function GameVerdict({audit}: {audit: GameAudit | undefined}) {
   const verdict = getGameVerdict(audit);
@@ -52,7 +53,8 @@ export function GameAnomalyAudit({audit, game, fallbackSummary}: {audit: GameAud
     <div className="audit-heading"><div><p className="eyebrow">THE RESULT IN CONTEXT</p><h2 id="game-audit-title">Why this result stands out—or doesn’t</h2></div></div>
     {audit ? <>
       <ProfileTable profiles={audit.profiles} game={game}/>
-      <MarketComparison market={audit.market}/>
+      <MarketComparison market={audit.market} currentRules={audit.version==='under-review-game-audit-v5'}/>
+      <ExpectedPerformance expectations={audit.expectations}/>
       {audit.context.length > 0 && <div className="audit-context"><div className="audit-subheading"><span className="eyebrow">THE BREAKS BEHIND THE SCORE</span><h3>How the result took shape</h3></div><div className="audit-context-grid">{audit.context.map((item,index)=><article key={index}><span className="eyebrow">{item.team ? `${teamName(item.team)} · ` : ""}{human(item.kind)}</span><p>{item.text}</p>{item.playIds.length > 0 && <div className="event-links">{item.playIds.map(id=><a key={id} href={`#play-${encodeURIComponent(id)}`}>See play {id} ↗</a>)}</div>}</article>)}</div></div>}
       {(prominentFlags.length > 0 || additionalFlags.length > 0) && <details className="additional-profile-comparisons"><summary>Explore the historical comparisons ({prominentFlags.length+additionalFlags.length})</summary><p className="small muted">These patterns overlap. They are separate comparisons, not independent evidence of multiple problems.</p><div className="audit-flags">{[...prominentFlags,...additionalFlags].map(flag=><HistoricalFlag key={flag.id} flag={flag}/>)}</div></details>}
       <details className="audit-method"><summary>Historical coverage & audit method</summary><p>{count(audit.reference.teamGames)} prior team-games · {referencePeriod(audit.reference.startSeason,audit.reference.endSeason)}</p><p>Audit: {audit.version}<br/>Reference: {audit.reference.version}</p>{audit.reference.checksum && <code className="checksum">Reference SHA-256: {audit.reference.checksum}</code>}{audit.notes.length > 0 && <ul>{audit.notes.map((note,index)=><li key={index}>{note}</li>)}</ul>}</details>
@@ -63,7 +65,7 @@ export function GameAnomalyAudit({audit, game, fallbackSummary}: {audit: GameAud
 
 function Candidate({candidate}: {candidate: ReviewCandidate}) {
   return <article className="review-candidate" id={`candidate-${candidate.id}`} data-play-id={candidate.playId}>
-    <div className="candidate-top"><span className="candidate-clock">{candidate.quarter ? `Q${candidate.quarter}` : "Period unavailable"} · {candidate.clock || "Clock unavailable"}</span><span className="candidate-priority">{candidate.priority === "high" ? "High review priority" : "Review candidate"}</span></div>
+    <div className="candidate-top"><span className="candidate-clock">{candidate.quarter ? `Q${candidate.quarter}` : "Period unavailable"} · {candidate.clock || "Clock unavailable"}</span><span className="candidate-priority">Recorded game event</span></div>
     <h3>{candidate.team ? teamName(candidate.team) : "Game-changing moment"}<span className="muted"> · Play {candidate.playId}</span></h3><p className="candidate-description">{candidate.description}</p>
     <ul className="candidate-reasons">{candidate.reasons.map((reason,index)=><li key={index}>{human(reason)}</li>)}</ul>
     {candidate.observedWpSwing !== null && <p className="candidate-movement">Estimated chance to win moved {(Math.abs(candidate.observedWpSwing)*100).toFixed(1)} percentage points across this play.</p>}
@@ -73,7 +75,7 @@ function Candidate({candidate}: {candidate: ReviewCandidate}) {
 
 export function NeedsReview({audit}: {audit: GameAudit | undefined}) {
   const candidates=audit?.reviewCandidates;
-  return <section id="needs-review" className={`needs-review ${candidates?.length ? "has-key-plays" : "no-key-plays"}`} aria-labelledby="needs-review-title"><div className="audit-heading"><div><p className="eyebrow">PLAYS FOR A CLOSER LOOK</p><h2 id="needs-review-title">Key plays to inspect {candidates && <span className="count">{candidates.length}</span>}</h2></div></div>
-    {!candidates ? <p className="review-empty">This saved report does not include the automatic key-play scan.</p> : candidates.length ? <><p className="review-intro">The plays and sequences behind the rating.</p><div className="review-candidates">{candidates.slice(0,4).map(candidate=><Candidate key={candidate.id} candidate={candidate}/>)}</div>{candidates.length>4 && <details className="more-candidates"><summary>Show {candidates.length-4} more flagged {candidates.length-4 === 1 ? "play" : "plays"}</summary><div className="review-candidates">{candidates.slice(4).map(candidate=><Candidate key={candidate.id} candidate={candidate}/>)}</div></details>}</> : <p className="review-empty">No key plays met the review criteria.</p>}
-  </section>;
+  return <section id="needs-review" className={`needs-review ${candidates?.length ? "has-key-plays" : "no-key-plays"}`} aria-labelledby="needs-review-title"><details className="report-disclosure"><summary><span><strong id="needs-review-title">Notable plays {candidates && <span className="count">{candidates.length}</span>}</strong><span className="disclosure-description">Optional play details behind the automatic scan.</span></span><span aria-hidden="true">+</span></summary><div className="disclosure-body">
+    {!candidates ? <p className="review-empty">This saved report does not include the automatic key-play scan.</p> : candidates.length ? <><p className="review-intro">These recorded events provide context. Their count does not determine the game rating.</p><div className="review-candidates">{candidates.slice(0,4).map(candidate=><Candidate key={candidate.id} candidate={candidate}/>)}</div>{candidates.length>4 && <details className="more-candidates"><summary>Show {candidates.length-4} more {candidates.length-4 === 1 ? "play" : "plays"}</summary><div className="review-candidates">{candidates.slice(4).map(candidate=><Candidate key={candidate.id} candidate={candidate}/>)}</div></details>}</> : <p className="review-empty">No plays met the scan criteria.</p>}
+  </div></details></section>;
 }

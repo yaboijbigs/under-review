@@ -1,15 +1,19 @@
 import { describe,it,expect } from 'vitest';
-import { normalizeGameProfiles,ingestGameProfiles,loadGameProfileReference } from '../packages/core/src/game-profile-source.js';
+import { normalizeGameProfiles,ingestGameProfiles,loadGameProfileReference,validateGameProfileFinality } from '../packages/core/src/game-profile-source.js';
 import type { Game } from '../packages/core/src/contracts.js';
 import type { SnapshotStore } from '../packages/core/src/sources.js';
-import { parseCsv,type ProviderRow } from '../packages/core/src/normalize.js';
+import { parseCsv,validateGameData,type ProviderRow } from '../packages/core/src/normalize.js';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { gunzipSync } from 'node:zlib';
 import path from 'node:path';
 
 const game:Game={id:'2026_02_GB_NYJ',season:2026,week:2,homeTeam:'NYJ',awayTeam:'GB',homeScore:17,awayScore:20,gameType:'REG',kickoffAt:null,providerData:{}};
 const rows=[{game_id:game.id,season:2026,week:2,team:'GB',opponent_team:'NYJ',passing_yards:180,rushing_yards:44,sack_yards_lost:-25,passing_interceptions:0,fumbles_lost_total:1,penalties:14,penalty_yards:133,def_tds:0,special_teams_tds:0,fumble_recovery_tds:0},{game_id:game.id,season:2026,week:2,team:'NYJ',opponent_team:'GB',passing_yards:200,rushing_yards:115,sack_yards_lost:-30,passing_interceptions:0,fumbles_lost_total:0,penalties:13,penalty_yards:156,def_tds:0,special_teams_tds:0,fumble_recovery_tds:0}];
 const official=JSON.parse(readFileSync(path.resolve('analytics/models/game-profile-validation.json'),'utf8')) as {rawRows:ProviderRow[]};
+const recoveryBytes=readFileSync(path.resolve('tests/fixtures/fumble-score-finality.json.gz'));
+const recoveryManifest=JSON.parse(readFileSync(path.resolve('tests/fixtures/fumble-score-finality.manifest.json'),'utf8'));
+const recoveryFixtures=JSON.parse(gunzipSync(recoveryBytes).toString()).games as {game:Game;aggregates:ProviderRow[];plays:ProviderRow[]}[];
 // These compact synthetic PBP rows exercise the gate with the independently verified
 // gamebook subtotals. The full cached real PBP is additionally checked in integration.
 const finalPbp:ProviderRow[]=[
@@ -32,6 +36,49 @@ function source(input:ProviderRow[]):SnapshotStore{
  return {fetch:async()=>({id:'aggregate-fixture',provider:'nflverse-team-stats',url:'https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2026.csv',retrievedAt:'2026-09-21T00:00:00Z',checksum:'fixture',path:'/fixture.csv',license:'CC-BY-4.0',metadata:{}}),read:async()=>Buffer.from(csv)};
 }
 describe('official team aggregate adapter',()=>{
+ it('verifies the attributed, compact real defensive-fumble scoring fixture bytes',()=>{
+  expect(createHash('sha256').update(recoveryBytes).digest('hex')).toBe(recoveryManifest.fixture.checksum);
+  expect(createHash('sha256').update(gunzipSync(recoveryBytes)).digest('hex')).toBe(recoveryManifest.fixture.decodedChecksum);
+  expect(recoveryManifest.license).toBe('CC-BY-4.0');expect(recoveryManifest.sources).toHaveLength(3);
+ });
+ it.each(recoveryFixtures)('reconciles the independently verified recovery TD in $game.id without modifying aggregates',fixture=>{
+  const pair=normalizeGameProfiles(fixture.game,fixture.aggregates),before=structuredClone(pair);
+  expect(validateGameData(fixture.game,fixture.plays)).toEqual({valid:true,issues:[]});
+  expect(()=>validateGameProfileFinality(fixture.game,fixture.aggregates,pair,fixture.plays)).not.toThrow();expect(pair).toEqual(before);
+  expect(pair.find(p=>p.team===fixture.game.homeTeam)?.nonOffensiveTouchdowns).toBeNull();
+ });
+ it.each(['missing-recovery-count','wrong-recovery-count','stale-score','already-counted-with-other-td-missing','ambiguous-recovery','not-defensive','not-return','nullified','duplicate-play','missing-terminal','wrong-final-score','stale-yards'])('withholds recovery reconciliation for %s',condition=>{
+  const fixture=structuredClone(recoveryFixtures[0]),own=fixture.aggregates.find(row=>row.team===fixture.game.homeTeam)!,play=fixture.plays.find(row=>row.play_id===545)!;
+  if(condition==='missing-recovery-count')own.fumble_recovery_tds=null;
+  if(condition==='wrong-recovery-count')own.fumble_recovery_tds=2;
+  if(condition==='stale-score')own.pat_made=2;
+  if(condition==='already-counted-with-other-td-missing'){own.def_tds=1;own.passing_tds=0;}
+  if(condition==='ambiguous-recovery')play.fumble_recovery_2_team=fixture.game.homeTeam;
+  if(condition==='not-defensive')play.defteam=fixture.game.awayTeam;
+  if(condition==='not-return')play.return_touchdown=0;
+  if(condition==='nullified')play.no_play=1;
+  if(condition==='duplicate-play')fixture.plays.splice(1,0,structuredClone(fixture.plays[0]));
+  if(condition==='missing-terminal')fixture.plays.pop();
+  if(condition==='wrong-final-score')fixture.plays.at(-1)!.total_home_score=32;
+  if(condition==='stale-yards')own.passing_yards=Number(own.passing_yards)-1;
+  const pair=normalizeGameProfiles(fixture.game,fixture.aggregates);expect(()=>validateGameProfileFinality(fixture.game,fixture.aggregates,pair,fixture.plays)).toThrow();
+ });
+ it('does not add a recovery touchdown already represented in the aggregate score',()=>{
+  const fixture=structuredClone(recoveryFixtures[0]),own=fixture.aggregates.find(row=>row.team===fixture.game.homeTeam)!;own.def_tds=1;
+  const pair=normalizeGameProfiles(fixture.game,fixture.aggregates);expect(()=>validateGameProfileFinality(fixture.game,fixture.aggregates,pair,fixture.plays)).not.toThrow();
+  expect(pair.find(p=>p.team===fixture.game.homeTeam)?.pointsFor).toBe(33);expect(pair.find(p=>p.team===fixture.game.homeTeam)?.nonOffensiveTouchdowns).toBeNull();
+ });
+ it('accepts equivalent explicit boolean indicators from raw R JSON while rejecting unknown flags',()=>{
+  const flags=new Set(['extra_point_attempt','two_point_attempt','safety','defensive_extra_point_conv','defensive_two_point_conv','touchdown','interception','fumble_lost','kickoff_attempt','punt_attempt','field_goal_attempt','no_play','pass_touchdown','rush_touchdown','return_touchdown','fumble','sack']);
+  for(const fixture of recoveryFixtures){
+   const plays=fixture.plays.map(play=>Object.fromEntries(Object.entries(play).map(([key,value])=>[key,flags.has(key)&&(value===0||value===1)?Boolean(value):value])));
+   const pair=normalizeGameProfiles(fixture.game,fixture.aggregates);expect(()=>validateGameProfileFinality(fixture.game,fixture.aggregates,pair,plays)).not.toThrow();
+   for(const field of ['pass_touchdown','rush_touchdown','interception','kickoff_attempt','punt_attempt']){
+    const unknown=structuredClone(plays),recovery=unknown.find(play=>play.fumble_lost===true&&play.touchdown===true)!;recovery[field]=null;
+    expect(()=>validateGameProfileFinality(fixture.game,fixture.aggregates,pair,unknown)).toThrow();
+   }
+  }
+ });
  it('adds signed sack yards and computes symmetric turnover margins from all units',()=>{
   const [away,home]=normalizeGameProfiles(game,rows);
   expect(away).toMatchObject({totalYards:199,opponentYards:285,penaltyYards:133,turnoverMargin:-1,pointsFor:20,nonOffensiveTouchdowns:0});

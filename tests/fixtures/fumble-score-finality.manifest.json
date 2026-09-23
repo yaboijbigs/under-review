@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "nflverse / nflfastR; schedules by Lee Sharpe and nflverse",
+  "derivation": "Two complete games with only fields needed for score/finality/yardage checks; original aggregate rows retained.",
+  "sources": [
+    {
+      "name": "schedules",
+      "provider": "nflverse-schedules",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv",
+      "id": "59d552a3eb98dbf2d629e86bc867ae54f8ec24d6eabbcd9991a400a18dbcd4de",
+      "checksum": "75850808ec84ef76c6e934f086f2dbaab4c854bf23864b0f022d601342686b2c",
+      "retrievedAt": "2026-09-23T20:32:16.478Z",
+      "lastModified": "Wed, 23 Sep 2026 20:16:24 GMT",
+      "license": "CC-BY-4.0",
+      "bytes": 2180724
+    },
+    {
+      "name": "stats",
+      "provider": "nflverse-team-stats",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2026.csv",
+      "id": "288eb6e095850646df66a225960cc7bc71ae861ea48675ec5f361c090a9fa567",
+      "checksum": "ab0c455c4dc1db4bc8de52fe5cabc562f63b376d207265c78d7fbae9ffb4940b",
+      "retrievedAt": "2026-09-23T20:32:16.460Z",
+      "lastModified": "Wed, 23 Sep 2026 14:15:47 GMT",
+      "license": "CC-BY-4.0",
+      "bytes": 27621
+    },
+    {
+      "name": "pbp",
+      "provider": "nflverse-pbp",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv",
+      "id": "57e73723ba8ab4bd26758f2a6edd18625b5612c0eb75fb9d5fc524a7568ce577",
+      "checksum": "96452de58a2a2baefe9cc090fa3177fb84083d3183c83914b9e9d93f2bf7d281",
+      "retrievedAt": "2026-09-23T20:32:17.460Z",
+      "lastModified": "Wed, 23 Sep 2026 14:14:21 GMT",
+      "license": "CC-BY-4.0",
+      "bytes": 11003604
+    }
+  ],
+  "fixture": {
+    "file": "fumble-score-finality.json.gz",
+    "checksum": "0db5f038f17e7cb839340ab6a42d541e532da04ddb90968313cb868a6f3d3c15",
+    "decodedChecksum": "a19b200c281e1b2bd593f4e0828d15e24f01fdfc31c21ddd1cd0ca2cad42d4f2",
+    "bytes": 18958,
+    "gameIds": [
+      "2026_01_TB_CIN",
+      "2026_02_PIT_NE"
+    ]
+  }
+}

@@ -1,7 +1,8 @@
 import type { EvidenceEvent, Game, GameAudit, GameAuditFlag, GameProfile, GameProfileReference, ReviewCandidate } from './contracts.js';
 import type { ProviderRow } from './normalize.js';
 
-export const GAME_AUDIT_VERSION = 'under-review-game-audit-v4';
+export const GAME_AUDIT_VERSION = 'under-review-game-audit-v5';
+export const LEGACY_GAME_AUDIT_VERSION = 'under-review-game-audit-v4';
 
 const finite = (value: unknown): number | null => value === null || value === undefined || value === '' || typeof value === 'boolean' || !Number.isFinite(Number(value)) ? null : Number(value);
 const yes = (value: unknown): boolean => value === true || value === 1;
@@ -207,6 +208,9 @@ export function buildGameAudit({ game, plays = [], profiles: supplied = [], refe
   const strongest = flags.find(flag => flag.status === 'historical_outlier') ?? flags.find(flag => flag.status === 'unusual_profile');
   const status: GameAudit['status'] = strongest ? strongest.status as 'historical_outlier' | 'unusual_profile' : candidates.length ? 'review_worthy' : !profiles.every(complete) || !prior.rows.length || flags.some(flag => flag.status === 'rare_sample') ? 'insufficient_data' : 'no_flag_found';
   const headline = strongest ? `${strongest.team}: ${strongest.title.toLowerCase()} — win with ${strongest.conditions.map(condition => condition.toLowerCase()).join(' and ')}; ${strongest.reference.wins} wins in ${strongest.reference.matchingGames} matching prior team-games.${candidates.length ? ` ${candidates.length} plays need review.` : ''}` : candidates.length ? `${candidates.length} plays need review; no call-correctness judgment has been made.` : status === 'insufficient_data' ? 'Insufficient comparable data for a historical outlier label.' : 'No configured historical outlier flag found; officiating correctness remains unreviewed.';
-  return { version: GAME_AUDIT_VERSION, status, headline, profiles, flags, reviewCandidates: candidates, context: observedContext(game, plays, profiles,extensions),
+  // The fixed-pattern component remains reproducible for earlier reports. The
+  // expectation integration upgrades the completed audit to v5, including when
+  // that new comparison is unavailable (which must stay unrated).
+  return { version: LEGACY_GAME_AUDIT_VERSION, status, headline, profiles, flags, reviewCandidates: candidates, context: observedContext(game, plays, profiles,extensions),
     reference: { version: reference?.version ?? 'unavailable', checksum: referenceChecksum, startSeason, endSeason, teamGames: prior.rows.length }, notes: [...notes, ...(reference?.notes ?? [])] };
 }

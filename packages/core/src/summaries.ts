@@ -1,5 +1,6 @@
 import twitterText from 'twitter-text';
 import type { AnalysisResult,Game,Metric } from './contracts.js';
+import { getGameVerdict } from './consumer-summary.js';
 
 export function metricDisplay(metric:Metric):string {
  if(metric.value===null)return 'Unavailable';
@@ -18,6 +19,7 @@ export function supportedFindings(analysis:AnalysisResult):Metric[]{
 export function reportSummary(game:Game,analysis:AnalysisResult):string{
  const findings=supportedFindings(analysis).slice(0,2);
  const score=`${game.awayTeam} ${game.awayScore ?? '–'}, ${game.homeTeam} ${game.homeScore ?? '–'}.`;
+ if(analysis.gameAudit?.version==='under-review-game-audit-v5'){const verdict=getGameVerdict(analysis.gameAudit);return `${score} ${verdict.label}${verdict.rating?` ${verdict.rating}/5`:''}. ${verdict.summary}`;}
  if(analysis.gameAudit)return `${score} ${analysis.gameAudit.headline} Officiating correctness: not reviewed.`;
  return `${score} ${findings.length?findings.map(m=>`${m.team?m.team+': ':''}${m.name}: ${metricDisplay(m)}.`).join(' '):'The final score is reconciled; supported category findings are still being processed.'} Officiating correctness: not reviewed.`;
 }

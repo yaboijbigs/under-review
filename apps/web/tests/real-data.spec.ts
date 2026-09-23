@@ -16,8 +16,11 @@ test("real report exposes revision, coverage, timeline, and evidence", async ({p
   await page.goto(`/games/${encodeURIComponent(gameId!)}`);
   await resolvedPage(page,'.analysis-complete');
   await expect(page.locator('#verdict-title')).toBeVisible();
-  await expect(page.getByRole("heading",{name:/^Key plays to inspect/})).toBeVisible();
+  await expect(page.locator('#needs-review > details > summary')).toContainText('Notable plays');
+  await expect(page.locator('#needs-review > details')).not.toHaveAttribute('open');
   await expect(page.locator('#categories > details > summary')).toBeVisible();
+  await expect(page.locator('#categories > details')).not.toHaveAttribute('open');
+  expect(await page.locator('#fan-feedback').evaluate(node=>!!(node.compareDocumentPosition(document.querySelector('#needs-review')!)&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   await expect(page.getByRole("heading",{name:"Game momentum"})).toBeVisible();
   await expect(page.locator('.audit-footer')).toContainText('Historical comparisons');
   await page.locator('#provenance > details > summary').click();

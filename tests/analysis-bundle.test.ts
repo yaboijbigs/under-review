@@ -11,6 +11,8 @@ import { loadGameProfileReference,normalizeGameProfiles } from '../packages/core
 import { sourceUrls,SOURCE_LICENSES } from '../packages/core/src/sources.js';
 import { applyOvertimeTimeline,loadOvertimeReference,type LoadedOvertimeReference } from '../packages/core/src/overtime-integration.js';
 import { applySpreadAudit,loadSpreadReference,type LoadedSpreadReference } from '../packages/core/src/spread.js';
+import { loadExpectationsReference } from '../packages/core/src/expectations.js';
+import { applyExpectationsAudit } from '../packages/core/src/expectations-integration.js';
 
 const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn()}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query,transaction:vi.fn()}));
@@ -46,6 +48,7 @@ beforeEach(async()=>{
  analysis.gameAudit=buildGameAudit({game,plays,profiles:normalizeGameProfiles(game,rawProfiles),reference:historical.reference,referenceChecksum:historical.checksum,events:analysis.events});
  Object.assign(analysis,applyOvertimeTimeline(game,plays,analysis,overtime));
  Object.assign(analysis,applySpreadAudit(game,analysis,snapshots,spread));
+ Object.assign(analysis,applyExpectationsAudit(game,analysis,await loadExpectationsReference()));
  report={game,revision:{id:'local-revision',number:1,createdAt:'2099-09-02T00:00:00Z',statisticalStatus:'reconciled',chartingStatus:'unavailable',reviewStatus:'not_reviewed',changeSummary:'Synthetic',summary:'Synthetic',inputHash:'synthetic',analysis,sourceSnapshots:snapshots},reviews:[],drafts:[],history:[]};
  mocks.getReport.mockImplementation(async()=>structuredClone(report));
  mocks.query.mockImplementation(async(sql:string)=>sql.startsWith('SELECT 1 FROM events')?{rows:[],rowCount:0}:sql.startsWith('SELECT snapshot_id')?{rows:plays.map((data,index)=>({snapshot_id:snapshots[1].id,play_id:String(data.play_id),provider_order:index,data})),rowCount:plays.length}:{rows:[],rowCount:0});
@@ -129,6 +132,7 @@ describe('bounded clean analysis evidence bundles',()=>{
   report.revision.analysis=applyOvertimeTimeline(game,overtimePlays,report.revision.analysis,overtime);
   report.revision.analysis.gameAudit=buildGameAudit({game,plays:overtimePlays,profiles:normalizeGameProfiles(game,rawProfiles),reference:historical.reference,referenceChecksum:historical.checksum,events:report.revision.analysis.events});
   report.revision.analysis=applySpreadAudit(game,report.revision.analysis,report.revision.sourceSnapshots,spread);
+  report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference());
   mocks.query.mockImplementation(async(sql:string)=>sql.startsWith('SELECT snapshot_id')?{rows:overtimePlays.map((data,index)=>({snapshot_id:source.id,play_id:String(data.play_id),provider_order:index,data}))}:{rows:[],rowCount:0});
   const bundle=await bundleForImport();
   expect(bundle.analysis.timeline.at(-1)).toMatchObject({status:'observed',homeWp:0,awayWp:0,tieProbability:1});
@@ -153,6 +157,7 @@ describe('bounded clean analysis evidence bundles',()=>{
   report.revision.sourceSnapshots[3]=await saveSource('nflverse-team-stats',report.revision.sourceSnapshots[3].url,csv(rows));
   report.revision.analysis.gameAudit=buildGameAudit({game,plays,profiles:[],reference:historical.reference,referenceChecksum:historical.checksum,events:report.revision.analysis.events});
   report.revision.analysis=applySpreadAudit(game,report.revision.analysis,report.revision.sourceSnapshots,spread);
+  report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference());
   report.revision.analysis.warnings=['team_stats_score_mismatch: Profiles withheld.'];
   const bundle=await bundleForImport();await importAnalysisBundle(bundle);
   expect(mocks.saveAnalysis.mock.calls[0][3].gameAudit.profiles.every((profile:{totalYards:number|null})=>profile.totalYards===null)).toBe(true);

@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 test("archive is usable without fabricated results", async ({page},testInfo) => {
-  await page.goto("/");
-  await expect(page.getByRole("heading",{name:/Was that win unusual/i})).toBeVisible();
+  await page.goto(process.env.SMOKE_SEASON?'/?season='+encodeURIComponent(process.env.SMOKE_SEASON):'/');
+  await expect(page.getByRole("heading",{name:/Was that game unusual/i})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Season"})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Team"})).toBeVisible();
   await expect(page.getByRole("combobox",{name:"Week"})).toHaveValue("");
@@ -15,11 +15,7 @@ test("archive is usable without fabricated results", async ({page},testInfo) => 
 });
 test("methodology preserves uncertainty and report links", async ({page}) => {
   await page.goto("/methodology");
-  await expect(page.getByRole("heading",{name:"Why an unusual win gets flagged"})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"Why a play needs review"})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"What the game suspicion rating means"})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"Why the rating is not a probability of rigging"})).toBeVisible();
-  await expect(page.getByRole("heading",{name:"Unavailable means unavailable"})).toBeVisible();
+  for(const name of ['Five levels, one overall rating','Expected versus actual','What referee history tells us','Notable plays and limitations','Rarity is not intent','Missing data stays missing'])await expect(page.getByRole('heading',{name,exact:true})).toBeVisible();
   await page.goto("/sources");
   await expect(page.getByRole("heading",{name:"FTN Data via nflverse"})).toBeVisible();
   await expect(page.getByRole("link",{name:"Creative Commons Attribution-ShareAlike 4.0"})).toHaveAttribute("href","https://creativecommons.org/licenses/by-sa/4.0/");

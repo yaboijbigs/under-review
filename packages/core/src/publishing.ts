@@ -4,7 +4,7 @@ import { query,transaction,audit } from './db.js';
 import { config,safeError } from './config.js';
 import { getReport } from './repository.js';
 import type { EvidenceDraft } from './summaries.js';
-import { renderSocialPost,validateSocialPost,SOCIAL_TEMPLATE_VERSION } from './social-post.js';
+import { renderSocialPost,validateSocialPost,SOCIAL_TEMPLATE_VERSION,SOCIAL_API_TEMPLATE_VERSION } from './social-post.js';
 import { getGameVerdict } from './consumer-summary.js';
 
 export interface PublishingSettings {mode:'off'|'draft-only'|'automatic';killSwitch:boolean;accountId:string|null;activatedAt:string|null}
@@ -47,14 +47,15 @@ export function initialPublicationIneligibility(game:PublicationGame|undefined,s
  if(!Number.isFinite(validated)||validated<cutoff)return 'A complete final report validated after activation is required.';
  return null;
 }
-export async function buildAutoPostPreview(gameId:string):Promise<EvidenceDraft&{gameId:string;revision:number;reportUrl:string;templateVersion:string;eligibleForAutomation:boolean;ineligibilityReason:string|null}>{
+export async function buildAutoPostPreview(gameId:string):Promise<EvidenceDraft&{gameId:string;revision:number;reportUrl:string;templateVersion:string;apiText:string;apiWeightedLength:number;apiTemplateVersion:string;eligibleForAutomation:boolean;ineligibilityReason:string|null}>{
  const report=await getReport(gameId);if(!report)throw new Error('A validated report is required before drafting.');
  const reportUrl=`${config.siteUrl}/games/${encodeURIComponent(gameId)}?revision=${report.revision.number}`;
  const draft=renderSocialPost(report.game,report.revision.analysis,reportUrl);
+ const apiDraft=renderSocialPost(report.game,report.revision.analysis,reportUrl,'initial','names');
  const settings=await getPublishingSettings();const game=(await query<PublicationGame>('SELECT publication_eligible,first_validated_at,kickoff_at FROM games WHERE id=$1',[gameId])).rows[0];
  const duplicate=(await query("SELECT 1 FROM publication_outbox WHERE game_id=$1 AND account_id=$2 AND kind='initial' AND mode='live'",[gameId,settings.accountId])).rowCount;
  const ineligibilityReason=initialPublicationIneligibility(game,settings)??(getGameVerdict(report.revision.analysis.gameAudit).rating===null?'Automatic posting waits for a complete game rating.':null)??(duplicate?'This account already has an initial publication record for this game.':null);
- return {...draft,gameId,revision:report.revision.number,reportUrl,templateVersion:SOCIAL_TEMPLATE_VERSION,eligibleForAutomation:!ineligibilityReason,ineligibilityReason};
+ return {...draft,gameId,revision:report.revision.number,reportUrl,templateVersion:SOCIAL_TEMPLATE_VERSION,apiText:apiDraft.text,apiWeightedLength:apiDraft.weightedLength,apiTemplateVersion:SOCIAL_API_TEMPLATE_VERSION,eligibleForAutomation:!ineligibilityReason,ineligibilityReason};
 }
 export async function createDraft(gameId:string,kind:'initial'|'correction'|'update'='initial'){
  const report=await getReport(gameId);if(!report)throw new Error('A validated report is required before drafting.');
@@ -84,21 +85,24 @@ export async function setKillSwitch(enabled:boolean,userId:string){
  await query("UPDATE settings SET value=$1,updated_at=now() WHERE key='publishing'",[JSON.stringify({...current,killSwitch:enabled,activatedAt})]);await audit(userId,'publishing.kill_switch',null,{enabled,activatedAt});
 }
 export async function approveDraft(id:string,userId:string,{authorizeHistoricalInitial=false}:{authorizeHistoricalInitial?:boolean}={}){
- const row=(await query("SELECT * FROM publication_outbox WHERE id=$1 AND mode='dry_run'",[id])).rows[0];if(!row)throw new Error('Draft not found.');
+ const row=(await query("SELECT o.*,r.number FROM publication_outbox o JOIN analysis_revisions r ON r.id=o.revision_id WHERE o.id=$1 AND o.mode='dry_run'",[id])).rows[0];if(!row)throw new Error('Draft not found.');
  const settings=await getPublishingSettings();
  if(authorizeHistoricalInitial){
   if(row.kind!=='initial')throw new Error('Historical authorization applies only to a game’s initial post.');
   if(!(await query("SELECT 1 FROM users WHERE id=$1 AND role='admin'",[userId])).rowCount)throw new Error('Administrator access is required for a historical initial post.');
   if(config.staging||!config.livePostingAllowed||settings.mode!=='automatic'||settings.killSwitch)throw new Error('Live publishing must be enabled before approving a historical initial post.');
   const report=await getReport(row.game_id);if(!report||getGameVerdict(report.revision.analysis.gameAudit).rating===null)throw new Error('A complete current game rating is required for historical publication.');
-  const fresh=renderSocialPost(report.game,report.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${report.revision.number}`);
+  const fresh=renderSocialPost(report.game,report.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${report.revision.number}`,'initial','names');
   if(!validateSocialPost(fresh.text,fresh))throw new Error('Current historical post failed validation.');
-  return queueLive({...row,revision_id:report.revision.id,text:fresh.text,evidence_ids:fresh.evidenceIds,template_version:SOCIAL_TEMPLATE_VERSION},userId,settings,true);
+  return queueLive({...row,revision_id:report.revision.id,text:fresh.text,evidence_ids:fresh.evidenceIds,template_version:SOCIAL_API_TEMPLATE_VERSION},userId,settings,true);
  }
  if(config.staging||!config.livePostingAllowed||settings.mode!=='automatic'||settings.killSwitch){
   await query("UPDATE publication_outbox SET status='approved',approved_by=$2,updated_at=now(),reason='Approved preview only; live publishing remains disabled.' WHERE id=$1",[id,userId]);await audit(userId,'draft.approved_preview',id);return id;
  }
- return queueLive(row,userId,settings);
+ const report=await getReport(row.game_id,row.number);if(!report)throw new Error('The approved report revision is unavailable.');
+ const liveDraft=renderSocialPost(report.game,report.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${row.number}`,row.kind,'names');
+ if(!validateSocialPost(liveDraft.text,liveDraft))throw new Error('API post failed canonical validation.');
+ return queueLive({...row,text:liveDraft.text,evidence_ids:liveDraft.evidenceIds,template_version:SOCIAL_API_TEMPLATE_VERSION},userId,settings);
 }
 async function queueLive(row:Record<string,any>,userId:string|null,settings:PublishingSettings,manualHistoricalInitial=false){
  return transaction(async client=>{
@@ -112,7 +116,7 @@ async function queueLive(row:Record<string,any>,userId:string|null,settings:Publ
   const id=randomUUID();const result=await client.query(`INSERT INTO publication_outbox(id,game_id,revision_id,account_id,kind,mode,status,text,evidence_ids,approved_by,template_version,queued_automatically,manual_historical_initial)
    VALUES($1,$2,$3,$4,$5,'live','approved',$6,$7,$8,$9,$10,$11) ON CONFLICT DO NOTHING RETURNING id`,[id,row.game_id,row.revision_id,latest.accountId,row.kind,row.text,JSON.stringify(row.evidence_ids),userId,row.template_version??null,userId===null,manualHistoricalInitial]);
   if(!result.rowCount&&userId===null){
-   const pending=(await client.query("SELECT id,revision_id FROM publication_outbox WHERE game_id=$1 AND account_id=$2 AND kind='initial' AND mode='live' AND status='approved' AND queued_automatically=true FOR UPDATE",[row.game_id,latest.accountId])).rows[0];
+   const pending=(await client.query("SELECT id,revision_id FROM publication_outbox WHERE game_id=$1 AND account_id=$2 AND kind='initial' AND mode='live' AND status='approved' AND queued_automatically=true AND template_version=$3 FOR UPDATE",[row.game_id,latest.accountId,SOCIAL_API_TEMPLATE_VERSION])).rows[0];
    // A previously queued rating may have been withdrawn before delivery. Resume only
    // that unsent, unambiguous record when a later complete rating becomes available.
    if(pending&&pending.revision_id!==row.revision_id){
@@ -144,7 +148,11 @@ export async function maybeAutomaticDraft(gameId:string){
   return (await client.query(`INSERT INTO publication_outbox(id,game_id,revision_id,kind,mode,status,text,evidence_ids,reason,template_version,queued_automatically)
    VALUES($1,$2,$3,'initial','dry_run','draft',$4,$5,$6,$7,true) ON CONFLICT(game_id,revision_id,account_id,kind,mode) DO UPDATE SET game_id=excluded.game_id RETURNING *`,[randomUUID(),gameId,report.revision.id,draft.text,JSON.stringify(draft.evidenceIds),config.staging?'Private staging URL: preview only, not publishable.':'Automatic initial preview; later revisions require explicit correction/update approval.',SOCIAL_TEMPLATE_VERSION])).rows[0];
  });
- if(live)await queueLive(row,null,settings);
+ if(live){
+  const apiDraft=renderSocialPost(report.game,report.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(gameId)}?revision=${report.revision.number}`,'initial','names');
+  if(!validateSocialPost(apiDraft.text,apiDraft))throw new Error('Automatic API post failed canonical validation.');
+  await queueLive({...row,text:apiDraft.text,evidence_ids:apiDraft.evidenceIds,template_version:SOCIAL_API_TEMPLATE_VERSION},null,settings);
+ }
 }
 function encryptionKey(){if(!/^[a-f0-9]{64}$/i.test(config.tokenEncryptionKey))throw new Error('A 32-byte TOKEN_ENCRYPTION_KEY is required.');return Buffer.from(config.tokenEncryptionKey,'hex');}
 export function encryptTokens(value:unknown){const iv=randomBytes(12);const cipher=createCipheriv('aes-256-gcm',encryptionKey(),iv);const encrypted=Buffer.concat([cipher.update(JSON.stringify(value),'utf8'),cipher.final()]);return Buffer.concat([iv,cipher.getAuthTag(),encrypted]).toString('base64');}
@@ -188,13 +196,16 @@ export async function publishOutbox(id:string){
  const row=(await query("SELECT o.*,r.number FROM publication_outbox o JOIN analysis_revisions r ON r.id=o.revision_id WHERE o.id=$1 AND o.mode='live' AND o.status='approved'",[id])).rows[0];if(!row)return;
  if(row.account_id!==settings.accountId)throw new Error('Publishing account mismatch.');
  const account=(await query('SELECT username FROM oauth_accounts WHERE id=$1',[row.account_id])).rows[0];if(!account)throw new Error('Connected X account missing.');assertIntendedAccount(account.username);
+ if(row.template_version!==SOCIAL_API_TEMPLATE_VERSION){
+  await query("UPDATE publication_outbox SET status='failed',reason='Stored API template is stale; delivery stopped for operator review.',updated_at=now() WHERE id=$1 AND status='approved'",[id]);return;
+ }
  if(row.queued_automatically){
   const current=await getReport(row.game_id);
   if(!current||getGameVerdict(current.revision.analysis.gameAudit).rating===null){await query("UPDATE publication_outbox SET reason='Awaiting a complete current game rating.',updated_at=now() WHERE id=$1 AND status='approved'",[id]);return;}
   if(current.revision.id!==row.revision_id){
-   const fresh=renderSocialPost(current.game,current.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${current.revision.number}`);
+   const fresh=renderSocialPost(current.game,current.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${current.revision.number}`,'initial','names');
    if(!validateSocialPost(fresh.text,fresh))throw new Error('Current automatic post failed validation.');
-   await query("UPDATE publication_outbox SET revision_id=$2,text=$3,evidence_ids=$4,template_version=$5,reason=null,updated_at=now() WHERE id=$1 AND status='approved'",[id,current.revision.id,fresh.text,JSON.stringify(fresh.evidenceIds),SOCIAL_TEMPLATE_VERSION]);
+   await query("UPDATE publication_outbox SET revision_id=$2,text=$3,evidence_ids=$4,template_version=$5,reason=null,updated_at=now() WHERE id=$1 AND status='approved'",[id,current.revision.id,fresh.text,JSON.stringify(fresh.evidenceIds),SOCIAL_API_TEMPLATE_VERSION]);
    Object.assign(row,{revision_id:current.revision.id,number:current.revision.number,text:fresh.text});
   }
  }
@@ -203,10 +214,15 @@ export async function publishOutbox(id:string){
   const game=(await query<PublicationGame>('SELECT publication_eligible,first_validated_at,kickoff_at FROM games WHERE id=$1',[row.game_id])).rows[0];const reason=initialPublicationIneligibility(game,settings);
   if(reason){await query("UPDATE publication_outbox SET status='cancelled',reason=$2,updated_at=now() WHERE id=$1 AND status='approved'",[id,reason]);return;}
  }
+ const pinned=await getReport(row.game_id,row.number);
+ const canonical=pinned?renderSocialPost(pinned.game,pinned.revision.analysis,`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${row.number}`,row.kind,'names'):null;
+ if(!canonical||!validateSocialPost(row.text,canonical)){
+  await query("UPDATE publication_outbox SET status='failed',reason='Stored API text differs from the canonical team-name template; delivery stopped for operator review.',updated_at=now() WHERE id=$1 AND status='approved'",[id]);return;
+ }
  await verifyPublicReport(`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${row.number}`);
  const token=await accountToken(row.account_id);const latest=await getPublishingSettings();if(latest.killSwitch||latest.mode!=='automatic'||latest.accountId!==row.account_id||latest.activatedAt!==settings.activatedAt)throw new Error('Publishing settings changed.');
  const attemptId=randomUUID();const claimed=await transaction(async client=>{
-  const claim=await client.query("UPDATE publication_outbox SET status='sending',updated_at=now() WHERE id=$1 AND status='approved' RETURNING id",[id]);if(!claim.rowCount)return false;
+  const claim=await client.query("UPDATE publication_outbox SET status='sending',updated_at=now() WHERE id=$1 AND status='approved' AND text=$2 AND template_version=$3 AND revision_id=$4 RETURNING id",[id,row.text,SOCIAL_API_TEMPLATE_VERSION,row.revision_id]);if(!claim.rowCount)return false;
   await client.query("INSERT INTO publication_attempts(id,outbox_id,state) VALUES($1,$2,'sending')",[attemptId,id]);return true;
  });if(!claimed)return;
  let outcome:'published'|'retry'|'failed'|'unknown_outcome'='unknown_outcome',httpStatus:number|null=null,externalId:string|null=null,reason:string|null=null,retryAfter=60;

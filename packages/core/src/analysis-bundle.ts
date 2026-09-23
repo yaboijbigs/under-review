@@ -13,6 +13,8 @@ import { loadGameProfileReference,normalizeGameProfiles,validateGameProfileFinal
 import { applyOvertimeTimeline,loadOvertimeReference,OVERTIME_MODEL_ID } from './overtime-integration.js';
 import { OVERTIME_MODEL_VERSION } from './overtime.js';
 import { buildMarketAudit,loadSpreadReference,SPREAD_MODEL_ID,SPREAD_VERSION,applySpreadAudit } from './spread.js';
+import { loadExpectationsReference,EXPECTATIONS_VERSION } from './expectations.js';
+import { applyExpectationsAudit,EXPECTATIONS_MODEL_ID } from './expectations-integration.js';
 
 // Deliberately bounded for the current-season catch-up, not whole-database transport.
 export const MAX_ANALYSIS_BUNDLE_BYTES=64*1024*1024;
@@ -32,7 +34,8 @@ export class AnalysisBundleError extends Error {
 function fail(code:string,message:string):never{throw new AnalysisBundleError(code,message);}
 const CODE_FILES=['analytics/renv.lock','analytics/run.R','analytics/R/common.R','analytics/R/states.R','analytics/R/fourth.R','analytics/R/baselines.R','analytics/R/engine.R','analytics/R/rarity.R',
  'analytics/vendor/nfl4th/helpers.R','analytics/vendor/nfl4th/decision_functions.R','analytics/vendor/nfl4th/apply_win_prob.R','analytics/vendor/nfl4th/wrapper.R',
- 'packages/core/src/normalize.ts','packages/core/src/game-audit.ts','packages/core/src/game-profile-source.ts','packages/core/src/overtime.ts','packages/core/src/overtime-integration.ts','packages/core/src/spread.ts'];
+ 'packages/core/src/normalize.ts','packages/core/src/game-audit.ts','packages/core/src/game-profile-source.ts','packages/core/src/overtime.ts','packages/core/src/overtime-integration.ts','packages/core/src/spread.ts',
+ 'packages/core/src/expectations.ts','packages/core/src/expectations-contracts.ts','packages/core/src/expectations-integration.ts','packages/core/src/consumer-summary.ts','packages/core/reference/expectations-reference.json'];
 const MODEL_FILES=['manifest.json','evaluation.json','coaching-evaluation.json','category-reference.json','game-profiles.json','overtime-reference.json','spread-reference.json','fd_model.rds','wp_model.rds','fg_model.rds','two_pt_model.rds','punt_df.rds','fastr_ep_model.rds','fastr_wp_model.rds','fastr_wp_model_spread.rds','fumble.rds','fg.rds','xp.rds','penalty.rds','kickoff_starts.rds'];
 const modelDirectory=()=>process.env.MODEL_DIR??path.join(projectRoot,'analytics/models');
 
@@ -55,6 +58,9 @@ export async function analysisBundleProducer():Promise<AnalysisBundleProducer>{
  const spread=await loadSpreadReference();
  if(spread.checksum!==files['models/spread-reference.json'])fail('bundle_local_models_invalid','The spread reference changed while validating its producer fingerprint.');
  models[SPREAD_MODEL_ID]={version:SPREAD_VERSION,checksum:spread.checksum};
+ const expectations=await loadExpectationsReference();
+ if(expectations.checksum!==files['packages/core/reference/expectations-reference.json'])fail('bundle_local_models_invalid','The expectation reference changed during validation.');
+ models[EXPECTATIONS_MODEL_ID]={version:EXPECTATIONS_VERSION,checksum:expectations.checksum};
  return producerSchema.parse({format:'under-review-analysis-bundle-v1',closeCallTolerance:config.closeCallTolerance,files,models});
 }
 
@@ -114,9 +120,12 @@ async function validateBundle(input:unknown):Promise<{bundle:AnalysisBundle;byte
   try{const rows=parseCsv(bytes.get(aggregate.snapshot.id)!);profiles=normalizeGameProfiles(bundle.game,rows);validateGameProfileFinality(bundle.game,rows,profiles,bundle.plays);}
   catch{profiles=[];}
  }
- const audit=buildGameAudit({game:bundle.game,plays:bundle.plays,profiles,reference:historical.reference,referenceChecksum:historical.checksum,events:bundle.analysis.events});
+ let audit=buildGameAudit({game:bundle.game,plays:bundle.plays,profiles,reference:historical.reference,referenceChecksum:historical.checksum,events:bundle.analysis.events});
  const spread=await loadSpreadReference();
  audit.market=buildMarketAudit(bundle.game,{...schedule.snapshot,path:''},spread);
+ const expected=applyExpectationsAudit(bundle.game,{...bundle.analysis,gameAudit:audit},await loadExpectationsReference());
+ audit=expected.gameAudit!;
+ if(stableJson(expected.models.find(model=>model.id===EXPECTATIONS_MODEL_ID))!==stableJson(bundle.analysis.models.find(model=>model.id===EXPECTATIONS_MODEL_ID)))fail('bundle_expectation_mismatch','Expectation model metadata does not match the frozen reference.');
  if(stableJson(audit)!==stableJson(bundle.analysis.gameAudit))fail('bundle_audit_mismatch','Game audit does not match the bundled sources and fixed historical reference.');
  const market=applySpreadAudit(bundle.game,bundle.analysis,[{...schedule.snapshot,path:''}],spread);
  if(stableJson(market.models.find(model=>model.id===SPREAD_MODEL_ID))!==stableJson(bundle.analysis.models.find(model=>model.id===SPREAD_MODEL_ID)))fail('bundle_market_mismatch','Market model metadata does not match the frozen reference.');

@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { z } from 'zod';
 import { gameProfileSchema, type Game, type GameProfile, type GameProfileReference, type SourceSnapshot } from './contracts.js';
-import { numberOrNull, parseCsv, type ProviderRow } from './normalize.js';
+import { numberOrNull, parseCsv, validateGameData, type ProviderRow } from './normalize.js';
 import { SOURCE_LICENSES, SourceError, type SnapshotStore } from './sources.js';
 
 const aliases:Record<string,string>={OAK:'LV',SD:'LAC',STL:'LA',LAR:'LA',JAC:'JAX',WSH:'WAS'};
@@ -59,9 +59,42 @@ export function validateGameProfileFinality(game:Game,rows:ProviderRow[],profile
    if(value===null||!Number.isInteger(value)||value<0)throw new SourceError('team_stats_scoring_incomplete','Aggregate scoring components are missing or invalid.',true);
    points+=weight*value;
   }
-  // Offensive fumble recoveries and other unusual scoring may be unrepresentable by this
-  // conservative decomposition. A mismatch withholds comparison instead of guessing.
-  if(profile.pointsFor===null||points!==profile.pointsFor)throw new SourceError('team_stats_score_mismatch','Aggregate scoring does not reconcile with the final schedule score.',true);
+  // Recovery TDs are not consistently included in the aggregate defensive TD field.
+  // Resolve only an exact missing defensive-fumble score, independently established
+  // by complete validated PBP. The profile's aggregate statistics remain untouched.
+  if(profile.pointsFor===null||points!==profile.pointsFor){
+   const deficit=profile.pointsFor===null?null:profile.pointsFor-points;
+   const recoveries=row?stat(row,'fumble_recovery_tds'):null;
+   const yes=(value:unknown)=>value===true||value===1||value==='1';
+   const no=(value:unknown)=>value===false||value===0||value==='0';
+   // Raw R JSON can encode these binary indicators as booleans. Preserve unknowns
+   // while making the existing numeric scoring validator compare equivalent data.
+   const validationFlags=new Set(['extra_point_attempt','two_point_attempt','safety','defensive_extra_point_conv','defensive_two_point_conv','touchdown','interception','fumble_lost','kickoff_attempt','punt_attempt','field_goal_attempt']);
+   const validationPlays=finalPbp?.map(play=>Object.fromEntries(Object.entries(play).map(([key,value])=>[key,validationFlags.has(key)&&typeof value==='boolean'?Number(value):value])));
+   let reconciled=false;
+   if(deficit!==null&&deficit>0&&deficit%6===0&&recoveries===deficit/6&&finalPbp?.length&&validationPlays&&validateGameData(game,validationPlays).valid){
+    const touchdowns=finalPbp.filter(p=>yes(p.touchdown)&&team(p.td_team)===team(profile.team)&&p.play_type!=='no_play'&&!yes(p.no_play)&&!yes(p.two_point_attempt)&&!yes(p.extra_point_attempt));
+    const defensiveRecoveries=touchdowns.filter(p=>['run','pass'].includes(String(p.play_type))&&team(p.defteam)===team(profile.team)&&p.posteam===profile.opponent
+     &&yes(p.fumble_lost)&&yes(p.fumble)&&yes(p.return_touchdown)&&no(p.pass_touchdown)&&no(p.rush_touchdown)&&no(p.interception)
+     &&team(p.fumble_recovery_1_team)===team(profile.team)&&(p.fumble_recovery_2_team===null||p.fumble_recovery_2_team===undefined)
+     &&no(p.kickoff_attempt)&&no(p.punt_attempt));
+    const representedTouchdowns=['passing_tds','rushing_tds','def_tds','special_teams_tds'].reduce((n,key)=>n+stat(row!,key)!,0);
+    const classified={passing_tds:0,rushing_tds:0,def_tds:0,special_teams_tds:0};let ambiguous=false;
+    for(const play of touchdowns){
+     if(defensiveRecoveries.includes(play))continue;
+     const kinds=[
+      play.posteam===profile.team&&yes(play.pass_touchdown)?'passing_tds':null,
+      play.posteam===profile.team&&yes(play.rush_touchdown)?'rushing_tds':null,
+      play.defteam===profile.team&&yes(play.interception)&&yes(play.return_touchdown)?'def_tds':null,
+      (yes(play.kickoff_attempt)||yes(play.punt_attempt)||yes(play.field_goal_attempt))&&yes(play.return_touchdown)?'special_teams_tds':null,
+     ].filter((kind):kind is keyof typeof classified=>kind!==null);
+     if(kinds.length!==1){ambiguous=true;break;}classified[kinds[0]]++;
+    }
+    reconciled=!ambiguous&&Object.entries(classified).every(([key,count])=>stat(row!,key)===count)
+     &&defensiveRecoveries.length===recoveries&&touchdowns.length===representedTouchdowns+recoveries;
+   }
+   if(!reconciled)throw new SourceError('team_stats_score_mismatch','Aggregate scoring does not reconcile with the final schedule score.',true);
+  }
  }
  if(!finalPbp?.length||finalPbp.at(-1)?.desc!=='END GAME')throw new SourceError('team_stats_final_pbp_unavailable','Validated final play-by-play is required to check aggregate completeness.',true);
  const totals=new Map(profiles.map(p=>[team(p.team),{yards:0,plays:0}]));
