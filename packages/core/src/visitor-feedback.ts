@@ -15,7 +15,7 @@ export interface PublicVisitorFeedback extends VisitorFeedback {id:string;revisi
 export interface PublicFeedbackPage {entries:PublicVisitorFeedback[];nextCursor:string|null;summary:FeedbackSummary}
 export interface FeedbackSummary {total:number;agree:number;disagree:number;ratingCount:number;averageRating:number|null;ratings:{rating:FeedbackRating;count:number}[]}
 export class FeedbackError extends Error {constructor(public status:number,message:string){super(message);}}
-const supportedRules=(value:string)=>value===SUSPICION_RULES_VERSION||value==='game-suspicion-v2';
+const supportedRules=(value:string)=>value===SUSPICION_RULES_VERSION||value==='game-suspicion-v2'||value==='game-suspicion-v3';
 const revisionSchema=z.object({revisionId:z.uuid(),rulesVersion:z.string().refine(supportedRules)});
 const submissionSchema=revisionSchema.extend({action:z.enum(['thumb','details']).default('details'),agreement:z.enum(['agree','disagree']),rating:z.number().int().min(1).max(5).nullable().default(null),modelRating:z.number().int().min(1).max(5),comment:z.string().max(FEEDBACK_COMMENT_LIMIT).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value)).transform(value=>value.replaceAll('\r\n','\n').trim()).default(''),public:z.boolean().default(false)}).strict();
 export type FeedbackSubmission=z.infer<typeof submissionSchema>;

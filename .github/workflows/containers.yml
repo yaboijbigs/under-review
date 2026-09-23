@@ -21,8 +21,18 @@ permissions:
 jobs:
   verify:
     uses: ./.github/workflows/verify.yml
-  web:
+  release-gate:
     needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Require an accepted algorithm evaluation before publication
+        run: node scripts/check-release-gate.mjs
+  web:
+    needs: release-gate
     if: inputs.component != 'worker'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -42,7 +52,7 @@ jobs:
           printf '%s' "$REGISTRY_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
           docker push ghcr.io/${{ github.repository_owner }}/under-review-web:${{ github.sha }}
   worker:
-    needs: verify
+    needs: release-gate
     if: inputs.component != 'web'
     runs-on: ubuntu-latest
     timeout-minutes: 90

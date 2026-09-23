@@ -12,6 +12,8 @@ import { applyOvertimeTimeline,loadOvertimeReference } from './overtime-integrat
 import { applySpreadAudit,loadSpreadReference } from './spread.js';
 import { loadExpectationsReference } from './expectations.js';
 import { applyExpectationsAudit } from './expectations-integration.js';
+import {loadOfficiatingReference} from './officiating-reference.js';
+import {applyOfficiatingAudit} from './officiating-integration.js';
 
 const store=()=>new LocalSnapshotStore(path.join(config.dataDir,'snapshots'));
 export async function syncSeason(season:number,scheduleJobs=true){
@@ -56,6 +58,7 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  analysis.models.push({id:'game-profile-audit',version:analysis.gameAudit.version,...(historical?{checksum:historical.checksum}:{}),trainingWindow:historical?`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`:null,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'});
  analysis=applySpreadAudit(game,analysis,snapshots,await loadSpreadReference());
  analysis=applyExpectationsAudit(game,analysis,await loadExpectationsReference());
+ analysis=applyOfficiatingAudit(game,ingested.plays,analysis,await loadOfficiatingReference());
  analysis.warnings=[...new Set([...analysis.warnings,...ingested.warnings,...profileSource.warnings])];
  const revision=await saveAnalysis(game,ingested.plays,snapshots,analysis,ingested.sourceKind);
  if(!backfill){

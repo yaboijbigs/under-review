@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { gameExpectationsSchema } from './expectations-contracts.js';
+import { officiatingAuditSchema } from './officiating-contracts.js';
 
 export const gameSchema = z.object({
   id:z.string(), season:z.number().int(), week:z.number().int(), gameType:z.string(),
@@ -47,7 +48,7 @@ export const gameAuditSchema=z.object({
   profiles:z.array(gameProfileSchema),flags:z.array(gameAuditFlagSchema),reviewCandidates:z.array(reviewCandidateSchema),
   context:z.array(z.object({team:z.string().nullable(),text:z.string(),playIds:z.array(z.string()),kind:z.string()})),
   reference:z.object({version:z.string(),checksum:z.string().nullable(),startSeason:z.number().nullable(),endSeason:z.number().nullable(),teamGames:z.number().int()}),
-  notes:z.array(z.string()),market:marketAuditSchema.optional(),expectations:gameExpectationsSchema.optional()
+  notes:z.array(z.string()),market:marketAuditSchema.optional(),expectations:gameExpectationsSchema.optional(),officiating:officiatingAuditSchema.optional()
 });
 export type GameAudit=z.infer<typeof gameAuditSchema>;
 export const analysisSchema=z.object({

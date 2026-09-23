@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "candidate": "game-suspicion-v4",
+  "status": "blocked",
+  "reasons": [
+    "The supported enforcement subset omits known third/fourth-down extensions; an ordinary subset result can misleadingly label the whole game Fair.",
+    "Expected-point impact can be extreme in low-leverage situations and does not establish outcome-changing interference.",
+    "Only 33.5% of accepted penalties in the reserved 2024/2025 seasons were valued; 96 of 544 games were unrated."
+  ],
+  "decision": "Keep the implemented candidate available for offline and isolated integration evaluation. Do not publish containers or promote it to the live site until these issues are resolved and a new evaluation is reviewed."
+}

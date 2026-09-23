@@ -47,6 +47,8 @@ jobs:
         run: npm test
       - name: Verify the frozen expectations reference from offline sources
         run: node scripts/build-expectations-reference.mjs --verify
+      - name: Validate the frozen officiating reference and reproduce its real-game candidate
+        run: node --import tsx scripts/seed-feedback-smoke.ts --validate-only
       - name: Build production web application
         run: npm run build
       - name: Seed the disposable browser-test database
@@ -75,10 +77,12 @@ jobs:
           SMOKE_GAME_ID: 2025_12_MIN_GB
           SMOKE_SEASON: '2025'
           SMOKE_EXPECTATIONS: 'true'
+          SMOKE_OFFICIATING: 'true'
           SMOKE_REFEREE_EXPECTED: 'true'
           SMOKE_OLD_REPORT_REVISION: '1'
           SMOKE_LEGACY_REPORT_REVISION: '2'
-        run: npx playwright test --config apps/web/playwright.config.ts apps/web/tests/consumer.spec.ts apps/web/tests/game-audit.spec.ts apps/web/tests/real-data.spec.ts apps/web/tests/public.spec.ts --grep 'browsing game cards|all weeks|report verdict|computed game audit|current comparisons|older immutable|immutable legacy|real report exposes|methodology preserves' --workers 2 --output artifacts/consumer-browser --reporter line
+          SMOKE_EXPECTATIONS_REPORT_REVISION: '3'
+        run: npx playwright test --config apps/web/playwright.config.ts apps/web/tests/consumer.spec.ts apps/web/tests/game-audit.spec.ts apps/web/tests/real-data.spec.ts apps/web/tests/public.spec.ts --grep 'browsing game cards|all weeks|report verdict|computed game audit|current comparisons|candidate comparisons|older immutable|immutable legacy|real report exposes|methodology preserves' --workers 2 --output artifacts/consumer-browser --reporter line
       - name: Verify feedback on desktop and mobile
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:4380
@@ -86,6 +90,7 @@ jobs:
           SMOKE_SEASON: '2025'
           SMOKE_MARKET_EXPECTED: 'true'
           SMOKE_EXPECTATIONS: 'true'
+          SMOKE_OFFICIATING: 'true'
         run: npx playwright test --config apps/web/playwright.config.ts apps/web/tests/rating-feedback.spec.ts --workers 2 --output artifacts/feedback-browser --reporter line
       - name: Preserve browser evidence and preview logs
         if: always()

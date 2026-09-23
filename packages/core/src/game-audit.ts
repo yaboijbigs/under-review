@@ -1,7 +1,7 @@
 import type { EvidenceEvent, Game, GameAudit, GameAuditFlag, GameProfile, GameProfileReference, ReviewCandidate } from './contracts.js';
 import type { ProviderRow } from './normalize.js';
 
-export const GAME_AUDIT_VERSION = 'under-review-game-audit-v5';
+export const GAME_AUDIT_VERSION = 'under-review-game-audit-v6';
 export const LEGACY_GAME_AUDIT_VERSION = 'under-review-game-audit-v4';
 
 const finite = (value: unknown): number | null => value === null || value === undefined || value === '' || typeof value === 'boolean' || !Number.isFinite(Number(value)) ? null : Number(value);

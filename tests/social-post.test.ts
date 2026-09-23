@@ -132,6 +132,6 @@ describe('original automatic X final report prose',()=>{
   const a=expectationsAudit(4);a.expectations!.outcome.residual=999;
   const draft=renderSocialPost(game,analysis(a),reportUrl);expect(draft.text).toContain('⚪ UNRATED');expect(draft.text).not.toContain('999');expect(draft.evidenceIds).toEqual([]);
  });
- it('versions the changed templates',()=>expect(SOCIAL_TEMPLATE_VERSION).toBe('game-final-screening-v4'));
+ it('versions the changed templates',()=>expect(SOCIAL_TEMPLATE_VERSION).toBe('game-final-screening-v5'));
  it('does not validate an unscored game for publication',()=>expect(renderSocialPost({...game,homeScore:null},analysis(),reportUrl).valid).toBe(false));
 });
