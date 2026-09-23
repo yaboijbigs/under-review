@@ -2,6 +2,7 @@ import { getReport } from '@under-review/core/repository';
 import { getGameVerdict } from '@under-review/core/consumer-summary';
 import { pool } from '@under-review/core/db';
 import { safeError } from '@under-review/core/config';
+import { checkSiteReadiness } from './site-readiness.js';
 
 try {
  const games=(process.env.SEED_GAMES??'').split(',').filter(Boolean);
@@ -27,6 +28,6 @@ try {
  // Existing schema-validated reports remain readable while audit upgrades run.
  // The separate coverage service requires the current audit version on all games.
  // Website readiness is independent of social drafts and manual officiating reviews.
- // The existing check still verifies that live social publication is disabled.
- await import('./staging-check.js');
-}catch(error){console.error(JSON.stringify({event:'public.check.failed',error:safeError(error)}));process.exitCode=1;await pool.end().catch(()=>{});}
+ // Authorized production automation does not prevent the website from becoming ready.
+ console.log(JSON.stringify({event:'public.check',...await checkSiteReadiness({staging:false,games})}));
+}catch(error){console.error(JSON.stringify({event:'public.check.failed',error:safeError(error)}));process.exitCode=1;}finally{await pool.end().catch(()=>{});}
