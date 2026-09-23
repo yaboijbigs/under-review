@@ -125,6 +125,21 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     vi.stubEnv('X_REDIRECT_URI','https://attacker.example/callback');expect((await publishing.getPublishingReadiness()).connectionReady).toBe(false);
     await expect(publishing.beginXConnection(adminId)).rejects.toThrow('exact callback');expect(requests).toHaveLength(0);
   });
+  it('refreshes the same unapproved dry-run revision with current text, evidence, template and matching metadata',async()=>{
+    await useNflTeamCodes();const first=await publishing.createDraft(gameId);
+    await db.query("UPDATE publication_outbox SET text='Old template',evidence_ids='[\"old-evidence\"]',template_version='game-final-screening-v2',reason='Old preview' WHERE id=$1",[first.id]);
+    const expected=await publishing.buildAutoPostPreview(gameId),again=await publishing.createDraft(gameId);
+    expect(again).toEqual({id:first.id,text:expected.text,evidenceIds:expected.evidenceIds,weightedLength:expected.weightedLength,valid:true});
+    expect((await db.query('SELECT text,evidence_ids,template_version,status,approved_by,reason FROM publication_outbox WHERE id=$1',[first.id])).rows[0]).toEqual({text:expected.text,evidence_ids:expected.evidenceIds,template_version:expected.templateVersion,status:'draft',approved_by:null,reason:'Dry-run preview.'});
+    expect((await db.query('SELECT count(*)::int n FROM publication_outbox')).rows[0].n).toBe(1);expect(requests).toHaveLength(0);
+  });
+  it('preserves an approved dry-run and reports metadata for its stored historical text',async()=>{
+    const draft=await publishing.createDraft(gameId),oldText='Previously approved preview';
+    await db.query("UPDATE publication_outbox SET text=$2,evidence_ids='[\"old-evidence\"]',template_version='game-final-screening-v2',status='approved',approved_by=$3 WHERE id=$1",[draft.id,oldText,adminId]);
+    const before=(await db.query('SELECT * FROM publication_outbox WHERE id=$1',[draft.id])).rows[0],again=await publishing.createDraft(gameId);
+    expect(again).toEqual({id:draft.id,text:oldText,evidenceIds:['old-evidence'],weightedLength:oldText.length,valid:false});
+    expect((await db.query('SELECT * FROM publication_outbox WHERE id=$1',[draft.id])).rows[0]).toEqual(before);expect(requests).toHaveLength(0);
+  });
 
   it('requires a separate administrator authorization; automatic and ordinary approval keep the cutoff',async()=>{
     const draft=await historicalDraft();

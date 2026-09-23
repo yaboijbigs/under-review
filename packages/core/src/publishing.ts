@@ -6,6 +6,7 @@ import { getReport } from './repository.js';
 import type { EvidenceDraft } from './summaries.js';
 import { renderSocialPost,validateSocialPost,SOCIAL_TEMPLATE_VERSION,SOCIAL_API_TEMPLATE_VERSION } from './social-post.js';
 import { getGameVerdict } from './consumer-summary.js';
+import twitterText from 'twitter-text';
 
 export interface PublishingSettings {mode:'off'|'draft-only'|'automatic';killSwitch:boolean;accountId:string|null;activatedAt:string|null}
 export async function getPublishingSettings():Promise<PublishingSettings>{return (await query("SELECT value FROM settings WHERE key='publishing'")).rows[0]?.value??{mode:'draft-only',killSwitch:true,accountId:null,activatedAt:null};}
@@ -64,7 +65,15 @@ export async function createDraft(gameId:string,kind:'initial'|'correction'|'upd
  const draft=renderSocialPost(report.game,report.revision.analysis,url,kind);
  if(!validateSocialPost(draft.text,draft))throw new Error('Evidence or platform validation failed.');
  const id=randomUUID();const result=await query(`INSERT INTO publication_outbox(id,game_id,revision_id,kind,mode,status,text,evidence_ids,reason,template_version)
- VALUES($1,$2,$3,$4,'dry_run','draft',$5,$6,$7,$8) ON CONFLICT(game_id,revision_id,account_id,kind,mode) DO UPDATE SET game_id=excluded.game_id RETURNING id,text,evidence_ids`,[id,gameId,report.revision.id,kind,draft.text,JSON.stringify(draft.evidenceIds),config.staging?'Private staging URL: preview only, not publishable.':'Dry-run preview.',SOCIAL_TEMPLATE_VERSION]);return {id:result.rows[0].id,...draft,text:result.rows[0].text,evidenceIds:result.rows[0].evidence_ids};
+ VALUES($1,$2,$3,$4,'dry_run','draft',$5,$6,$7,$8) ON CONFLICT(game_id,revision_id,account_id,kind,mode) DO UPDATE
+ SET text=excluded.text,evidence_ids=excluded.evidence_ids,reason=excluded.reason,template_version=excluded.template_version,updated_at=now()
+ WHERE publication_outbox.mode='dry_run' AND publication_outbox.status='draft' AND publication_outbox.approved_by IS NULL
+ RETURNING id,text,evidence_ids,template_version`,[id,gameId,report.revision.id,kind,draft.text,JSON.stringify(draft.evidenceIds),config.staging?'Private staging URL: preview only, not publishable.':'Dry-run preview.',SOCIAL_TEMPLATE_VERSION]);
+ // An already-approved preview is history. Return its own metadata rather than
+ // attaching a new template's length or validation result to its preserved text.
+ const stored=result.rows[0]??(await query("SELECT id,text,evidence_ids,template_version FROM publication_outbox WHERE game_id=$1 AND revision_id=$2 AND account_id='unconnected' AND kind=$3 AND mode='dry_run'",[gameId,report.revision.id,kind])).rows[0];
+ if(!stored)throw new Error('The draft changed while it was being prepared; reload and try again.');
+ return {id:stored.id,text:stored.text,evidenceIds:stored.evidence_ids,weightedLength:twitterText.parseTweet(stored.text).weightedLength,valid:stored.template_version===SOCIAL_TEMPLATE_VERSION&&validateSocialPost(stored.text,draft)};
 }
 export async function setPublishing(mode:PublishingSettings['mode'],accountId:string|null,userId:string){
  const current=await getPublishingSettings();
