@@ -7,6 +7,15 @@ import { teamSocialHandle, teamShortName } from './team-social.js';
 export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v4';
 export const SOCIAL_API_TEMPLATE_VERSION = `${SOCIAL_TEMPLATE_VERSION}-names`;
 export type SocialRecipientStyle = 'handles' | 'names';
+/** Recognize stored historical formats without relying on the moving current version. */
+export function recognizedPublicationFooter(text:string,templateVersion:string|null,reportUrl:string):boolean{
+ if(templateVersion==='game-final-screening-v4-names'){
+  // twitter-text excludes reserved/unknown TLDs; explicit URL schemes must also fail closed.
+  return !/https?:\/\//i.test(text)&&twitterText.extractUrls(text).length===0&&text.endsWith('\n\n#NFL #UnderReview');
+ }
+ const legacyVersion=templateVersion==null||['game-final-screening-v1','game-final-screening-v2','game-final-screening-v3','game-final-screening-v3-names'].includes(templateVersion);
+ return legacyVersion&&(text.endsWith(reportUrl)||text.endsWith(`\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`));
+}
 const headings = {1:'🟢 FAIR — 1/5',2:'🟡 DEBATABLE — 2/5',3:'🟠 HMM — 3/5',4:'🔴 SUS — 4/5',5:'🚨🚨 RIGGED? 🚨🚨'} as const;
 const conditions: Record<string, string> = {
   'Total offense below 200 yards': 'under 200 offensive yards',

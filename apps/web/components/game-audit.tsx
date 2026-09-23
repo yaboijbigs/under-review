@@ -4,6 +4,7 @@ import { getGameVerdict, SUSPICION_SCALE } from "@under-review/core/consumer-sum
 import { auditLabel, human, referencePeriod, teamName } from "@/lib/presentation";
 import { MarketComparison } from "@/components/market-comparison";
 import { ExpectedPerformance } from "@/components/game-expectations";
+import { RatingBreakdown } from "@/components/rating-breakdown";
 
 export function GameVerdict({audit}: {audit: GameAudit | undefined}) {
   const verdict = getGameVerdict(audit);
@@ -13,7 +14,7 @@ export function GameVerdict({audit}: {audit: GameAudit | undefined}) {
       <ol className="rating-scale" aria-label="Game suspicion rating scale">{SUSPICION_SCALE.map(tier=><li key={tier.level} data-level={tier.rating} data-selected={tier.rating===verdict.rating} aria-current={tier.rating===verdict.rating ? "step" : undefined}><span className="rating-tick" aria-hidden="true"/><span>{tier.label}</span></li>)}</ol>
       <p className="verdict-summary">{verdict.summary}</p>{verdict.reasons.length>0 && <ul className="verdict-reasons">{verdict.reasons.slice(0,3).map((reason,index)=><li key={index}>{reason}</li>)}</ul>}{verdict.cluster && <div className="event-links rating-play-links" aria-label="Penalty sequence behind the rating">{verdict.cluster.playIds.map(id=><a key={id} href={`#play-${encodeURIComponent(id)}`}>Inspect play {id} ↗</a>)}</div>}</div>
     {comparison && comparison.matchingGames>0 && <aside className="verdict-comparison"><span className="eyebrow">THE HISTORICAL COMPARISON</span><strong>{comparison.wins}<span> / {comparison.matchingGames}</span></strong><p>similar past team performances ended in a win</p><span className="comparison-period">{referencePeriod(comparison.startSeason,comparison.endSeason)}</span><a href="#game-audit">See the comparison →</a></aside>}
-    <div className="verdict-note"><a href="/methodology#verdicts">How we rate games ↗</a></div>
+    <RatingBreakdown audit={audit}/>
   </section>;
 }
 
@@ -29,7 +30,7 @@ const profileRows: {key: keyof Pick<GameProfile, "pointsFor" | "totalYards" | "p
 
 function ProfileTable({profiles, game}: {profiles: GameProfile[]; game: Game}) {
   const ordered = [game.awayTeam, game.homeTeam].map(team => profiles.find(profile => profile.team === team));
-  return <div className="audit-profile"><div className="audit-subheading"><span className="eyebrow">THE BOX SCORE THAT MATTERS</span><h3>How the teams performed</h3></div>
+  return <div className="audit-profile"><div className="audit-subheading"><h3>How the teams performed</h3></div>
     <div className="table-scroll"><table className="profile-table"><caption className="sr-only">Actual team statistics for {game.awayTeam} at {game.homeTeam}</caption><thead><tr><th scope="col">Game statistic</th>{ordered.map((profile,index) => <th scope="col" key={index}><span>{index === 0 ? game.awayTeam : game.homeTeam}</span>{profile?.pointsFor !== null && profile?.pointsFor !== undefined && profile.pointsAgainst !== null && <small>{profile.pointsFor > profile.pointsAgainst ? "WIN" : profile.pointsFor < profile.pointsAgainst ? "LOSS" : "TIE"}</small>}</th>)}</tr></thead><tbody>{profileRows.map(row => <tr key={row.key}><th scope="row">{row.label}</th>{ordered.map((profile,index) => {const value=profile?.[row.key]??null;return <td key={index}>{row.signed && value !== null && value > 0 ? "+" : ""}{count(value)}</td>;})}</tr>)}</tbody></table></div>
   </div>;
 }
@@ -50,7 +51,7 @@ export function GameAnomalyAudit({audit, game, fallbackSummary}: {audit: GameAud
   if(audit && !prominentFlags.length){const sparse=audit.flags.find(flag=>flag.status==='rare_sample');if(sparse)prominentFlags.push(sparse);}
   const additionalFlags=audit?.flags.filter(flag=>!prominentFlags.some(shown=>shown.id===flag.id))??[];
   return <section id="game-audit" className={`game-audit ${audit ? `audit-${audit.status}` : "audit-not-computed"}`} aria-labelledby="game-audit-title">
-    <div className="audit-heading"><div><p className="eyebrow">THE RESULT IN CONTEXT</p><h2 id="game-audit-title">Why this result stands out—or doesn’t</h2></div></div>
+    <div className="audit-heading"><h2 id="game-audit-title">Why this result stands out—or doesn’t</h2></div>
     {audit ? <>
       <ProfileTable profiles={audit.profiles} game={game}/>
       <MarketComparison market={audit.market} currentRules={audit.version==='under-review-game-audit-v5'}/>
@@ -59,7 +60,7 @@ export function GameAnomalyAudit({audit, game, fallbackSummary}: {audit: GameAud
       {(prominentFlags.length > 0 || additionalFlags.length > 0) && <details className="additional-profile-comparisons"><summary>Explore the historical comparisons ({prominentFlags.length+additionalFlags.length})</summary><p className="small muted">These patterns overlap. They are separate comparisons, not independent evidence of multiple problems.</p><div className="audit-flags">{[...prominentFlags,...additionalFlags].map(flag=><HistoricalFlag key={flag.id} flag={flag}/>)}</div></details>}
       <details className="audit-method"><summary>Historical coverage & audit method</summary><p>{count(audit.reference.teamGames)} prior team-games · {referencePeriod(audit.reference.startSeason,audit.reference.endSeason)}</p><p>Audit: {audit.version}<br/>Reference: {audit.reference.version}</p>{audit.reference.checksum && <code className="checksum">Reference SHA-256: {audit.reference.checksum}</code>}{audit.notes.length > 0 && <ul>{audit.notes.map((note,index)=><li key={index}>{note}</li>)}</ul>}</details>
     </> : <div className="audit-missing"><h3>Historical comparison not available</h3><p>This saved report does not include the game-level comparison. That is a data gap, not a finding that the game was ordinary.</p>{fallbackSummary && <details><summary>Earlier analysis summary</summary><p>{fallbackSummary}</p></details>}</div>}
-    <div className="audit-footer"><span>{audit ? "Historical comparisons · exact counts" : "Historical comparisons not yet computed"}</span><Link href="/methodology#game-audit-method">How the historical comparison works ↗</Link></div>
+    <div className="audit-footer"><Link href="/methodology#game-audit-method">Historical comparison methodology ↗</Link></div>
   </section>;
 }
 
@@ -75,7 +76,7 @@ function Candidate({candidate}: {candidate: ReviewCandidate}) {
 
 export function NeedsReview({audit}: {audit: GameAudit | undefined}) {
   const candidates=audit?.reviewCandidates;
-  return <section id="needs-review" className={`needs-review ${candidates?.length ? "has-key-plays" : "no-key-plays"}`} aria-labelledby="needs-review-title"><details className="report-disclosure"><summary><span><strong id="needs-review-title">Notable plays {candidates && <span className="count">{candidates.length}</span>}</strong><span className="disclosure-description">Optional play details behind the automatic scan.</span></span><span aria-hidden="true">+</span></summary><div className="disclosure-body">
+  return <section id="needs-review" className={`needs-review ${candidates?.length ? "has-key-plays" : "no-key-plays"}`} aria-labelledby="needs-review-title"><details className="report-disclosure"><summary><span><strong id="needs-review-title">Notable plays {candidates && <span className="count">{candidates.length}</span>}</strong></span><span aria-hidden="true">+</span></summary><div className="disclosure-body">
     {!candidates ? <p className="review-empty">This saved report does not include the automatic key-play scan.</p> : candidates.length ? <><p className="review-intro">These recorded events provide context. Their count does not determine the game rating.</p><div className="review-candidates">{candidates.slice(0,4).map(candidate=><Candidate key={candidate.id} candidate={candidate}/>)}</div>{candidates.length>4 && <details className="more-candidates"><summary>Show {candidates.length-4} more {candidates.length-4 === 1 ? "play" : "plays"}</summary><div className="review-candidates">{candidates.slice(4).map(candidate=><Candidate key={candidate.id} candidate={candidate}/>)}</div></details>}</> : <p className="review-empty">No plays met the scan criteria.</p>}
   </div></details></section>;
 }

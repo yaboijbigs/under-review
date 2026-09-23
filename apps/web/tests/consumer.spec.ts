@@ -95,7 +95,7 @@ test("report verdict and completed automation are separate from human review",as
   await expect(page.locator('#verdict-title')).not.toBeEmpty();
   await expect(page.locator('.rating-scale > li')).toHaveCount(5);
   await expect(page.locator('.rating-boundary')).toHaveCount(0);
-  await expect(page.getByRole('link',{name:'How we rate games',exact:false})).toBeVisible();
+  await expect(page.getByText('How this rating was calculated',{exact:true})).toBeVisible();
   const rating=await page.locator('.game-verdict').getAttribute('data-rating');
   const selected=page.locator('.rating-scale [aria-current="step"]');
   if(rating==='unrated')await expect(selected).toHaveCount(0);
@@ -105,7 +105,7 @@ test("report verdict and completed automation are separate from human review",as
   await page.getByRole('link',{name:'Data & updates',exact:true}).click();
   await expect(page.locator('#provenance > details')).toHaveAttribute('open','');
   await expect(page.getByRole('heading',{name:'Automatic analysis',exact:true})).toBeVisible();
-  await expect(page.locator('.report-status-explained')).toContainText('This report was generated automatically');
+  await expect(page.locator('.report-status-explained')).toContainText('Updates automatically when source data changes');
   const candidate=page.locator('.review-candidate').last();
   if(await candidate.count()){
     const id=await candidate.getAttribute('id');

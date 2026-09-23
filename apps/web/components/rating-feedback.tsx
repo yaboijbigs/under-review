@@ -48,18 +48,17 @@ export function RatingFeedback({gameId,revisionId,revisionNumber,rating:modelRat
  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!agreement||!ready||saving||pendingThumb)return;await persist('details',agreement);}
  const chooseRating=(value:string)=>{edited.current.rating=true;setRating(Number(value) as Rating);};
  return <section className={`rating-feedback${compact?' rating-feedback-compact':''}`} aria-labelledby={`${id}-title`} data-report-version={revisionNumber}>
-  <div className={compact?'sr-only':undefined}><h3 id={`${id}-title`}>Do you agree with this rating?</h3>{!compact&&<p>Share your take with other fans.</p>}</div>
+  <div className={compact?'sr-only':undefined}><h3 id={`${id}-title`}>Do you agree with this rating?</h3></div>
   <div className="feedback-thumb-row"><div className="feedback-choices" aria-label="Agreement with the game rating">
    {(['agree','disagree'] as const).map(value=><button key={value} type="button" className="feedback-choice" aria-label={value==='agree'?'Agree':'Disagree'} title={value==='agree'?'Agree with this rating':'Disagree with this rating'} aria-pressed={agreement===value} aria-describedby={`${id}-public`} aria-controls={`${id}-form`} aria-expanded={agreement!==null} disabled={saving||pendingThumb!==null} onClick={()=>{edited.current.agreement=true;setAgreement(value);setActivated(true);setPendingThumb(value);}}><span aria-hidden="true">{value==='agree'?'👍':'👎'}</span>{!compact&&<> {value==='agree'?'Agree':'Disagree'}</>}</button>)}
   </div><a className="public-feedback-link" href={`/games/${encodeURIComponent(gameId)}#fan-feedback`}>See Public Feedback{compact?` (${count})`:''}</a></div>
-  <p id={`${id}-public`} className="small feedback-public-notice">Thumbs are public. One response per browser, per game.</p>
+  <span id={`${id}-public`} className="sr-only">Your vote is public.</span>
   {agreement && <form className="feedback-form" id={`${id}-form`} onSubmit={submit}>
    <label htmlFor={`${id}-rating`}>How would you rate this game? <strong>{rating===null?'Optional · not selected':`${SUSPICION_SCALE[rating-1].label} · ${rating}/5`}</strong></label>
    <input className="feedback-slider" id={`${id}-rating`} name="rating" type="range" min="1" max="5" step="1" value={rating??3} onChange={event=>chooseRating(event.target.value)} onPointerUp={event=>chooseRating(event.currentTarget.value)} data-chosen={rating!==null} aria-valuetext={rating===null?'No rating selected. Move the slider to add one.':`${SUSPICION_SCALE[rating-1].label}, ${rating} of 5`} disabled={saving}/>
    <div className="feedback-labels" aria-hidden="true">{SUSPICION_SCALE.map(tier=><span key={tier.level} data-selected={tier.rating===rating}>{tier.label}</span>)}</div>
-   <label htmlFor={`${id}-comment`}>Why? <span>(optional)</span></label><textarea id={`${id}-comment`} name="comment" value={comment} maxLength={1000} rows={3} onChange={event=>{edited.current.comment=true;setComment(event.target.value);}} placeholder="Which plays or patterns shaped your view? Please leave out personal information." disabled={saving}/>
+   <label htmlFor={`${id}-comment`}>Why? <span>(optional, public)</span></label><textarea id={`${id}-comment`} name="comment" value={comment} maxLength={1000} rows={3} onChange={event=>{edited.current.comment=true;setComment(event.target.value);}} placeholder="What shaped your view? Leave out personal information." disabled={saving}/>
    {rating!==null&&<button className="feedback-clear-rating" type="button" disabled={saving} onClick={()=>{edited.current.rating=true;setRating(null);}}>Clear optional rating</button>}
-   <p className="small muted">Details will be public too. Don’t include personal information.</p>
    {saved&&!saved.public&&<p className="small muted">Your earlier response is private. Submit again to share it publicly.</p>}
    <div className="feedback-actions"><button className="button dark" type="submit" disabled={!ready||saving||pendingThumb!==null||unchanged}>{saving?'Saving…':'Save details'}</button><span className="small muted">{comment.length}/1,000</span></div>
   </form>}

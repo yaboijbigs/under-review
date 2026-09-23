@@ -4,7 +4,7 @@ import { query,transaction,audit } from './db.js';
 import { config,safeError } from './config.js';
 import { getReport } from './repository.js';
 import type { EvidenceDraft } from './summaries.js';
-import { renderSocialPost,validateSocialPost,SOCIAL_TEMPLATE_VERSION,SOCIAL_API_TEMPLATE_VERSION } from './social-post.js';
+import { renderSocialPost,validateSocialPost,recognizedPublicationFooter,SOCIAL_TEMPLATE_VERSION,SOCIAL_API_TEMPLATE_VERSION } from './social-post.js';
 import { getGameVerdict } from './consumer-summary.js';
 import twitterText from 'twitter-text';
 
@@ -286,13 +286,7 @@ export async function reconcilePublication(outboxId:string,resolution:'posted'|'
   const body=await response.json() as {data?:{id?:string;author_id?:string;text?:string;entities?:unknown}};
   if(body.data?.id!==externalId||body.data.author_id!==row.account_id)throw new Error('The supplied post does not belong to the intended X account.');
   const reportUrl=`${config.siteUrl}/games/${encodeURIComponent(row.game_id)}?revision=${row.number}`;
-  // Historical reconciliation uses the stored version, never a moving current-template constant.
-  const urlFreeVersion=row.template_version==='game-final-screening-v4-names';
-  const legacyVersion=row.template_version==null||['game-final-screening-v1','game-final-screening-v2','game-final-screening-v3','game-final-screening-v3-names'].includes(row.template_version);
-  const recognizedFooter=urlFreeVersion
-   ? twitterText.extractUrls(row.text).length===0&&row.text.endsWith('\n\n#NFL #UnderReview')
-   : legacyVersion&&(row.text.endsWith(reportUrl)||row.text.endsWith(`\n\nSee the Review: ${reportUrl}\n\n#NFL #UnderReview`));
-  if(!recognizedFooter||verifiedPostText(body.data)!==row.text.normalize('NFC'))throw new Error('The supplied post does not exactly match the intended full text and stored report revision.');
+  if(!recognizedPublicationFooter(row.text,row.template_version,reportUrl)||verifiedPostText(body.data)!==row.text.normalize('NFC'))throw new Error('The supplied post does not exactly match the intended full text and stored report revision.');
  }
  await transaction(async client=>{
   const current=(await client.query('SELECT * FROM publication_outbox WHERE id=$1 FOR UPDATE',[outboxId])).rows[0];

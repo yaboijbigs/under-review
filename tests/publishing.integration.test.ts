@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { config } from '../packages/core/src/config.js';
+import { recognizedPublicationFooter } from '../packages/core/src/social-post.js';
 
 vi.mock('node:dns/promises', () => ({ lookup: vi.fn(async () => [{ address: '203.0.113.10', family: 4 }]) }));
 const enabled = process.env.RUN_DB_TESTS === '1';
@@ -39,6 +40,22 @@ async function historicalDraft(){
   await db.query("UPDATE games SET publication_eligible=false,kickoff_at='1999-09-01',first_validated_at='1999-09-02' WHERE id=$1",[gameId]);
   return publishing.createDraft(gameId);
 }
+
+describe('publication footer format (no database required)',()=>{
+  const footer='\n\n#NFL #UnderReview';
+  it('accepts the fixed URL-free v4 template and rejects unrecognized versions',()=>{
+    expect(recognizedPublicationFooter(`Synthetic test only.${footer}`,'game-final-screening-v4-names',reportUrl)).toBe(true);
+    expect(recognizedPublicationFooter(`Synthetic test only.${footer}`,'unknown-template',reportUrl)).toBe(false);
+  });
+  it.each([reportUrl,'https://underreview.jbigs.com/games/test','https://reserved.test/report','HTTP://localhost/report','example.com/report'])('rejects embedded URL %s even when twitter-text excludes its TLD',url=>{
+    expect(recognizedPublicationFooter(`Synthetic test only. ${url}${footer}`,'game-final-screening-v4-names',reportUrl)).toBe(false);
+  });
+  it('preserves exact legacy revision URLs without accepting them as v4',()=>{
+    expect(recognizedPublicationFooter(labeledText,'game-final-screening-v3-names',reportUrl)).toBe(true);
+    expect(recognizedPublicationFooter(labeledText,'game-final-screening-v4-names',reportUrl)).toBe(false);
+    expect(recognizedPublicationFooter(labeledText.replace('?revision=1','?revision=2'),'game-final-screening-v3-names',reportUrl)).toBe(false);
+  });
+});
 
 describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP mocked)', () => {
   beforeAll(async () => {

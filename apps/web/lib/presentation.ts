@@ -32,11 +32,6 @@ export function dataMaturity(status: string) {
   if (status === "preliminary") return {label:"Early source data", detail:"The automated analysis is complete using the first available final-game data. It will update when cleaned data arrives."};
   return {label:"Waiting for final data", detail:"Analysis starts automatically after the game ends and complete final-game data becomes available."};
 }
-export function humanReview(status: string) {
-  if (status === "reviewed_within_scope") return {label:"Selected plays reviewed", detail:"A person has reviewed the stated plays and evidence. This is not a judgment on every call in the game."};
-  if (status === "partially_reviewed") return {label:"Some plays reviewed", detail:"Human review is in progress for selected plays. Approved findings appear with the play evidence."};
-  return {label:"No human ruling assessment", detail:"The automatic scan is complete. A person has not yet assessed whether the selected officiating decisions were correct."};
-}
 export function gameView(raw: unknown) {
   const source = record(raw); const nested = record(source.game); const game = Object.keys(nested).length ? {...source, ...nested} : source;
   return {
@@ -53,7 +48,6 @@ export function gameView(raw: unknown) {
 }
 export const categories = [
   {id: "officiating", title: "Impact of officiating decisions", note: "How a ruling changed the game state. Whether the ruling was correct is a separate question."},
-  {id: "reviewed_errors", title: "Human review of calls", note: "Findings from a person reviewing the play, evidence, and applicable rule."},
   {id: "coaching", title: "Coaching decisions", note: "Fourth-down choices judged using what was known before the play."},
   {id: "fumble", title: "Fumble recoveries", note: "Who recovered loose balls compared with what the model expected."},
   {id: "kicking", title: "Kicking", note: "Field goals and extra points compared with the expected chance of making them."},

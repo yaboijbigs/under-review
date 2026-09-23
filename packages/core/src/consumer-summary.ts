@@ -24,6 +24,19 @@ export interface GameVerdict {
  comparison:{wins:number;matchingGames:number;winRate:number|null;startSeason:number|null;endSeason:number|null}|null;
  reviewCount:number;evidenceNote:string;tone:'high'|'elevated'|'neutral'|'limited'|'waiting';
 }
+export interface GameRatingFamilyBreakdown {
+ id:'outcome'|'penalty'|'spread'|'drive';title:string;status:'eligible'|'unavailable';
+ eligibleRating:1|2|3|4|null;eligibleLabel:string|null;evidence:string[];
+ tailProbability:number|null;adjustedTailProbability:number|null;
+}
+export interface GameRatingBreakdown {
+ status:'available'|'legacy'|'unavailable';rulesVersion:GameVerdict['rulesVersion'];rating:GameVerdict['rating'];label:string;summary:string;
+ families:GameRatingFamilyBreakdown[];
+ thresholds:{rating:2|3|4;label:string;adjustedTailAtMost:number}[];
+ combinationRule:string;
+ corroboration:{eligible:boolean;winner:string|null;outcomeFavoredTeam:string|null;winnerDrivePenalties:number;explanation:string}|null;
+ notes:string[];
+}
 
 const names:Record<string,string>={ARI:'Arizona Cardinals',ATL:'Atlanta Falcons',BAL:'Baltimore Ravens',BUF:'Buffalo Bills',CAR:'Carolina Panthers',CHI:'Chicago Bears',CIN:'Cincinnati Bengals',CLE:'Cleveland Browns',DAL:'Dallas Cowboys',DEN:'Denver Broncos',DET:'Detroit Lions',GB:'Green Bay Packers',HOU:'Houston Texans',IND:'Indianapolis Colts',JAX:'Jacksonville Jaguars',KC:'Kansas City Chiefs',LA:'Los Angeles Rams',LAR:'Los Angeles Rams',LAC:'Los Angeles Chargers',LV:'Las Vegas Raiders',MIA:'Miami Dolphins',MIN:'Minnesota Vikings',NE:'New England Patriots',NO:'New Orleans Saints',NYG:'New York Giants',NYJ:'New York Jets',PHI:'Philadelphia Eagles',PIT:'Pittsburgh Steelers',SEA:'Seattle Seahawks',SF:'San Francisco 49ers',TB:'Tampa Bay Buccaneers',TEN:'Tennessee Titans',WAS:'Washington Commanders'};
 export const teamName=(code:string):string=>names[code]??code;
@@ -184,6 +197,27 @@ function validExpectations(e:GameExpectations,home:GameProfile,away:GameProfile)
   &&close(e.outcome.expectedHomeMargin,predicted)&&close(e.outcome.residual,e.outcome.actualHomeMargin!-predicted)&&close(e.outcome.anomalyScore!,Math.abs(e.outcome.residual));
 }
 
+type V3Signal={kind:'penalty'|'outcome'|'market';tail:number;reason:string};
+const signalRating=(s:V3Signal):1|2|3|4=>s.tail*3<=.03&&s.kind!=='market'?4:s.tail*3<=.10?3:s.tail*3<=.20?2:1;
+/** Called only after the complete V3 arithmetic and provenance gate passes. */
+function scoreV3(audit:GameAudit,e:GameExpectations,home:GameProfile,away:GameProfile){
+ const market=marketSignal(audit),outcomeFavored=e.outcome.residual!>=0?home.team:away.team;
+ const signals:V3Signal[]=[
+  {kind:'outcome',tail:e.outcome.tailProbability!,reason:`${outcomeFavored} finished ${Math.abs(e.outcome.residual!).toFixed(1)} points above its box-score expectation.`},
+  {kind:'penalty',tail:e.penalty.tailProbability!,reason:`Penalty patterns were this unusual in ${e.penalty.atLeastAsUnusual} of ${e.penalty.calibrationGames} comparison games.`},
+ ];
+ if(market.tailProbability!==undefined)signals.push({kind:'market',tail:market.tailProbability,reason:`The final margin missed the spread by ${audit.market!.absoluteError} points.`});
+ // A market-only cap must not suppress an independently stronger statistical family.
+ signals.sort((a,b)=>signalRating(b)-signalRating(a)||a.tail-b.tail);
+ const strongest=signals[0],statisticalRating=signalRating(strongest);
+ const clusters=driveClusters(audit),winner=audit.profiles.find(p=>p.pointsFor!>p.pointsAgainst!),winningCluster=clusters.find(c=>c.team===winner?.team&&c.playIds.length>=3);
+ // An absolute anomaly may favor either side; the top tier requires the winner.
+ const extreme=!!winningCluster&&winner?.team===outcomeFavored&&Math.abs(e.outcome.residual!)>0&&e.outcome.tailProbability!*3<=.03;
+ const cluster=extreme?winningCluster!:clusters[0]??null;
+ const rating=(extreme?5:Math.max(statisticalRating,cluster?(cluster.playIds.length>=3?4:3):1)) as 1|2|3|4|5;
+ return {market,outcomeFavored,signals,strongest,statisticalRating,clusters,winner,winningCluster,extreme,cluster,rating};
+}
+
 /** V3 uses two chronologically calibrated statistical families plus the market.
  * The fixed three-comparison adjustment is conservative even if a line is absent.
  * The ordinal thresholds are editorial, never a probability of misconduct. */
@@ -201,24 +235,7 @@ export function getGameVerdict(audit:GameAudit|null|undefined,hasAnalysis=true):
  if(!compatible||!validExpectations(e,home!,away!)){
   return {...base,summary:'Some statistics or historical comparisons are missing or inconsistent. The available figures are shown below.'};
  }
- const market=marketSignal(audit);
- type Signal={kind:'penalty'|'outcome'|'market';tail:number;reason:string};
- const outcomeFavored=e.outcome.residual!>=0?home!.team:away!.team;
- const signals:Signal[]=[
-  {kind:'outcome',tail:e.outcome.tailProbability!,reason:`${outcomeFavored} finished ${Math.abs(e.outcome.residual!).toFixed(1)} points above its box-score expectation.`},
-  {kind:'penalty',tail:e.penalty.tailProbability!,reason:`Penalty patterns were this unusual in ${e.penalty.atLeastAsUnusual} of ${e.penalty.calibrationGames} comparison games.`},
- ];
- if(market.tailProbability!==undefined)signals.push({kind:'market',tail:market.tailProbability,reason:`The final margin missed the spread by ${audit.market!.absoluteError} points.`});
- const signalRating=(s:Signal):1|2|3|4=>s.tail*3<=.03&&s.kind!=='market'?4:s.tail*3<=.10?3:s.tail*3<=.20?2:1;
- // A market-only cap must not suppress an independently stronger statistical family.
- signals.sort((a,b)=>signalRating(b)-signalRating(a)||a.tail-b.tail);
- const strongest=signals[0],statisticalRating=signalRating(strongest);
- const clusters=driveClusters(audit),winner=profiles.find(p=>p.pointsFor!>p.pointsAgainst!),winningCluster=clusters.find(c=>c.team===winner?.team&&c.playIds.length>=3);
- // An absolute anomaly may favor either side. Only an unusually favorable
- // outcome for the actual winner can corroborate that winner's penalty sequence.
- const extreme=!!winningCluster&&winner?.team===outcomeFavored&&Math.abs(e.outcome.residual!)>0&&e.outcome.tailProbability!*3<=.03;
- const cluster=extreme?winningCluster!:clusters[0]??null;
- const rating=(extreme?5:Math.max(statisticalRating,cluster?(cluster.playIds.length>=3?4:3):1)) as 1|2|3|4|5;
+ const {signals,strongest,statisticalRating,winner,winningCluster,extreme,cluster,rating}=scoreV3(audit,e,home!,away!);
  const tier=SUSPICION_SCALE[rating-1];
  const clusterReason=cluster?`${cluster.playIds.length} defensive penalties extended one ${cluster.team} drive on third or fourth down.`:null;
  const topReason=extreme?`${winner!.team} beat its box-score expectation by ${Math.abs(e.outcome.residual!).toFixed(1)} points; ${winningCluster!.playIds.length} penalties extended one ${winner!.team} drive.`:null;
@@ -226,4 +243,47 @@ export function getGameVerdict(audit:GameAudit|null|undefined,hasAnalysis=true):
  const reasons=topReason?[topReason,...stats]:cluster&&rating>statisticalRating?[clusterReason!,...stats]:[...stats,...(clusterReason?[clusterReason]:[])];
  const summary=extreme?'An exceptionally unusual outcome and a repeated penalty sequence both favored the winner.':cluster&&rating>statisticalRating?`${cluster.playIds.length} defensive penalties kept one ${cluster.team} drive alive.`:statisticalRating===1?'The result and penalty pattern fit the usual historical range.':strongest.kind==='penalty'?'The penalty pattern was unusually far from team, opponent and available referee expectations.':strongest.kind==='outcome'?'The final score was unusual given the teams’ yardage and turnovers.':'The final score was unusually far from the pregame spread.';
  return {...base,...tier,shortLabel:tier.label,summary,reasons,cluster,tone:rating>=4?'high':rating===3?'elevated':'neutral'};
+}
+
+/** Consumer disclosure of the same validated calculation that produces the badge. */
+export function getGameRatingBreakdown(audit:GameAudit|null|undefined):GameRatingBreakdown{
+ const verdict=getGameVerdict(audit),base:GameRatingBreakdown={status:'unavailable',rulesVersion:verdict.rulesVersion,rating:verdict.rating,label:verdict.label,summary:verdict.summary,families:[],thresholds:[],combinationRule:'',corroboration:null,notes:[]};
+ if(audit&&/^under-review-game-audit-v[1-4]$/.test(audit.version))return {...base,status:'legacy',summary:'This saved report uses the earlier rating rules. Open the latest report for the current calculation.'};
+ if(!audit||audit.version!=='under-review-game-audit-v5'||verdict.rating===null)return base;
+ // getGameVerdict has already checked schema, matching profiles, and every arithmetic link.
+ const e=gameExpectationsSchema.parse(audit.expectations),home=audit.profiles.find(p=>p.team===e.homeTeam)!,away=audit.profiles.find(p=>p.team===e.awayTeam)!;
+ const scoring=scoreV3(audit,e,home,away),margin=(value:number,decimals=1)=>value===0?'a tie':`${value>0?home.team:away.team} by ${Math.abs(value).toFixed(decimals)}`;
+ const family=(id:GameRatingFamilyBreakdown['id'],title:string,signal:V3Signal|undefined,evidence:string[]):GameRatingFamilyBreakdown=>{
+  const eligibleRating=signal?signalRating(signal):null;
+  return {id,title,status:signal?'eligible':'unavailable',eligibleRating,eligibleLabel:eligibleRating?SUSPICION_SCALE[eligibleRating-1].label:null,evidence,tailProbability:signal?.tail??null,adjustedTailProbability:signal?Math.min(1,3*signal.tail):null};
+ };
+ const strongestPenalty=e.penalty.components.reduce((best,item)=>Math.abs(item.standardized)>Math.abs(best.standardized)?item:best);
+ const penaltyNames={total_count:'Combined penalty count',total_yards:'Combined penalty yards',imbalance_count:`${home.team} minus ${away.team} penalty-count difference`,imbalance_yards:`${home.team} minus ${away.team} penalty-yard difference`};
+ const outcome=family('outcome','Result versus box score',scoring.signals.find(s=>s.kind==='outcome'),[
+  `Expected result from final yardage and turnovers: ${margin(e.outcome.expectedHomeMargin!)}; actual result: ${margin(e.outcome.actualHomeMargin!,0)}.`,
+  `The ${Math.abs(e.outcome.residual!).toFixed(1)}-point difference was matched or exceeded in ${count(e.outcome.atLeastAsUnusual)} of ${count(e.outcome.calibrationGames)} earlier comparison games.`,
+ ]);
+ const penalty=family('penalty','Penalty pattern',scoring.signals.find(s=>s.kind==='penalty'),[
+  `${penaltyNames[strongestPenalty.id]}: ${strongestPenalty.actual} versus ${strongestPenalty.expected.toFixed(1)} expected.`,
+  `The strongest of four related penalty checks is counted once; ${count(e.penalty.atLeastAsUnusual)} of ${count(e.penalty.calibrationGames)} earlier comparison games were at least as unusual.`,
+ ]);
+ const market=scoring.signals.find(s=>s.kind==='market'),m=audit.market;
+ const spread=family('spread','Result versus spread',market,market&&m?[
+  `Recorded spread: ${margin(m.expectedHomeMargin!)}; actual result: ${margin(m.actualHomeMargin!,0)}. The difference was ${m.absoluteError} points.`,
+  `${count(m.reference.atLeastAsSurprising)} of ${count(m.reference.games)} prior games were at least this far from their recorded spread.`,
+ ]:[m?.reasonCode==='spread_line_missing'?'No recorded closing spread is available for this game.':'The saved spread or its historical comparison is missing or inconsistent.']);
+ const cluster=scoring.clusters[0],driveRating=cluster?(cluster.playIds.length>=3?4:3):1;
+ const drive:GameRatingFamilyBreakdown={id:'drive',title:'Penalties extending one drive',status:'eligible',eligibleRating:driveRating,eligibleLabel:SUSPICION_SCALE[driveRating-1].label,tailProbability:null,adjustedTailProbability:null,evidence:[cluster?`${cluster.playIds.length} defensive penalties gave ${cluster.team} first downs on third or fourth down during one drive.`:'No qualifying two-penalty sequence on one drive appears in the saved play evidence.']};
+ const winner=scoring.winner?.team??null,outcomeFavoredTeam=e.outcome.residual===0?null:scoring.outcomeFavored;
+ const corroboration={eligible:scoring.extreme,winner,outcomeFavoredTeam,winnerDrivePenalties:scoring.clusters.find(item=>item.team===winner)?.playIds.length??0,
+  explanation:scoring.extreme?'The winner exceeded its box-score expectation at adjusted rarity of 3% or less and received three or more qualifying first downs on one drive.':!winner?'A tied game has no winner, so the RIGGED? combination cannot apply.':!scoring.winningCluster?'The winner has no qualifying three-penalty sequence on one drive.':outcomeFavoredTeam!==winner?'The outcome deviation does not favor the winning team.':'The winner-favoring outcome does not meet the adjusted rarity threshold of 3%.'};
+ return {...base,status:'available',summary:`${verdict.label} (${verdict.rating}/5): ${verdict.summary}`,families:[outcome,penalty,spread,drive],
+  thresholds:[{rating:2,label:'Debatable',adjustedTailAtMost:.20},{rating:3,label:'Hmm',adjustedTailAtMost:.10},{rating:4,label:'Sus',adjustedTailAtMost:.03}],
+  combinationRule:'The highest eligible tier sets the rating; signals are not added. The RIGGED? combination is checked separately.',corroboration,
+  notes:['Adjusted rarity = min(1, 3 × (at least as unusual + 1) / (comparison games + 1)). The factor of three accounts for outcome, penalty and spread comparisons, even when a spread is unavailable.',
+   'Adjusted rarity above 20% supplies Fair; at most 20% supplies Debatable, at most 10% Hmm, and at most 3% Sus. Spread alone is capped at Hmm.',
+   'Two qualifying penalties on one drive supply Hmm; three or more supply Sus. This drive rule has no statistical tail probability.',
+   'RIGGED? requires a winner-favoring outcome at adjusted rarity of 3% or less and three or more defensive penalties extending that same winner’s drive.',
+   'Referee history can adjust the penalty expectation. Team win/loss/tie records under that referee are context only and add no rating points.',
+   'These thresholds are exploratory rating rules. Adjusted rarity is not a probability of manipulation.']};
 }

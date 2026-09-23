@@ -20,9 +20,14 @@ test("real report exposes revision, coverage, timeline, and evidence", async ({p
   await expect(page.locator('#needs-review > details')).not.toHaveAttribute('open');
   await expect(page.locator('#categories > details > summary')).toBeVisible();
   await expect(page.locator('#categories > details')).not.toHaveAttribute('open');
+  await page.locator('#categories > details > summary').click();
+  await expect(page.locator('#categories .category-panel')).toHaveCount(6);
+  await expect(page.getByRole('heading',{name:'Human review of calls',exact:true})).toHaveCount(0);
+  await expect(page.getByRole('heading',{name:'Impact of officiating decisions',exact:true})).toBeVisible();
+  await page.locator('#categories > details > summary').click();
   expect(await page.locator('#fan-feedback').evaluate(node=>!!(node.compareDocumentPosition(document.querySelector('#needs-review')!)&Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
   await expect(page.getByRole("heading",{name:"Game momentum",exact:true})).toBeVisible();
-  await expect(page.locator('.audit-footer')).toContainText('Historical comparisons');
+  await expect(page.locator('.audit-footer').getByRole('link',{name:'Historical comparison methodology ↗',exact:true})).toBeVisible();
   await page.locator('#provenance > details > summary').click();
   await expect(page.getByRole("heading",{name:"Report updates"})).toBeVisible();
   await expect(page.getByRole('heading',{name:'Automatic analysis',exact:true})).toBeVisible();

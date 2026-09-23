@@ -30,7 +30,7 @@ export function PublicFeedback({gameId}:{gameId:string}){
   catch{setError('Fan feedback is temporarily unavailable. Please try again.');}finally{setLoading(false);}
  }
  return <section id="fan-feedback" className="report-section public-feedback" aria-labelledby="fan-feedback-title">
-  <div className="section-heading"><div><p className="eyebrow">FROM THE FANS</p><h2 id="fan-feedback-title">Fan feedback</h2></div><span className="section-caption">How other fans saw this game.</span></div>
+  <div className="section-heading"><h2 id="fan-feedback-title">Fan feedback</h2></div>
   {summary&&<div className="public-feedback-summary" aria-label="Public feedback totals"><div><strong>{summary.total}</strong><span>{summary.total===1?'response':'responses'}</span></div><div><strong>{summary.agree}</strong><span>Agree</span></div><div><strong>{summary.disagree}</strong><span>Disagree</span></div><div><strong>{summary.averageRating===null?'—':`${summary.averageRating.toFixed(1)} / 5`}</strong><span>Average rating</span><small>{summary.ratingCount?`From ${summary.ratingCount} slider ${summary.ratingCount===1?'rating':'ratings'}`:'No slider ratings yet'}</small></div></div>}
   {entries.length>0&&<div className="visitor-feedback-list">{entries.map(entry=><article key={entry.id}>
    <div className="visitor-feedback-top"><strong>{entry.rating===null?'No slider rating':`${SUSPICION_SCALE[entry.rating-1].label} · ${entry.rating}/5`}</strong><span>{entry.agreement==='agree'?'Agrees':'Disagrees'} with {SUSPICION_SCALE[entry.modelRating-1].label}</span></div>
