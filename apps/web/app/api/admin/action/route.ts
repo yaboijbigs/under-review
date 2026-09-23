@@ -19,7 +19,7 @@ export async function POST(request:Request){
    case 'save-review':await saveReview({...Object.fromEntries(form),replayCorrected:get('replayCorrected')==='true',scopeComplete:get('scopeComplete')==='true'},session);break;
    case 'approve-review':await approveReview(get('reviewId'),session);break;
    case 'insert-event':await insertMissedEvent({gameId:get('gameId'),playId:get('playId'),description:get('description'),team:get('team')||null},session);break;
-   case 'draft':await createDraft(get('gameId'));await audit(session.userId,'draft.created',get('gameId'));break;
+   case 'draft':{const kind=get('kind')||'initial';if(kind!=='initial'&&kind!=='update'&&kind!=='correction')throw new Error('Invalid post type');await createDraft(get('gameId'),kind);await audit(session.userId,'draft.created',get('gameId'),{kind});break;}
    case 'approve-draft':await approveDraft(get('outboxId'),session.userId);break;
    case 'reconcile-publication':{const resolution=get('resolution');if(resolution!=='posted'&&resolution!=='cancel')throw new Error('Choose an existing post or permanent cancellation.');await reconcilePublication(get('outboxId'),resolution,get('externalId')||null,session.userId);break;}
    case 'set-publishing':{const mode=get('mode');if(!['off','draft-only','automatic'].includes(mode))throw new Error('Invalid mode');if(mode==='automatic'&&get('confirmAutomatic')!=='yes')throw new Error('Explicit account-bound automatic-posting confirmation required.');await setPublishing(mode as 'off'|'draft-only'|'automatic',get('accountId')||null,session.userId);break;}

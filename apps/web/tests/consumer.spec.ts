@@ -3,6 +3,7 @@ import { test, expect as baseExpect, type Page } from "@playwright/test";
 // The shared VPS streams a loading shell before completing a server-rendered report.
 // Wait for the resolved page state; a rendered data error must still fail the test.
 const expect = baseExpect.configure({timeout:20_000});
+const archivePath=process.env.SMOKE_SEASON?`/?season=${encodeURIComponent(process.env.SMOKE_SEASON)}`:'/';
 test.setTimeout(90_000);
 async function archiveReady(page:Page) {
   await expect(page.locator('#archive-title')).toBeVisible();
@@ -12,7 +13,7 @@ async function archiveReady(page:Page) {
 async function reportReady(page:Page) {
   await expect(page.locator('.analysis-complete, main .notice').first()).toBeVisible();
   await expect(page.locator('main .notice'),'A report data-connection error is a product failure, not a timing allowance.').toHaveCount(0);
-  await expect(page.locator('.analysis-complete')).toHaveText('✓ Automated analysis complete');
+  await expect(page.locator('.analysis-complete')).toHaveText('✓ Analysis complete');
 }
 
 test("browsing game cards does not eagerly request every report",async({page})=>{
@@ -21,7 +22,7 @@ test("browsing game cards does not eagerly request every report",async({page})=>
     const headers=request.headers(),url=new URL(request.url());
     if(url.pathname.startsWith('/games/') && (headers['next-router-prefetch']==='1' || headers.purpose==='prefetch'))prefetchedReports.push(url.pathname);
   });
-  await page.goto('/');
+  await page.goto(archivePath);
   await archiveReady(page);
   const cards=page.locator('.game-card');
   if(await cards.count()){
@@ -34,7 +35,7 @@ test("browsing game cards does not eagerly request every report",async({page})=>
 });
 
 test("all weeks keeps every published report and rating filters stay honest", async ({page},testInfo)=>{
-  await page.goto("/");
+  await page.goto(archivePath);
   await archiveReady(page);
   await expect(page.getByRole("combobox",{name:"Week",exact:true})).toHaveValue("");
   const allIds=await page.locator('.game-card .scoreboard-link').evaluateAll(links=>links.map(link=>link.getAttribute('href')));
@@ -48,10 +49,11 @@ test("all weeks keeps every published report and rating filters stay honest", as
     await expect(page.locator('.card-verdict').first()).toBeVisible();
     await expect(page.locator('.game-card .card-top .status')).toHaveCount(0);
     await expect(page.locator('.game-card .card-bottom').first()).not.toContainText(/Not reviewed|Preliminary/i);
-    await expect(page.locator('.card-rating-label').first()).toContainText('GAME SUSPICION RATING');
-    await expect(page.locator('.card-rating-boundary').first()).toContainText('Not a finding of manipulation');
+    await expect(page.locator('.card-rating-label').first()).toContainText('GAME RATING');
+    await expect(page.locator('.card-rating-boundary')).toHaveCount(0);
   }
   await page.screenshot({path:testInfo.outputPath('consumer-home.png'),fullPage:true});
+  await expect(page.getByRole('link',{name:'View source on GitHub'})).toHaveAttribute('href','https://github.com/yaboijbigs/under-review');
   const ratingFilter=page.getByRole("combobox",{name:"Rating",exact:true});
   await expect(ratingFilter.locator('option')).toHaveText(['All ratings','RIGGED? · 5/5','Sus · 4/5','Hmm · 3/5','Debatable · 2/5','Fair · 1/5','Unrated · Not enough data']);
   await ratingFilter.selectOption("sus");
@@ -92,8 +94,8 @@ test("report verdict and completed automation are separate from human review",as
   await reportReady(page);
   await expect(page.locator('#verdict-title')).not.toBeEmpty();
   await expect(page.locator('.rating-scale > li')).toHaveCount(5);
-  await expect(page.locator('.rating-boundary')).toHaveText('Automatic screening · Not a finding of manipulation');
-  await expect(page.locator('.rating-version')).toContainText('game-suspicion-v1');
+  await expect(page.locator('.rating-boundary')).toHaveCount(0);
+  await expect(page.getByRole('link',{name:'How we rate games',exact:false})).toBeVisible();
   const rating=await page.locator('.game-verdict').getAttribute('data-rating');
   const selected=page.locator('.rating-scale [aria-current="step"]');
   if(rating==='unrated')await expect(selected).toHaveCount(0);

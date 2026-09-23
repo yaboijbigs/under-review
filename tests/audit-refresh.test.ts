@@ -7,6 +7,7 @@ import type { AnalysisResult,Game,GameProfile,GameReport,SourceSnapshot } from '
 import { GAME_AUDIT_VERSION } from '../packages/core/src/game-audit.js';
 import { config } from '../packages/core/src/config.js';
 import { LocalSnapshotStore } from '../packages/core/src/sources.js';
+import { normalizeSchedule,parseCsv } from '../packages/core/src/normalize.js';
 
 const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn(),ingest:vi.fn(),reference:vi.fn(),runAnalytics:vi.fn(),fetch:vi.fn()}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query}));
@@ -15,10 +16,10 @@ vi.mock('../packages/core/src/game-profile-source.js',async original=>({...await
 vi.mock('../packages/core/src/analytics-bridge.js',()=>({runAnalytics:mocks.runAnalytics}));
 import { refreshGameAudit } from '../packages/core/src/audit-refresh.js';
 
-const game:Game={id:'2099_01_TST_DMO',season:2099,week:1,gameType:'REG',awayTeam:'TST',homeTeam:'DMO',homeScore:0,awayScore:0,kickoffAt:'2099-09-01T17:00:00Z',providerData:{result:0,synthetic:true}};
+const game=normalizeSchedule({game_id:'2099_01_TST_DMO',season:2099,week:1,game_type:'REG',away_team:'TST',home_team:'DMO',home_score:0,away_score:0,gameday:'2099-09-01',gametime:'13:00',result:0,spread_line:3.5});
 const snapshot=(id:string,provider:string):SourceSnapshot=>({id,provider,checksum:id.repeat(64).slice(0,64),url:`https://example.invalid/${id}`,path:`/synthetic/${id}`,retrievedAt:'2099-09-02T00:00:00Z',license:'Synthetic test only'});
-const pbp=snapshot('a','nflverse-pbp'),schedule=snapshot('b','nflverse-schedules'),ftn=snapshot('c','ftn-via-nflverse');
-let aggregate:SourceSnapshot;
+const pbp=snapshot('a','nflverse-pbp'),ftn=snapshot('c','ftn-via-nflverse');
+let aggregate:SourceSnapshot,schedule:SourceSnapshot;
 const profiles:GameProfile[]=[game.awayTeam,game.homeTeam].map(team=>({gameId:game.id,season:game.season,team,opponent:team===game.homeTeam?game.awayTeam:game.homeTeam,pointsFor:0,pointsAgainst:0,totalYards:200,opponentYards:200,penalties:3,penaltyYards:20,turnoverMargin:0,nonOffensiveTouchdowns:0}));
 const rawProfiles=profiles.map(profile=>({game_id:game.id,season:game.season,week:game.week,team:profile.team,opponent_team:profile.opponent,passing_yards:0,rushing_yards:200,sack_yards_lost:0,passing_interceptions:0,fumbles_lost_total:0,penalties:3,penalty_yards:20,passing_tds:0,rushing_tds:0,def_tds:0,special_teams_tds:0,fumble_recovery_tds:0,fg_made:0,pat_made:0,passing_2pt_conversions:0,rushing_2pt_conversions:0,def_2pt_made:0,def_safeties:0}));
 const csv=(rows:Record<string,unknown>[])=>{const keys=Object.keys(rows[0]);return Buffer.from([keys.join(','),...rows.map(row=>keys.map(key=>String(row[key]??'')).join(','))].join('\n'));};
@@ -35,12 +36,19 @@ async function persistAggregate(rows:Record<string,unknown>[]){
  await writeFile(path.join(directory,`${checksum}.csv`),bytes);
  return aggregate;
 }
+async function persistSchedule(row=game.providerData){
+ const bytes=csv([row]),checksum=createHash('sha256').update(bytes).digest('hex');
+ schedule={...snapshot(checksum,'nflverse-schedules'),checksum,url:'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'};
+ const directory=path.join(temporaryDataDir,'snapshots','snapshots');await mkdir(directory,{recursive:true});await writeFile(path.join(directory,`${checksum}.csv`),bytes);
+ return normalizeSchedule(parseCsv(bytes)[0]);
+}
 async function existingV2Audit(){
  await refreshGameAudit(game.id);
  const analysis=structuredClone(mocks.saveAnalysis.mock.calls[0][3]) as AnalysisResult;
  analysis.gameAudit!.version='under-review-game-audit-v2';
  analysis.models.find(model=>model.id==='game-profile-audit')!.version='under-review-game-audit-v2';
- analysis.models=analysis.models.filter(model=>model.id!=='overtime-empirical');
+ analysis.models=analysis.models.filter(model=>!['overtime-empirical','spread-reference'].includes(model.id));
+ delete analysis.gameAudit!.market;
  analysis.timeline=analysis.timeline.filter(point=>(point.quarter??0)<=4);
  analysis.warnings=analysis.warnings.filter(warning=>!warning.startsWith('overtime_model_experimental:'));
  report.revision.analysis=analysis;
@@ -52,6 +60,7 @@ beforeEach(async()=>{
  vi.clearAllMocks();
  temporaryDataDir=await mkdtemp(path.join(os.tmpdir(),'under-review-audit-refresh-'));config.dataDir=temporaryDataDir;
  await persistAggregate(rawProfiles);
+ await persistSchedule();
  vi.spyOn(LocalSnapshotStore.prototype,'read');
  mocks.fetch.mockRejectedValue(new Error('External provider unavailable'));vi.stubGlobal('fetch',mocks.fetch);
  report={game:structuredClone(game),revision:{id:'base-revision',number:1,createdAt:'2099-09-02T00:00:00Z',statisticalStatus:'reconciled',chartingStatus:'unavailable',reviewStatus:'not_reviewed',changeSummary:'Synthetic',inputHash:'old-hash',summary:'Synthetic',analysis:structuredClone(baseAnalysis),sourceSnapshots:[schedule,pbp,ftn,aggregate]},history:[],reviews:[],drafts:[]};
@@ -72,8 +81,9 @@ describe('audit-only immutable report refresh',()=>{
   expect(savedGame).toEqual(game);expect(savedPlays).toEqual(plays);expect(sourceKind).toBe('clean');
   expect(options).toEqual({expectedBaseRevisionId:'base-revision'});
   for(const key of ['metrics','events','timeline','coverage'] as const)expect(analysis[key]).toEqual(baseAnalysis[key]);
-  expect(analysis.models[0]).toEqual(baseAnalysis.models[0]);expect(analysis.models).toHaveLength(3);
+  expect(analysis.models[0]).toEqual(baseAnalysis.models[0]);expect(analysis.models).toHaveLength(4);
   expect(analysis.gameAudit.version).toBe(GAME_AUDIT_VERSION);
+  expect(analysis.gameAudit.market).toMatchObject({expectedHomeMargin:3.5,actualHomeMargin:0,absoluteError:3.5,atsResult:'away_covered',source:{checksum:schedule.checksum}});
   expect(snapshots).toEqual([schedule,pbp,ftn,aggregate]);
   expect(analysis.warnings).toEqual(['R source warning preserved']);
   expect(report.revision.analysis).toEqual(baseAnalysis);
@@ -85,7 +95,7 @@ describe('audit-only immutable report refresh',()=>{
   report.revision={...report.revision,id:'new-revision',number:2,analysis:mocks.saveAnalysis.mock.calls[0][3],sourceSnapshots:mocks.saveAnalysis.mock.calls[0][2]};
   const second=await refreshGameAudit(game.id);
   expect(second).toMatchObject({id:'new-revision',number:2,created:false});
-  expect(mocks.saveAnalysis).toHaveBeenCalledTimes(1);expect(LocalSnapshotStore.prototype.read).toHaveBeenCalledTimes(1);expect(mocks.ingest).not.toHaveBeenCalled();expect(mocks.fetch).not.toHaveBeenCalled();
+  expect(mocks.saveAnalysis).toHaveBeenCalledTimes(1);expect(LocalSnapshotStore.prototype.read).toHaveBeenCalledTimes(3);expect(mocks.ingest).not.toHaveBeenCalled();expect(mocks.fetch).not.toHaveBeenCalled();
  });
  it('can reuse a complete raw report only through its exact stored normalized PBP snapshot',async()=>{
   const raw={...pbp,id:'raw-source',provider:'nflverse-raw-pbp'};
@@ -139,9 +149,12 @@ describe('audit-only immutable report refresh',()=>{
   expect(analysis.metrics).toEqual(baseAnalysis.metrics);
   expect(analysis.warnings).toEqual(expect.arrayContaining([expect.stringContaining('team_stats_score_mismatch:')]));
   expect(mocks.fetch).not.toHaveBeenCalled();
+  report.revision={...report.revision,id:'new-revision',number:2,analysis};
+  expect(await refreshGameAudit(game.id)).toMatchObject({created:false,id:'new-revision'});
+  expect(mocks.saveAnalysis).toHaveBeenCalledTimes(1);
  });
  it('upgrades v2 with identical validated profiles, flags and provenance during a provider outage, adding only OT estimates and model metadata',async()=>{
-  report.game.homeScore=3;report.game.providerData.result=3;
+  report.game=await persistSchedule({...game.providerData,home_score:3,result:3});
   report.revision.sourceSnapshots=[schedule,pbp,ftn,await persistAggregate(rawProfiles.map(row=>({...row,penalty_yards:133,fg_made:row.team===game.homeTeam?1:0})))];
   const rows=dbRows();rows.at(-1)!.data.desc='End of regulation';
   rows.push({...rows.at(-1)!,play_id:'5',provider_order:5,data:{...rows.at(-1)!.data,play_id:5,source_order:5,qtr:5,desc:'Synthetic field goal',total_home_score:3,play_type:'field_goal'}});
@@ -179,5 +192,32 @@ describe('audit-only immutable report refresh',()=>{
   report.revision.sourceSnapshots=[schedule,pbp,ftn,await persistAggregate(rawProfiles.map(row=>({...row,passing_tds:1})))];
   await expect(refreshGameAudit(game.id)).rejects.toMatchObject({code:'audit_aggregate_snapshot_invalid'});
   expect(report.revision.analysis).toEqual(previous);expect(mocks.saveAnalysis).not.toHaveBeenCalled();expect(mocks.fetch).not.toHaveBeenCalled();
+ });
+ it('rejects a changed stored line instead of inventing snapshot provenance',async()=>{
+  report.game.providerData.spread_line=-9;
+  await expect(refreshGameAudit(game.id)).rejects.toMatchObject({code:'audit_schedule_snapshot_mismatch'});
+  expect(mocks.saveAnalysis).not.toHaveBeenCalled();expect(mocks.fetch).not.toHaveBeenCalled();
+ });
+ it('upgrades v3 to v4 without changing any regulation or OT values, R outputs, profiles or snapshots',async()=>{
+  await refreshGameAudit(game.id);
+  report.revision.analysis=structuredClone(mocks.saveAnalysis.mock.calls[0][3]);
+  report.revision.analysis.gameAudit!.version='under-review-game-audit-v3';
+  report.revision.analysis.models.find(model=>model.id==='game-profile-audit')!.version='under-review-game-audit-v3';
+  report.revision.analysis.models=report.revision.analysis.models.filter(model=>model.id!=='spread-reference');
+  delete report.revision.analysis.gameAudit!.market;
+  const previous=structuredClone(report.revision.analysis);mocks.saveAnalysis.mockClear();
+  await refreshGameAudit(game.id);
+  const [,savedPlays,sources,analysis]=mocks.saveAnalysis.mock.calls[0];
+  for(const field of ['metrics','events','coverage','timeline'] as const)expect(analysis[field]).toEqual(previous[field]);
+  expect(analysis.gameAudit.profiles).toEqual(previous.gameAudit!.profiles);expect(analysis.gameAudit.flags).toEqual(previous.gameAudit!.flags);
+  expect(analysis.gameAudit.market).toMatchObject({expectedHomeMargin:3.5,source:{checksum:schedule.checksum}});
+  expect(sources).toEqual(report.revision.sourceSnapshots);expect(savedPlays).toEqual(plays);
+  expect(mocks.runAnalytics).not.toHaveBeenCalled();expect(mocks.fetch).not.toHaveBeenCalled();
+ });
+ it('preserves a v3 report when its schedule evidence is corrupt',async()=>{
+  const previous=await existingV2Audit();report.revision.analysis.gameAudit!.version='under-review-game-audit-v3';
+  await writeFile(path.join(temporaryDataDir,'snapshots','snapshots',`${schedule.checksum}.csv`),'corrupt');
+  await expect(refreshGameAudit(game.id)).rejects.toMatchObject({code:'audit_schedule_snapshot_unreadable'});
+  expect(report.revision.analysis.metrics).toEqual(previous.metrics);expect(mocks.saveAnalysis).not.toHaveBeenCalled();
  });
 });

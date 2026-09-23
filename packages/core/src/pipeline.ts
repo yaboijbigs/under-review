@@ -9,6 +9,7 @@ import { maybeAutomaticDraft } from './publishing.js';
 import { ingestGameProfiles,loadGameProfileReference } from './game-profile-source.js';
 import { buildGameAudit } from './game-audit.js';
 import { applyOvertimeTimeline,loadOvertimeReference } from './overtime-integration.js';
+import { applySpreadAudit,loadSpreadReference } from './spread.js';
 
 const store=()=>new LocalSnapshotStore(path.join(config.dataDir,'snapshots'));
 export async function syncSeason(season:number,scheduleJobs=true){
@@ -51,11 +52,12 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  catch{profileSource.warnings.push('game_profile_reference_unavailable: Historical winning-profile comparisons are unavailable.');}
  analysis.gameAudit=buildGameAudit({game,plays:ingested.plays,profiles:profileSource.profiles,reference:historical?.reference,referenceChecksum:historical?.checksum,events:analysis.events});
  analysis.models.push({id:'game-profile-audit',version:analysis.gameAudit.version,...(historical?{checksum:historical.checksum}:{}),trainingWindow:historical?`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`:null,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'});
+ analysis=applySpreadAudit(game,analysis,snapshots,await loadSpreadReference());
  analysis.warnings=[...new Set([...analysis.warnings,...ingested.warnings,...profileSource.warnings])];
  const revision=await saveAnalysis(game,ingested.plays,snapshots,analysis,ingested.sourceKind);
- if(revision.created&&!backfill){
+ if(!backfill){
   await maybeAutomaticDraft(gameId);
-  if(revision.number===1)for(const hours of [6,24,48])await enqueue('analyze',gameId,{backfill:false,preferRaw:false},`reconcile:${gameId}:initial:${hours}`,new Date(Date.now()+hours*3600000));
+  if(revision.created&&revision.number===1)for(const hours of [6,24,48])await enqueue('analyze',gameId,{backfill:false,preferRaw:false},`reconcile:${gameId}:initial:${hours}`,new Date(Date.now()+hours*3600000));
  }
  return {gameId,...revision,metrics:analysis.metrics.length,sourceKind:ingested.sourceKind,warnings:analysis.warnings};
 }

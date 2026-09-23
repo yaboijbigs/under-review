@@ -2,12 +2,13 @@ import path from 'node:path';
 import { config,projectRoot } from './config.js';
 import { query } from './db.js';
 import type { Game,GameAudit,SourceSnapshot } from './contracts.js';
-import { assertGameId,parseCsv,validateGameData,type ProviderRow } from './normalize.js';
-import { LocalSnapshotStore,SourceError } from './sources.js';
+import { assertGameId,normalizeSchedule,parseCsv,validateGameData,type ProviderRow } from './normalize.js';
+import { LocalSnapshotStore,SourceError,sourceUrls } from './sources.js';
 import { getReport,saveAnalysis,stableJson } from './repository.js';
 import { buildGameAudit,GAME_AUDIT_VERSION } from './game-audit.js';
 import { loadGameProfileReference,normalizeGameProfiles,validateGameProfileFinality } from './game-profile-source.js';
 import { applyOvertimeTimeline,loadOvertimeReference } from './overtime-integration.js';
+import { applySpreadAudit,loadSpreadReference } from './spread.js';
 
 export class AuditRefreshError extends Error {
  constructor(public readonly code:string,message:string){super(message);this.name='AuditRefreshError';}
@@ -23,6 +24,17 @@ function completeProfiles(game:Game,audit:GameAudit):boolean{
  });
 }
 const evidence=(snapshots:SourceSnapshot[])=>snapshots.map(({id,provider,checksum})=>({id,provider,checksum})).sort((a,b)=>a.id.localeCompare(b.id));
+
+async function validateStoredSchedule(game:Game,snapshots:SourceSnapshot[]):Promise<void>{
+ const schedules=snapshots.filter(source=>source.provider==='nflverse-schedules');
+ if(schedules.length!==1||schedules[0].url!==sourceUrls.schedules||!/^[a-f0-9]{64}$/.test(schedules[0].checksum))throw new AuditRefreshError('audit_schedule_snapshot_invalid','The report must identify its exact immutable schedule source.');
+ const snapshot=schedules[0],store=new LocalSnapshotStore(path.join(config.dataDir,'snapshots'));
+ let bytes:Buffer;
+ try{bytes=await store.read({...snapshot,path:path.join(store.root,'snapshots',`${snapshot.checksum}.csv`)});}
+ catch{throw new AuditRefreshError('audit_schedule_snapshot_unreadable','The original schedule snapshot is missing or fails its checksum; the existing report was preserved.');}
+ const rows=parseCsv(bytes).filter(row=>row.game_id===game.id);
+ if(rows.length!==1||stableJson(normalizeSchedule(rows[0]))!==stableJson(game))throw new AuditRefreshError('audit_schedule_snapshot_mismatch','The saved game and betting line differ from the original schedule snapshot; the existing report was preserved.');
+}
 
 /** Audit upgrades reuse immutable evidence; only analyze jobs reconcile live sources. */
 async function storedProfiles(game:Game,plays:ProviderRow[],sources:SourceSnapshot[],current:GameAudit|undefined){
@@ -72,28 +84,35 @@ export async function refreshGameAudit(gameId:string):Promise<{gameId:string;id:
  const plays=rows.map(row=>row.data as ProviderRow);
  const validation=validateGameData(game,plays);
  if(!validation.valid)throw new AuditRefreshError('audit_pbp_incomplete',`Stored report inputs are not a complete final game: ${validation.issues.join(', ')}. Run normal analysis.`);
+ await validateStoredSchedule(game,revision.sourceSnapshots);
  let historical:Awaited<ReturnType<typeof loadGameProfileReference>>;
  try{historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));}
  catch{throw new AuditRefreshError('audit_reference_unavailable','The fixed historical game-profile reference is unavailable or invalid.');}
  const current=revision.analysis.gameAudit;
  const withOvertime=applyOvertimeTimeline(game,plays,revision.analysis,await loadOvertimeReference());
+ const spread=await loadSpreadReference();
  const auditModels=revision.analysis.models.filter(model=>model.id==='game-profile-audit');
  const aggregateSources=revision.sourceSnapshots.filter(source=>source.provider==='nflverse-team-stats');
  // This command upgrades the audit only. Fresh statistical/source reconciliation
  // remains the normal analysis job, including updates to already complete audits.
  if(current?.version===GAME_AUDIT_VERSION&&current.reference.checksum===historical.checksum&&current.reference.version===historical.reference.version
   &&completeProfiles(game,current)&&auditModels.length===1&&auditModels[0].version===GAME_AUDIT_VERSION&&auditModels[0].checksum===historical.checksum&&aggregateSources.length===1){
-  if(stableJson(withOvertime)===stableJson(revision.analysis))return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:revision.analysis.warnings};
+  const upgraded=applySpreadAudit(game,withOvertime,revision.sourceSnapshots,spread);
+  if(stableJson(upgraded)===stableJson(revision.analysis))return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:revision.analysis.warnings};
   // An OT-only upgrade of an already current, complete audit needs no source fetch.
-  const saved=await saveAnalysis(game,plays,revision.sourceSnapshots,withOvertime,sourceKind,{expectedBaseRevisionId:revision.id});
-  return {gameId,...saved,sourceKind,warnings:withOvertime.warnings};
+  const saved=await saveAnalysis(game,plays,revision.sourceSnapshots,upgraded,sourceKind,{expectedBaseRevisionId:revision.id});
+  return {gameId,...saved,sourceKind,warnings:upgraded.warnings};
  }
  const source=await storedProfiles(game,plays,aggregateSources,current);
- const analysis=structuredClone(withOvertime);
+ let analysis=structuredClone(withOvertime);
  analysis.gameAudit=buildGameAudit({game,plays,profiles:source.profiles,reference:historical.reference,referenceChecksum:historical.checksum,events:analysis.events});
- analysis.models=[...analysis.models.filter(model=>model.id!=='game-profile-audit'),{id:'game-profile-audit',version:analysis.gameAudit.version,checksum:historical.checksum,
-  trainingWindow:`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'}];
+ const auditModel={id:'game-profile-audit',version:analysis.gameAudit.version,checksum:historical.checksum,
+  trainingWindow:`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'};
+ const auditAt=analysis.models.findIndex(model=>model.id==='game-profile-audit');
+ analysis.models=analysis.models.filter((model,index)=>model.id!=='game-profile-audit'||index===auditAt);
+ if(auditAt>=0)analysis.models[auditAt]=auditModel;else analysis.models.push(auditModel);
  analysis.warnings=[...new Set([...analysis.warnings.filter(warning=>!/^(?:team_stats_|team_profile_|game_profile_reference_unavailable:)/.test(warning)),...source.warnings])];
+ analysis=applySpreadAudit(game,analysis,revision.sourceSnapshots,spread);
  const snapshots=revision.sourceSnapshots;
  if(stableJson(analysis)===stableJson(revision.analysis)&&stableJson(evidence(snapshots))===stableJson(evidence(revision.sourceSnapshots))){
   return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:analysis.warnings};

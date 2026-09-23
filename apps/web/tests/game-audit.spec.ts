@@ -6,7 +6,7 @@ async function reportReady(page:Page) {
   await expect(page.locator('.analysis-complete, main > .notice, main > .empty-state').first()).toBeVisible();
   await expect(page.locator('main > .notice'),'A rendered report data error must fail, not be treated as a slow stream.').toHaveCount(0);
   await expect(page.getByRole('heading',{name:"The record couldn't be loaded.",exact:true})).toHaveCount(0);
-  await expect(page.locator('.analysis-complete')).toHaveText('✓ Automated analysis complete');
+  await expect(page.locator('.analysis-complete')).toHaveText('✓ Analysis complete');
 }
 
 test("computed game audit exposes actual profiles and historical context", async ({page},testInfo) => {
@@ -17,7 +17,7 @@ test("computed game audit exposes actual profiles and historical context", async
   const audit=page.locator('#game-audit');
   await expect(audit.getByRole('heading',{name:'Why this result stands out—or doesn’t',exact:true})).toBeVisible();
   await expect(page.locator('#verdict-title')).not.toBeEmpty();
-  await expect(page.getByText('✓ Automated analysis complete',{exact:true})).toBeVisible();
+  await expect(page.getByText('✓ Analysis complete',{exact:true})).toBeVisible();
   await expect(page.locator('.game-verdict .verdict-summary')).not.toBeEmpty();
   await expect(audit.locator('.profile-table')).toBeVisible();
   await expect(audit.getByRole('rowheader',{name:'Total offensive yards',exact:true})).toBeVisible();

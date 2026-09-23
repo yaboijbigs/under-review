@@ -15,10 +15,15 @@ export function stableJson(value:unknown):string{
 export const contentHash=(value:unknown)=>createHash('sha256').update(stableJson(value)).digest('hex');
 export function gameAuditCorrection(previous:AnalysisResult['gameAudit'],current:AnalysisResult['gameAudit']):boolean{
  if(!previous)return false;
- if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null);
+ if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null)||previous.market?.status==='available';
  const fields=['totalYards','opponentYards','penalties','penaltyYards','turnoverMargin','nonOffensiveTouchdowns'] as const;
  const profileChanged=previous.profiles.some(p=>fields.some(key=>p[key]!==null&&p[key]!==current.profiles.find(n=>n.team===p.team)?.[key]));
- return profileChanged||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
+ const marketFields=['expectedHomeMargin','actualHomeMargin','homeMarginError','absoluteError','favoredTeam','pickem','atsWinner','atsResult','favoriteCovered','underdogWon'] as const;
+ const oldMarket=previous.market,newMarket=current.market;
+ const marketChanged=oldMarket?.status==='available'&&(!newMarket||newMarket.status!=='available'
+  ||marketFields.some(key=>oldMarket[key]!==newMarket[key])
+  ||(oldMarket.reference.tailRate!==null&&(['startSeason','endSeason','games','atLeastAsSurprising','tailRate','percentile'] as const).some(key=>oldMarket.reference[key]!==newMarket.reference[key])));
+ return profileChanged||marketChanged||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
 }
 function sourceEvent(event:Record<string,unknown>|undefined){if(!event)return null;const {reviewStatus,notes,...evidence}=event;return evidence;}
 export async function saveGames(games:Game[],publicationEligible=false){

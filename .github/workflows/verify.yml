@@ -1,0 +1,88 @@
+name: Verify application
+on:
+  workflow_dispatch:
+  workflow_call:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: under_review_ci
+          POSTGRES_PASSWORD: synthetic_ci_password
+          POSTGRES_DB: under_review_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U under_review_ci -d under_review_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      CI: 'true'
+      DATABASE_URL: postgresql://under_review_ci:synthetic_ci_password@127.0.0.1:5432/under_review_ci
+      SESSION_SECRET: synthetic-ci-only-session-secret-never-use-for-deployment
+      TOKEN_ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      SITE_URL: http://127.0.0.1:4380
+      PRIVATE_STAGING: 'true'
+      LIVE_POSTING_ALLOWED: 'false'
+      NEXT_TELEMETRY_DISABLED: '1'
+      RUN_DB_TESTS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install pinned workspace dependencies
+        run: npm ci
+      - name: Check all TypeScript
+        run: npm run typecheck
+      - name: Run unit and isolated PostgreSQL integration tests
+        run: npm test
+      - name: Build production web application
+        run: npm run build
+      - name: Seed the disposable browser-test database
+        run: node --import tsx scripts/seed-feedback-smoke.ts
+      - name: Install browser and system dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Start the local production preview
+        run: |
+          mkdir -p artifacts
+          npm run start --workspace @under-review/web -- --port 4380 > artifacts/web-preview.log 2>&1 &
+          node --input-type=module <<'NODE'
+          const deadline = Date.now() + 45000;
+          while (Date.now() < deadline) {
+            try {
+              const response = await fetch('http://127.0.0.1:4380/api/ready', {signal: AbortSignal.timeout(1500)});
+              if (response.ok) process.exit(0);
+            } catch {}
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+          throw new Error('The production preview did not become ready.');
+          NODE
+      - name: Verify archive and report navigation on desktop and mobile
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4380
+          SMOKE_AUDIT_GAME_ID: 2099_01_GB_MIN
+          SMOKE_SEASON: '2099'
+        run: npx playwright test --config apps/web/playwright.config.ts apps/web/tests/consumer.spec.ts --grep 'browsing game cards|all weeks|report verdict' --workers 2 --output artifacts/consumer-browser --reporter line
+      - name: Verify feedback on desktop and mobile
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4380
+          SMOKE_AUDIT_GAME_ID: 2099_01_GB_MIN
+          SMOKE_MARKET_EXPECTED: 'true'
+        run: npx playwright test --config apps/web/playwright.config.ts apps/web/tests/rating-feedback.spec.ts --workers 2 --output artifacts/feedback-browser --reporter line
+      - name: Preserve browser evidence and preview logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-${{ github.sha }}
+          path: artifacts/
+          if-no-files-found: ignore
+          retention-days: 7

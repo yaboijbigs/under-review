@@ -195,17 +195,32 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     const {refreshGameAudit}=await import('../packages/core/src/audit-refresh.js');
     const {projectRoot}=await import('../packages/core/src/config.js');
     const path=await import('node:path');
+    const fs=await import('node:fs/promises');
+    const os=await import('node:os');
+    const {createHash}=await import('node:crypto');
+    const {normalizeSchedule,parseCsv}=await import('../packages/core/src/normalize.js');
     const historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));
-    const otGame={...game,id:'2099_11_TST_DMO',homeTeam:'DMO',week:11,homeScore:0,awayScore:0,providerData:{synthetic:true,result:0}};
+    const scheduleBytes=Buffer.from('game_id,season,week,game_type,home_team,away_team,home_score,away_score,result,spread_line\n2099_11_TST_DMO,2099,11,REG,DMO,TST,0,0,0,3.5');
+    const otGame=normalizeSchedule(parseCsv(scheduleBytes)[0]);
+    const previousDataDir=config.dataDir;const temporaryDataDir=await fs.mkdtemp(path.join(os.tmpdir(),'ur-spread-db-'));config.dataDir=temporaryDataDir;
+    const checksum=createHash('sha256').update(scheduleBytes).digest('hex');
+    const schedulePath=path.join(temporaryDataDir,'snapshots','snapshots',`${checksum}.csv`);await fs.mkdir(path.dirname(schedulePath),{recursive:true});await fs.writeFile(schedulePath,scheduleBytes);
+    try{
     const plays=Array.from({length:6},(_,index)=>({game_id:otGame.id,home_team:otGame.homeTeam,away_team:otGame.awayTeam,season:otGame.season,
-      play_id:index,qtr:Math.max(1,index),time:'00:00',total_home_score:0,total_away_score:0,desc:index===0?'GAME':index===5?'END GAME':'Synthetic test row',play_type:'no_play'}));
+      play_id:index,qtr:Math.max(1,index),time:'00:00',total_home_score:0,total_away_score:0,desc:index===0?'GAME':index===5?'END GAME':'Synthetic test row',play_type:index===1||index===2?'run':'no_play',yards_gained:0,posteam:index===1?'TST':'DMO',defteam:index===1?'DMO':'TST'}));
     const profiles=[otGame.homeTeam,otGame.awayTeam].map(team=>({gameId:otGame.id,season:otGame.season,team,opponent:team===otGame.homeTeam?otGame.awayTeam:otGame.homeTeam,
       pointsFor:0,pointsAgainst:0,totalYards:0,opponentYards:0,penalties:0,penaltyYards:0,turnoverMargin:0,nonOffensiveTouchdowns:0}));
     const audit=buildGameAudit({game:otGame,plays,profiles,reference:historical.reference,referenceChecksum:historical.checksum});
-    const sources=[{...snapshot,id:'synthetic-ot-pbp',provider:'nflverse-pbp'},{...snapshot,id:'synthetic-ot-aggregate',provider:'nflverse-team-stats'}];
+    audit.version='under-review-game-audit-v3';
+    const scoring=['passing_tds','rushing_tds','def_tds','special_teams_tds','fg_made','pat_made','passing_2pt_conversions','rushing_2pt_conversions','def_2pt_made','def_safeties','fumble_recovery_tds'];
+    const fields=['game_id','season','week','team','opponent_team','passing_yards','rushing_yards','sack_yards_lost','passing_interceptions','fumbles_lost_total','penalties','penalty_yards',...scoring];
+    const aggregateBytes=Buffer.from([fields.join(','),...['DMO','TST'].map(team=>[otGame.id,2099,11,team,team==='DMO'?'TST':'DMO',...Array(fields.length-5).fill(0)].join(','))].join('\n'));
+    const aggregateHash=createHash('sha256').update(aggregateBytes).digest('hex'),aggregatePath=path.join(temporaryDataDir,'snapshots','snapshots',`${aggregateHash}.csv`);await fs.writeFile(aggregatePath,aggregateBytes);
+    const sources=[{...snapshot,id:'synthetic-ot-pbp',provider:'nflverse-pbp'},{...snapshot,id:'synthetic-ot-aggregate',provider:'nflverse-team-stats',checksum:aggregateHash,path:aggregatePath,url:'https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2099.csv'},
+      {...snapshot,id:'synthetic-market-schedule',provider:'nflverse-schedules',checksum,path:schedulePath,url:'https://github.com/nflverse/nflverse-data/releases/download/schedules/games.csv'}];
     const original:AnalysisResult={...result(),events:[],gameAudit:audit,
       timeline:[{playId:'2',quarter:2,clock:'12:00',homeWp:0.42,description:'Stored regulation point'},{playId:'5',quarter:5,clock:'00:00',homeWp:null,description:'END GAME'}],
-      models:[{id:'game-profile-audit',version:GAME_AUDIT_VERSION,checksum:historical.checksum}],warnings:[]};
+      models:[{id:'game-profile-audit',version:'under-review-game-audit-v3',checksum:historical.checksum}],warnings:[]};
     const first=await repository.saveAnalysis(otGame,plays,sources,original,'clean');
     const refreshed=await refreshGameAudit(otGame.id);
     expect(refreshed).toMatchObject({created:true,number:2});
@@ -213,11 +228,13 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     expect(latest?.revision.analysis.metrics).toEqual(original.metrics);
     expect(latest?.revision.analysis.timeline[0]).toEqual(original.timeline[0]);
     expect(latest?.revision.analysis.timeline.at(-1)).toMatchObject({status:'observed',homeWp:0,awayWp:0,tieProbability:1,reasonCode:'observed_terminal_result'});
+    expect(latest?.revision.analysis.gameAudit?.market).toMatchObject({expectedHomeMargin:3.5,actualHomeMargin:0,absoluteError:3.5,atsResult:'away_covered'});
     expect(latest?.revision.sourceSnapshots.map(source=>source.id).sort()).toEqual(sources.map(source=>source.id).sort());
     expect((await repository.getReport(otGame.id,1))?.revision).toMatchObject({id:first.id,analysis:original});
     expect(await refreshGameAudit(otGame.id)).toMatchObject({created:false,id:refreshed.id,number:2});
     expect((await repository.getReport(otGame.id))?.history).toHaveLength(2);
     expect((await db.query('SELECT 1 FROM publication_outbox WHERE game_id=$1',[otGame.id])).rowCount).toBe(0);
+    }finally{config.dataDir=previousDataDir;await fs.rm(temporaryDataDir,{recursive:true,force:true});}
   });
 
   it('reads complete latest and historical reports with one pool checkout each',async()=>{

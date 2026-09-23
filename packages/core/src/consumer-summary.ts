@@ -1,10 +1,10 @@
 import type { GameAudit, GameAuditFlag, GameProfile } from './contracts.js';
 
-export const SUSPICION_RULES_VERSION = 'game-suspicion-v1';
+export const SUSPICION_RULES_VERSION = 'game-suspicion-v2';
 export const SUSPICION_SCALE = [
  {level:'fair',rating:1,label:'Fair',definition:'No flags within the checks we can run.'},
- {level:'debatable',rating:2,label:'Debatable',definition:'Individual plays deserve a closer look.'},
- {level:'hmm',rating:3,label:'Hmm',definition:'An unusual win pattern or a repeated penalty sequence.'},
+ {level:'debatable',rating:2,label:'Debatable',definition:'Individual plays deserve a closer look, or the result was unusually far from the recorded spread.'},
+ {level:'hmm',rating:3,label:'Hmm',definition:'An unusual win pattern, repeated penalty sequence, or very unusual result versus the spread.'},
  {level:'sus',rating:4,label:'Sus',definition:'A strong statistical flag or three-plus drive-extending penalties.'},
  {level:'extreme',rating:5,label:'RIGGED?',definition:'A strong statistical flag and a three-plus penalty sequence favored the winner.'},
 ] as const;
@@ -80,6 +80,21 @@ function driveClusters(audit:GameAudit):NonNullable<GameVerdict['cluster']>[] {
  return clusters.sort((a,b)=>b.playIds.length-a.playIds.length);
 }
 
+/** Validate every displayed arithmetic link; missing market evidence never supplies a floor. */
+function marketSignal(audit:GameAudit):{floor:1|2|3;reason:string|null}{
+ const m=audit.market,r=m?.reference,home=audit.profiles.find(p=>p.team===m?.homeTeam),away=audit.profiles.find(p=>p.team===m?.awayTeam);
+ if(!m||m.version!=='under-review-spread-v1'||m.status!=='available'||!r||!home||!away||home.gameId!==away.gameId||home.season!==away.season
+  ||!finite(home.pointsFor)||!finite(away.pointsFor)||home.pointsAgainst!==away.pointsFor||away.pointsAgainst!==home.pointsFor
+  ||!finite(m.expectedHomeMargin)||!Number.isInteger(m.expectedHomeMargin*2)||Math.abs(m.expectedHomeMargin)>100||m.actualHomeMargin!==home.pointsFor-away.pointsFor
+  ||m.homeMarginError!==m.actualHomeMargin-m.expectedHomeMargin||m.absoluteError!==Math.abs(m.homeMarginError)||!m.source||!/^[a-f0-9]{64}$/.test(m.source.checksum)
+  ||!/^[a-f0-9]{64}$/.test(r.checksum??'')||!integer(r.games)||r.games<500||!integer(r.atLeastAsSurprising)||r.atLeastAsSurprising>r.games
+  ||!integer(r.startSeason)||!integer(r.endSeason)||r.startSeason>r.endSeason||r.endSeason>=home.season||!finite(r.tailRate)||Math.abs(r.tailRate-r.atLeastAsSurprising/r.games)>1e-9
+  ||!finite(r.percentile)||Math.abs(r.percentile-100*(1-r.tailRate))>1e-9)return {floor:1,reason:null};
+ const floor=r.tailRate<=.05?3:r.tailRate<=.1?2:1;
+ if(m.ratingFloor!==floor||m.surprise!==(floor===3?'very_unusual':floor===2?'unusual':'ordinary'))return {floor:1,reason:null};
+ return {floor,reason:floor>1?`The final margin was ${m.absoluteError} points from the recorded spread. ${count(r.atLeastAsSurprising)} of ${count(r.games)} prior games (${(100*r.tailRate).toFixed(1)}%) were at least this far from their line.`:null};
+}
+
 /** Versioned editorial screening rules, not a probability or finding of manipulation. */
 export function getGameVerdict(audit:GameAudit|null|undefined,hasAnalysis=true):GameVerdict{
  const base={comparison:null,rating:null,cluster:null,rulesVersion:SUSPICION_RULES_VERSION,definition:'Outside the five-level scale until the evidence is sufficient.',reviewCount:audit?.reviewCandidates.length??0,evidenceNote:'Automatic screening. Not a finding of manipulation.'} as const;
@@ -101,10 +116,12 @@ export function getGameVerdict(audit:GameAudit|null|undefined,hasAnalysis=true):
  const outlier=strongest?.status==='historical_outlier';
  const top=outlier&&strongest.team===winner.team&&!!winningCluster;
  const cluster=top?winningCluster!:clusters[0]??null;
- const rating=top?5:outlier||(cluster&&cluster.playIds.length>=3)?4:strongest||(cluster&&cluster.playIds.length>=2)?3:base.reviewCount?2:1;
+ const market=marketSignal(audit);
+ const existingRating=top?5:outlier||(cluster&&cluster.playIds.length>=3)?4:strongest||(cluster&&cluster.playIds.length>=2)?3:base.reviewCount?2:1;
+ const rating=Math.max(existingRating,market.floor) as 1|2|3|4|5;
  const tier=SUSPICION_SCALE[rating-1];
  const clusterReason=cluster?`${teamName(cluster.team)} received ${cluster.playIds.length} first downs from defensive penalties on third or fourth down during one drive.`:null;
  const historicalReason=strongest?`${teamName(winner.team)} won despite ${strongest.conditions.map(condition=>conditionLabels[condition]).join(' and ')}. Matching past performances produced ${count(strongest.reference.wins)} wins in ${count(strongest.reference.matchingGames)} games.`:null;
- const summary=top?'A rare winning profile and a repeated drive-extending penalty sequence both favored the winning team. This is our strongest screening flag; it does not establish that the calls were wrong or the game was fixed.':rating===4?'A strong flag deserves scrutiny. The evidence below explains whether it comes from the winning performance or a repeated penalty sequence.':rating===3?'There is a specific pattern worth questioning beyond individual key plays. The evidence below explains it.':rating===2?`${base.reviewCount} ${base.reviewCount===1?'play deserves':'plays deserve'} a closer look, but no stronger pattern met this rating’s rules. More routine flags alone do not raise the rating.`:'No unusual winning pattern or key review candidates were found within the checks we can run. Fair here does not mean every call was correct.';
- return {...base,...tier,shortLabel:tier.label,summary,cluster,comparison:strongest?comparison(strongest):null,reasons:[historicalReason,clusterReason,...profileFacts(winner)].filter((reason):reason is string=>!!reason),tone:rating>=4?'high':rating===3?'elevated':'neutral',evidenceNote:'Automatic screening. Not a finding of manipulation. These signals may overlap; the level is not the odds that a game was rigged.'};
+ const summary=top?'A rare winning profile and a repeated penalty sequence favored the winner.':outlier?'The winner’s statistical profile rarely produced wins in the historical comparison.':cluster&&cluster.playIds.length>=3?'Three or more defensive penalties extended one drive.':strongest?'The winning performance matches an unusual historical pattern.':cluster?'Repeated defensive penalties extended one drive.':market.floor===3?'The final margin was very unusual compared with the recorded spread.':market.floor===2?'The final margin was unusual compared with the recorded spread.':base.reviewCount?`${base.reviewCount} ${base.reviewCount===1?'play deserves':'plays deserve'} a closer look.`:'No unusual pattern stood out in the available data.';
+ return {...base,...tier,shortLabel:tier.label,summary,cluster,comparison:strongest?comparison(strongest):null,reasons:[historicalReason,clusterReason,market.reason,...profileFacts(winner)].filter((reason):reason is string=>!!reason),tone:rating>=4?'high':rating===3?'elevated':'neutral',evidenceNote:'Automatic screening. Not a finding of manipulation. These signals may overlap; the level is not the odds that a game was rigged.'};
 }

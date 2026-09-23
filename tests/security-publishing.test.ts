@@ -1,5 +1,5 @@
 import { describe,it,expect } from 'vitest';
-import { classifyPostResponse } from '../packages/core/src/publishing.js';
+import { classifyPostResponse,initialPublicationIneligibility,type PublishingSettings } from '../packages/core/src/publishing.js';
 import { draftPost,validateDraft,supportedFindings,metricDisplay,reportSummary } from '../packages/core/src/summaries.js';
 import { buildGameAudit } from '../packages/core/src/game-audit.js';
 import { readFile } from 'node:fs/promises';
@@ -45,6 +45,16 @@ describe('evidence-constrained drafting',()=>{
 describe('safe external delivery classification',()=>{
  it('only marks confirmed IDs as published',()=>{expect(classifyPostResponse(201,true)).toBe('published');expect(classifyPostResponse(201,false)).toBe('unknown_outcome');});
  it('does not blindly retry ambiguous responses',()=>{expect(classifyPostResponse(503,false)).toBe('unknown_outcome');expect(classifyPostResponse(408,false)).toBe('unknown_outcome');expect(classifyPostResponse(429,false)).toBe('retry');expect(classifyPostResponse(403,false)).toBe('failed');});
+});
+describe('upcoming-game publication cutoff',()=>{
+ const settings:PublishingSettings={mode:'automatic',killSwitch:false,accountId:'1',activatedAt:'2026-09-23T00:00:00Z'};
+ const eligible={publication_eligible:true,kickoff_at:'2026-09-24T00:00:00Z',first_validated_at:'2026-09-24T04:00:00Z'};
+ it('requires an eligible future kickoff and a final validation after activation',()=>{
+  expect(initialPublicationIneligibility(eligible,settings)).toBeNull();
+  for(const changes of [{publication_eligible:false},{kickoff_at:null},{kickoff_at:'bad'},{kickoff_at:'2026-09-22T23:59:59Z'},{first_validated_at:null},{first_validated_at:'bad'},{first_validated_at:'2026-09-22T23:59:59Z'}])expect(initialPublicationIneligibility({...eligible,...changes},settings)).toBeTypeOf('string');
+  expect(initialPublicationIneligibility(eligible,{...settings,activatedAt:null})).toBeTypeOf('string');
+  expect(initialPublicationIneligibility(undefined,settings)).toBeTypeOf('string');
+ });
 });
 describe('mutation security',()=>{
  const session:Session={id:'id',userId:'user',username:'operator',role:'admin',csrfToken:'random-secret-csrf',expiresAt:new Date().toISOString()};

@@ -31,12 +31,22 @@ export const gameAuditFlagSchema=z.object({id:z.string(),team:z.string(),title:z
 export type GameAuditFlag=z.infer<typeof gameAuditFlagSchema>;
 export const reviewCandidateSchema=z.object({id:z.string(),playId:z.string(),quarter:z.number().nullable(),clock:z.string().nullable(),description:z.string(),team:z.string().nullable(),reasons:z.array(z.string()),priority:z.enum(['high','medium']),observedWpSwing:z.number().nullable(),existingEventId:z.string().nullable()});
 export type ReviewCandidate=z.infer<typeof reviewCandidateSchema>;
+export const marketAuditSchema=z.object({
+ version:z.string(),status:z.enum(['available','unavailable']),reasonCode:z.string().nullable(),
+ homeTeam:z.string(),awayTeam:z.string(),expectedHomeMargin:z.number().nullable(),actualHomeMargin:z.number().nullable(),homeMarginError:z.number().nullable(),absoluteError:z.number().nullable(),
+ favoredTeam:z.string().nullable(),pickem:z.boolean().nullable(),atsWinner:z.string().nullable(),atsResult:z.enum(['home_covered','away_covered','push']).nullable(),favoriteCovered:z.boolean().nullable(),underdogWon:z.boolean().nullable(),
+ surprise:z.enum(['ordinary','unusual','very_unusual','unavailable']),ratingFloor:z.union([z.literal(1),z.literal(2),z.literal(3)]).nullable(),
+ source:z.object({snapshotId:z.string(),url:z.string(),checksum:z.string(),retrievedAt:z.string(),field:z.literal('spread_line')}).nullable(),
+ reference:z.object({version:z.string(),checksum:z.string().nullable(),startSeason:z.number().int().nullable(),endSeason:z.number().int().nullable(),games:z.number().int().nonnegative(),atLeastAsSurprising:z.number().int().nonnegative(),tailRate:z.number().min(0).max(1).nullable(),percentile:z.number().min(0).max(100).nullable()}),
+ notes:z.array(z.string())
+});
+export type MarketAudit=z.infer<typeof marketAuditSchema>;
 export const gameAuditSchema=z.object({
   version:z.string(),status:z.enum(['historical_outlier','unusual_profile','review_worthy','no_flag_found','insufficient_data']),headline:z.string(),
   profiles:z.array(gameProfileSchema),flags:z.array(gameAuditFlagSchema),reviewCandidates:z.array(reviewCandidateSchema),
   context:z.array(z.object({team:z.string().nullable(),text:z.string(),playIds:z.array(z.string()),kind:z.string()})),
   reference:z.object({version:z.string(),checksum:z.string().nullable(),startSeason:z.number().nullable(),endSeason:z.number().nullable(),teamGames:z.number().int()}),
-  notes:z.array(z.string())
+  notes:z.array(z.string()),market:marketAuditSchema.optional()
 });
 export type GameAudit=z.infer<typeof gameAuditSchema>;
 export const analysisSchema=z.object({

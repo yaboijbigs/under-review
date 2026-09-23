@@ -48,6 +48,8 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     handler = async () => { throw new Error('Unexpected test HTTP call.'); };
     vi.stubEnv('X_CLIENT_ID', 'synthetic-client');
     vi.stubEnv('X_CLIENT_SECRET', 'synthetic-secret');
+    vi.stubEnv('X_REDIRECT_URI', 'https://under-review.example/api/x/callback');
+    vi.stubEnv('X_EXPECTED_USERNAME', '');
     vi.stubGlobal('fetch', vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
       const url = String(input); requests.push({ url, method: init?.method ?? 'GET' });
       return handler(url, init);
@@ -56,6 +58,12 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     await db.query('DELETE FROM publication_outbox');
     await db.query('DELETE FROM jobs');
     await db.query('DELETE FROM audit_log');
+    await db.query('DELETE FROM analysis_revisions WHERE number>1');
+    const game={id:gameId,season:2099,week:1,gameType:'REG',homeTeam:'DEMO',awayTeam:'TST',homeScore:17,awayScore:20,kickoffAt:'2099-09-01T00:00:00Z',providerData:{}};
+    await db.query("UPDATE games SET publication_eligible=true,first_validated_at='2099-09-01T04:00:00Z',kickoff_at=$1,game_json=$2 WHERE id=$3",[game.kickoffAt,JSON.stringify(game),gameId]);
+    const profiles=[game.homeTeam,game.awayTeam].map(team=>({gameId,season:2099,team,opponent:team===game.homeTeam?game.awayTeam:game.homeTeam,pointsFor:team===game.homeTeam?17:20,pointsAgainst:team===game.homeTeam?20:17,totalYards:300,opponentYards:300,penalties:3,penaltyYards:20,turnoverMargin:0,nonOffensiveTouchdowns:0}));
+    const analysis={gameAudit:{version:'synthetic',status:'no_flag_found',headline:'Synthetic',profiles,flags:[],context:[],reviewCandidates:[],reference:{version:'synthetic',checksum:'a'.repeat(64),startSeason:2098,endSeason:2098,teamGames:2},notes:[]}};
+    await db.query('UPDATE analysis_revisions SET game_json=$1,analysis=$2 WHERE id=$3',[JSON.stringify(game),JSON.stringify(analysis),revisionId]);
     await db.query("INSERT INTO oauth_accounts(id,username,encrypted_tokens,expires_at) VALUES($1,'synthetic-account',$2,now()+interval '1 hour') ON CONFLICT(id) DO UPDATE SET encrypted_tokens=excluded.encrypted_tokens,expires_at=excluded.expires_at", [accountId, publishing.encryptTokens({ access_token: 'synthetic-old', refresh_token: 'synthetic-refresh', expires_in: 3600 })]);
     await db.query("UPDATE settings SET value=$1 WHERE key='publishing'", [JSON.stringify({ mode: 'automatic', killSwitch: false, accountId, activatedAt: '2000-01-01T00:00:00Z' })]);
   });
@@ -78,6 +86,72 @@ describe.skipIf(!enabled)('publication recovery (isolated PostgreSQL, all HTTP m
     expect((await db.query('SELECT details FROM audit_log')).rows[0].details).toMatchObject({ resolution: 'posted', verified: true, accountId });
     expect(requests.map(request => request.method)).toEqual(['GET']);
     expect((await db.query('SELECT count(*)::int AS n FROM jobs')).rows[0].n).toBe(0);
+  });
+
+  it('shows credential/account readiness and an attributable preview without calling X',async()=>{
+    const ready=await publishing.getPublishingReadiness();expect(ready).toMatchObject({connectionReady:true,automaticReady:true,cutoffPolicy:'kickoff_after_activation',corrections:'manual_only',selectedAccount:{id:accountId}});
+    const preview=await publishing.buildAutoPostPreview(gameId);expect(preview).toMatchObject({valid:true,revision:1,eligibleForAutomation:true,reportUrl});expect(preview.text).toContain('TST 20–17 DEMO | Final. Game rating: Fair (1/5).');
+    vi.stubEnv('X_EXPECTED_USERNAME','riggednflmoment');expect((await publishing.getPublishingReadiness()).automaticReady).toBe(false);
+    vi.stubEnv('X_REDIRECT_URI','https://attacker.example/callback');expect((await publishing.getPublishingReadiness()).connectionReady).toBe(false);
+    await expect(publishing.beginXConnection(adminId)).rejects.toThrow('exact callback');expect(requests).toHaveLength(0);
+  });
+
+  it('atomically queues one initial post per game/account and does not post revisions automatically',async()=>{
+    // More callers than the pool's five connections catches nested-checkout deadlocks.
+    await Promise.all(Array.from({length:7},()=>publishing.maybeAutomaticDraft(gameId)));
+    expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(1);
+    expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(1);
+    await db.query("UPDATE publication_outbox SET status='published',external_id='987654321' WHERE mode='live'");
+    await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'synthetic2',statistical_status,charting_status,'correction',summary,analysis,snapshot_ids,game_json FROM analysis_revisions WHERE id=$2`,[randomUUID(),revisionId]);
+    await publishing.maybeAutomaticDraft(gameId);
+    expect((await db.query('SELECT count(*)::int n FROM publication_outbox')).rows[0].n).toBe(2);
+    expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(1);
+    expect((await publishing.buildAutoPostPreview(gameId)).ineligibilityReason).toContain('already has');expect(requests).toHaveLength(0);
+  });
+  it('renders the latest scored report instead of reusing an older dry-run preview',async()=>{
+    const old=await publishing.createDraft(gameId);
+    const newRevision=randomUUID();
+    await db.query(`INSERT INTO analysis_revisions(id,game_id,number,input_hash,statistical_status,charting_status,change_summary,summary,analysis,snapshot_ids,game_json) SELECT $1,game_id,2,'corrected-final',statistical_status,charting_status,'corrected final',summary,jsonb_set(jsonb_set(analysis,'{gameAudit,profiles,0,pointsFor}','21'),'{gameAudit,profiles,1,pointsAgainst}','21'),snapshot_ids,jsonb_set(game_json,'{homeScore}','21') FROM analysis_revisions WHERE id=$2`,[newRevision,revisionId]);
+    await publishing.maybeAutomaticDraft(gameId);
+    const live=(await db.query("SELECT revision_id,text FROM publication_outbox WHERE mode='live'")).rows[0];expect(live.revision_id).toBe(newRevision);expect(live.text).toContain('TST 20–21 DEMO');expect(live.text.endsWith('?revision=2')).toBe(true);
+    expect((await db.query('SELECT text FROM publication_outbox WHERE id=$1',[old.id])).rows[0].text).toContain('TST 20–17 DEMO');expect(requests).toHaveLength(0);
+  });
+  it('waits for a complete rating without consuming the initial slot, then queues once',async()=>{
+    const saved=(await db.query('SELECT analysis FROM analysis_revisions WHERE id=$1',[revisionId])).rows[0].analysis;
+    await db.query("UPDATE analysis_revisions SET analysis='{}' WHERE id=$1",[revisionId]);
+    await publishing.maybeAutomaticDraft(gameId);expect((await db.query('SELECT count(*)::int n FROM publication_outbox')).rows[0].n).toBe(0);
+    expect((await publishing.buildAutoPostPreview(gameId)).ineligibilityReason).toContain('complete game rating');
+    await db.query('UPDATE analysis_revisions SET analysis=$2 WHERE id=$1',[revisionId,JSON.stringify(saved)]);await publishing.maybeAutomaticDraft(gameId);
+    expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(1);
+    await db.query("UPDATE analysis_revisions SET analysis='{}' WHERE id=$1",[revisionId]);const id=(await db.query("SELECT id FROM publication_outbox WHERE mode='live'")).rows[0].id;
+    await publishing.publishOutbox(id);expect(requests).toHaveLength(0);expect((await db.query('SELECT status,reason FROM publication_outbox WHERE id=$1',[id])).rows[0]).toMatchObject({status:'approved',reason:expect.stringContaining('complete current game rating')});
+  });
+
+  it.each(['backfill','early-kickoff','missing-kickoff','prevalidated'])('excludes %s without failing analysis or queuing a historical post',async reason=>{
+    if(reason==='backfill')await db.query('UPDATE games SET publication_eligible=false');
+    if(reason==='early-kickoff')await db.query("UPDATE games SET kickoff_at='1999-01-01'");
+    if(reason==='missing-kickoff')await db.query('UPDATE games SET kickoff_at=null');
+    if(reason==='prevalidated')await db.query("UPDATE games SET first_validated_at='1999-01-01'");
+    await publishing.maybeAutomaticDraft(gameId);expect((await db.query('SELECT count(*)::int n FROM publication_outbox')).rows[0].n).toBe(0);expect(requests).toHaveLength(0);
+  });
+
+  it('rolls back the live row if enqueueing fails, then analysis retry can recover without another preview',async()=>{
+    await db.query("ALTER TABLE jobs ADD CONSTRAINT synthetic_reject_publish CHECK(kind<>'publish')");
+    try{await expect(publishing.maybeAutomaticDraft(gameId)).rejects.toThrow();expect((await db.query("SELECT count(*)::int n FROM publication_outbox WHERE mode='live'")).rows[0].n).toBe(0);}
+    finally{await db.query('ALTER TABLE jobs DROP CONSTRAINT synthetic_reject_publish');}
+    await publishing.maybeAutomaticDraft(gameId);expect((await db.query('SELECT count(*)::int n FROM publication_outbox')).rows[0].n).toBe(2);expect((await db.query('SELECT count(*)::int n FROM jobs')).rows[0].n).toBe(1);expect(requests).toHaveLength(0);
+  });
+
+  it('requires the expected account and refreshes the cutoff only when automation resumes',async()=>{
+    vi.stubEnv('X_EXPECTED_USERNAME','riggednflmoment');await expect(publishing.setPublishing('automatic',accountId,adminId)).rejects.toThrow('intended X account');
+    await expect(publishing.setKillSwitch(false,adminId)).rejects.toThrow('intended X account');vi.stubEnv('X_EXPECTED_USERNAME','');
+    await publishing.setKillSwitch(true,adminId);await publishing.setKillSwitch(false,adminId);const settings=await publishing.getPublishingSettings();expect(Date.parse(settings.activatedAt!)).toBeGreaterThan(Date.now()-5000);
+    await publishing.setKillSwitch(false,adminId);expect((await publishing.getPublishingSettings()).activatedAt).toBe(settings.activatedAt);expect(requests).toHaveLength(0);
+  });
+
+  it('rechecks the cutoff at delivery and never submits a stale initial post',async()=>{
+    const id=await makeOutbox('approved');await db.query("UPDATE games SET kickoff_at='1999-01-01'");await publishing.publishOutbox(id);
+    expect((await db.query('SELECT status FROM publication_outbox WHERE id=$1',[id])).rows[0].status).toBe('cancelled');expect(requests).toHaveLength(0);
   });
 
   it.each(['wrong-author', 'changed-text', 'wrong-url', 'missing-post'])('keeps %s uncertain and never resends', async (failure) => {

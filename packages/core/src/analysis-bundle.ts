@@ -12,6 +12,7 @@ import { buildGameAudit,GAME_AUDIT_VERSION } from './game-audit.js';
 import { loadGameProfileReference,normalizeGameProfiles,validateGameProfileFinality } from './game-profile-source.js';
 import { applyOvertimeTimeline,loadOvertimeReference,OVERTIME_MODEL_ID } from './overtime-integration.js';
 import { OVERTIME_MODEL_VERSION } from './overtime.js';
+import { buildMarketAudit,loadSpreadReference,SPREAD_MODEL_ID,SPREAD_VERSION,applySpreadAudit } from './spread.js';
 
 // Deliberately bounded for the current-season catch-up, not whole-database transport.
 export const MAX_ANALYSIS_BUNDLE_BYTES=64*1024*1024;
@@ -31,8 +32,8 @@ export class AnalysisBundleError extends Error {
 function fail(code:string,message:string):never{throw new AnalysisBundleError(code,message);}
 const CODE_FILES=['analytics/renv.lock','analytics/run.R','analytics/R/common.R','analytics/R/states.R','analytics/R/fourth.R','analytics/R/baselines.R','analytics/R/engine.R','analytics/R/rarity.R',
  'analytics/vendor/nfl4th/helpers.R','analytics/vendor/nfl4th/decision_functions.R','analytics/vendor/nfl4th/apply_win_prob.R','analytics/vendor/nfl4th/wrapper.R',
- 'packages/core/src/normalize.ts','packages/core/src/game-audit.ts','packages/core/src/game-profile-source.ts','packages/core/src/overtime.ts','packages/core/src/overtime-integration.ts'];
-const MODEL_FILES=['manifest.json','evaluation.json','coaching-evaluation.json','category-reference.json','game-profiles.json','overtime-reference.json','fd_model.rds','wp_model.rds','fg_model.rds','two_pt_model.rds','punt_df.rds','fastr_ep_model.rds','fastr_wp_model.rds','fastr_wp_model_spread.rds','fumble.rds','fg.rds','xp.rds','penalty.rds','kickoff_starts.rds'];
+ 'packages/core/src/normalize.ts','packages/core/src/game-audit.ts','packages/core/src/game-profile-source.ts','packages/core/src/overtime.ts','packages/core/src/overtime-integration.ts','packages/core/src/spread.ts'];
+const MODEL_FILES=['manifest.json','evaluation.json','coaching-evaluation.json','category-reference.json','game-profiles.json','overtime-reference.json','spread-reference.json','fd_model.rds','wp_model.rds','fg_model.rds','two_pt_model.rds','punt_df.rds','fastr_ep_model.rds','fastr_wp_model.rds','fastr_wp_model_spread.rds','fumble.rds','fg.rds','xp.rds','penalty.rds','kickoff_starts.rds'];
 const modelDirectory=()=>process.env.MODEL_DIR??path.join(projectRoot,'analytics/models');
 
 /** The trusted local runtime, never filenames or executable instructions from a bundle. */
@@ -51,6 +52,9 @@ export async function analysisBundleProducer():Promise<AnalysisBundleProducer>{
  const overtime=await loadOvertimeReference(path.join(modelDirectory(),'overtime-reference.json'));
  if(overtime.checksum!==files['models/overtime-reference.json'])fail('bundle_local_models_invalid','The overtime reference changed while validating its producer fingerprint.');
  models[OVERTIME_MODEL_ID]={version:OVERTIME_MODEL_VERSION,checksum:overtime.checksum};
+ const spread=await loadSpreadReference();
+ if(spread.checksum!==files['models/spread-reference.json'])fail('bundle_local_models_invalid','The spread reference changed while validating its producer fingerprint.');
+ models[SPREAD_MODEL_ID]={version:SPREAD_VERSION,checksum:spread.checksum};
  return producerSchema.parse({format:'under-review-analysis-bundle-v1',closeCallTolerance:config.closeCallTolerance,files,models});
 }
 
@@ -111,7 +115,11 @@ async function validateBundle(input:unknown):Promise<{bundle:AnalysisBundle;byte
   catch{profiles=[];}
  }
  const audit=buildGameAudit({game:bundle.game,plays:bundle.plays,profiles,reference:historical.reference,referenceChecksum:historical.checksum,events:bundle.analysis.events});
+ const spread=await loadSpreadReference();
+ audit.market=buildMarketAudit(bundle.game,{...schedule.snapshot,path:''},spread);
  if(stableJson(audit)!==stableJson(bundle.analysis.gameAudit))fail('bundle_audit_mismatch','Game audit does not match the bundled sources and fixed historical reference.');
+ const market=applySpreadAudit(bundle.game,bundle.analysis,[{...schedule.snapshot,path:''}],spread);
+ if(stableJson(market.models.find(model=>model.id===SPREAD_MODEL_ID))!==stableJson(bundle.analysis.models.find(model=>model.id===SPREAD_MODEL_ID)))fail('bundle_market_mismatch','Market model metadata does not match the frozen reference.');
  const overtime=applyOvertimeTimeline(bundle.game,bundle.plays,bundle.analysis,await loadOvertimeReference(path.join(modelDirectory(),'overtime-reference.json')));
  if(stableJson(overtime.timeline)!==stableJson(bundle.analysis.timeline)
   ||stableJson(overtime.models.find(model=>model.id===OVERTIME_MODEL_ID))!==stableJson(bundle.analysis.models.find(model=>model.id===OVERTIME_MODEL_ID)))fail('bundle_overtime_mismatch','Overtime probabilities or model metadata do not match the immutable plays and frozen reference.');
