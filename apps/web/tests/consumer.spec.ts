@@ -204,7 +204,7 @@ test("a sequence of drive-extending penalties stays grouped and inspectable",asy
   await page.goto(`/games/${gameId}`);
   await reportReady(page);
   expect(Number(await page.locator('.game-verdict').getAttribute('data-rating'))).toBeGreaterThanOrEqual(4);
-  await expect(page.locator('.verdict-reasons')).toContainText('Minnesota Vikings received 3 first downs');
+  await expect(page.locator('.verdict-reasons')).toContainText('3 defensive penalties extended one MIN drive on third or fourth down.');
   await expect(page.locator('.rating-play-links a')).toHaveCount(3);
   const group=page.locator('.audit-context-grid article').filter({hasText:'Drive extending penalties'});
   await expect(group).toBeVisible();
