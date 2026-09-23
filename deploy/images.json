@@ -1,9 +1,9 @@
 {
-  "verifiedAt": "2026-09-23T18:43:42.793Z",
+  "verifiedAt": "2026-09-23T18:58:02.108Z",
   "workflowRun": {
-    "id": 35903880874,
-    "url": "https://github.com/yaboijbigs/under-review/actions/runs/35903880874",
-    "sourceCommit": "427a835299bb9372f5aed960223807ea782ad859",
+    "id": 35905669169,
+    "url": "https://github.com/yaboijbigs/under-review/actions/runs/35905669169",
+    "sourceCommit": "cd354220556e26a69c6fa2bb4d99863171ff8aca",
     "conclusion": "success"
   },
   "web": {
@@ -13,10 +13,10 @@
     "workflowRun": "https://github.com/yaboijbigs/under-review/actions/runs/35903880874"
   },
   "worker": {
-    "sourceCommit": "427a835299bb9372f5aed960223807ea782ad859",
-    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:71d4419829ef11a0f62b0979fb5bfc035381d99c8b5f47c312611a3d9caceb19",
+    "sourceCommit": "cd354220556e26a69c6fa2bb4d99863171ff8aca",
+    "image": "ghcr.io/yaboijbigs/under-review-worker@sha256:07b96758997a26674669f546c65932b064f015a07b00511cbbf2d7e597934835",
     "anonymousManifestVerified": true,
-    "workflowRun": "https://github.com/yaboijbigs/under-review/actions/runs/35903880874"
+    "workflowRun": "https://github.com/yaboijbigs/under-review/actions/runs/35905669169"
   },
   "catchup": {
     "sourceCommit": "9122aed3f2599ac8db5a7e4a0a0810aa83840837",
