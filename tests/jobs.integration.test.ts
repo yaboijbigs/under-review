@@ -129,6 +129,149 @@ describe.skipIf(!enabled)('scheduler priority and coalescing (isolated PostgreSQ
     await jobs.finishJob(next!);
   });
 
+  it('keeps completion and publication moving for other games while heavy analysis holds its lease', async () => {
+    const heavyId = await jobs.enqueue('analyze', 'heavy-game-a', {}, 'heavy-a', due(24));
+    const heavy = await jobs.claimJob('heavy-worker', 'analysis');
+    expect(heavy?.id).toBe(heavyId);
+    const lease = (await db.query('SELECT status,attempts,worker_id,lease_until FROM jobs WHERE id=$1', [heavyId])).rows[0];
+    const routineId = await jobs.enqueue('refresh-audit', 'routine-game-d', {}, 'routine-d', due(48));
+    const completionId = await jobs.enqueueDataCompletionIfIdle('finished-game-b', 'completion-b');
+    const publicationId = await jobs.enqueue('publish', 'rated-game-c', { outboxId: 'synthetic-no-send' }, 'publish-c');
+    const claimed = [];
+    for (let i = 0; i < 2; i++) {
+      const fast = await jobs.claimJob('fast-worker', 'fast');
+      expect(fast).not.toBeNull();
+      claimed.push(fast!.id);
+      await jobs.finishJob(fast!);
+    }
+    expect(new Set(claimed)).toEqual(new Set([completionId, publicationId]));
+    expect(await jobs.claimJob('fast-worker', 'fast')).toBeNull();
+    expect((await db.query('SELECT status,attempts,worker_id,lease_until FROM jobs WHERE id=$1', [heavyId])).rows[0]).toEqual(lease);
+    expect((await db.query('SELECT status FROM jobs WHERE id=$1', [routineId])).rows[0].status).toBe('pending');
+    await jobs.finishJob(heavy!);
+    const routine = await jobs.claimJob('heavy-worker', 'analysis');
+    expect(routine?.id).toBe(routineId);
+    await jobs.finishJob(routine!);
+  });
+
+  it('reserves every fast kind for its lane while the analysis lane claims only heavy work', async () => {
+    const fastKinds = ['sync-season', 'reconcile-week', 'complete-data', 'complete-referee', 'publish'];
+    const fastIds = await Promise.all(fastKinds.map(kind => jobs.enqueue(kind, `${kind}-game`, {}, `lane:${kind}`, due(48))));
+    const heavyIds = await Promise.all(['analyze', 'refresh-audit'].map(kind => jobs.enqueue(kind, `${kind}-game`, {}, `lane:${kind}`)));
+    const claimedHeavy = [];
+    for (let i = 0; i < heavyIds.length; i++) {
+      const heavy = await jobs.claimJob('analysis-only', 'analysis');
+      expect(heavy).not.toBeNull();
+      claimedHeavy.push(heavy!.id);
+      await jobs.finishJob(heavy!);
+    }
+    expect(new Set(claimedHeavy)).toEqual(new Set(heavyIds));
+    expect(await jobs.claimJob('analysis-only', 'analysis')).toBeNull();
+    const claimedFast = [];
+    for (let i = 0; i < fastIds.length; i++) {
+      const fast = await jobs.claimJob('fast-only', 'fast');
+      expect(fast).not.toBeNull();
+      claimedFast.push(fast!.id);
+      await jobs.finishJob(fast!);
+    }
+    expect(new Set(claimedFast)).toEqual(new Set(fastIds));
+    expect(await jobs.claimJob('fast-only', 'fast')).toBeNull();
+  });
+
+  it.each([
+    ['complete-data', 'analysis'], ['complete-data', 'fast'],
+    ['complete-referee', 'analysis'], ['complete-referee', 'fast'],
+    ['publish', 'analysis'], ['publish', 'fast'],
+  ] as const)('excludes concurrent %s and heavy work for one game when %s claims first', async (fastKind, firstLane) => {
+    const heavyId = await jobs.enqueue('analyze', 'shared-game', {}, 'shared-heavy');
+    const fastId = await jobs.enqueue(fastKind, 'shared-game', {}, 'shared-fast');
+    const otherLane = firstLane === 'fast' ? 'analysis' : 'fast';
+    const first = await jobs.claimJob('first-owner', firstLane);
+    expect(first?.id).toBe(firstLane === 'fast' ? fastId : heavyId);
+    expect(await jobs.claimJob('other-owner', otherLane)).toBeNull();
+    expect((await db.query("SELECT count(*)::int AS count FROM jobs WHERE game_id='shared-game' AND status='running'")).rows[0].count).toBe(1);
+    await jobs.finishJob(first!);
+    const second = await jobs.claimJob('other-owner', otherLane);
+    expect(second?.id).toBe(firstLane === 'fast' ? heavyId : fastId);
+    await jobs.finishJob(second!);
+  });
+
+  it('allows only one owner when fast and analysis lanes race on the same game', async () => {
+    await jobs.enqueue('analyze', 'racing-lanes', {}, 'racing-heavy');
+    await jobs.enqueueDataCompletionIfIdle('racing-lanes', 'racing-completion');
+    const claims = await Promise.all([jobs.claimJob('race-heavy', 'analysis'), jobs.claimJob('race-fast', 'fast')]);
+    const owners = claims.filter(job => job !== null);
+    expect(owners).toHaveLength(1);
+    expect((await db.query("SELECT count(*)::int AS count FROM jobs WHERE game_id='racing-lanes' AND status='running'")).rows[0].count).toBe(1);
+    await jobs.finishJob(owners[0]!);
+    const remaining = await jobs.claimJob('after-race', owners[0]!.kind === 'analyze' ? 'fast' : 'analysis');
+    expect(remaining).not.toBeNull();
+    expect(remaining!.id).not.toBe(owners[0]!.id);
+    await jobs.finishJob(remaining!);
+  });
+
+  it('coalesces concurrent completion requests while pending or running, then permits a later bucket', async () => {
+    const ids = await Promise.all(Array.from({ length: 8 }, (_, n) => jobs.enqueueDataCompletionIfIdle('completion-race', `completion-bucket:${n}`)));
+    expect(new Set(ids).size).toBe(1);
+    expect((await db.query("SELECT count(*)::int AS count FROM jobs WHERE game_id='completion-race' AND kind='complete-data'")).rows[0].count).toBe(1);
+    const running = await jobs.claimJob('completion-owner', 'fast');
+    expect(running?.id).toBe(ids[0]);
+    const before = (await db.query('SELECT * FROM jobs WHERE id=$1', [running!.id])).rows[0];
+    const repeated = await Promise.all(Array.from({ length: 4 }, (_, n) => jobs.enqueueDataCompletionIfIdle('completion-race', `while-running:${n}`)));
+    expect(new Set(repeated)).toEqual(new Set(ids));
+    expect((await db.query('SELECT * FROM jobs WHERE id=$1', [running!.id])).rows[0]).toEqual(before);
+    await jobs.finishJob(running!);
+    expect(await jobs.enqueueDataCompletionIfIdle('completion-race', before.job_key)).toBe(running!.id);
+    const later = await jobs.enqueueDataCompletionIfIdle('completion-race', 'next-completion-bucket');
+    expect(later).not.toBe(running!.id);
+    const rows = (await db.query("SELECT status FROM jobs WHERE game_id='completion-race' ORDER BY created_at")).rows;
+    expect(rows.map(row => row.status).sort()).toEqual(['pending', 'succeeded']);
+  });
+
+  it('preserves a future completion retry instead of creating immediate duplicate work', async () => {
+    const future = due(-1);
+    const id = await jobs.enqueue('complete-data', 'completion-delayed', { synthetic: 'preserve' }, 'future-completion', future);
+    const requests = await Promise.all(Array.from({ length: 4 }, (_, n) => jobs.enqueueDataCompletionIfIdle('completion-delayed', `earlier-completion:${n}`)));
+    expect(new Set(requests)).toEqual(new Set([id]));
+    expect((await db.query('SELECT payload,run_after,status FROM jobs WHERE id=$1', [id])).rows[0]).toEqual({ payload: { synthetic: 'preserve' }, run_after: future, status: 'pending' });
+    expect(await jobs.claimJob('fast-too-early', 'fast')).toBeNull();
+    expect(await jobs.claimJob('all-too-early')).toBeNull();
+  });
+
+  it('coalesces referee checks independently of missing aggregates for the same game',async()=>{
+    const aggregate=await jobs.enqueueDataCompletionIfIdle('missing-both','aggregate-bucket');
+    const refereeIds=await Promise.all(Array.from({length:8},(_,n)=>jobs.enqueueRefereeCompletionIfIdle('missing-both',`referee-bucket:${n}`)));
+    expect(new Set(refereeIds).size).toBe(1);
+    expect(refereeIds[0]).not.toBe(aggregate);
+    const first=await jobs.claimJob('first-completion','fast');
+    expect(await jobs.claimJob('blocked-completion','fast')).toBeNull();
+    await jobs.finishJob(first!);
+    const second=await jobs.claimJob('second-completion','fast');
+    expect(new Set([first!.id,second!.id])).toEqual(new Set([aggregate,refereeIds[0]]));
+    await jobs.finishJob(second!);
+  });
+
+  it('prioritizes data completion over older routine analysis in the default combined lane', async () => {
+    await game('routine-completed', 4, true);
+    const routine = await jobs.enqueue('analyze', 'routine-completed', { preferRaw: false }, 'routine-old', due(72));
+    const refresh = await jobs.enqueue('refresh-audit', 'another-game', {}, 'refresh-old', due(48));
+    const completion = await jobs.enqueueDataCompletionIfIdle('newly-finished', 'new-completion');
+    expect((await claimAndFinish())?.id).toBe(completion);
+    expect((await claimAndFinish())?.id).toBe(routine);
+    expect((await claimAndFinish())?.id).toBe(refresh);
+  });
+
+  it('can retry exhausted referee fallback analysis on the next completion check',async()=>{
+    const failed=await jobs.enqueueAnalysisIfIdle('older-referee-game',{preferRaw:false},'referee-reconcile:older:revision:check-one');
+    await db.query("UPDATE jobs SET status='failed',attempts=max_attempts WHERE id=$1",[failed]);
+    const next=await jobs.enqueueAnalysisIfIdle('older-referee-game',{preferRaw:false},'referee-reconcile:older:revision:check-two');
+    expect(next).not.toBe(failed);
+    expect(await jobs.enqueueAnalysisIfIdle('older-referee-game',{preferRaw:false},'referee-reconcile:older:revision:check-three')).toBe(next);
+    const claimed=await jobs.claimJob('fallback-owner','analysis');
+    expect(claimed?.id).toBe(next);
+    await jobs.finishJob(claimed!);
+  });
+
   it('preserves the explicit 6/24/48-hour reconciliation jobs without claiming them early', async () => {
     const start = Date.now();
     const ids = [];

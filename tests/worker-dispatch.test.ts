@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Job } from '../packages/core/src/jobs.js';
 
-const mocks = vi.hoisted(() => ({ claimJob: vi.fn(), enqueue: vi.fn(), enqueueAnalysisIfIdle: vi.fn(), heartbeat: vi.fn(), finishJob: vi.fn(), refreshGameAudit: vi.fn(), createDraft: vi.fn(), analyzeGame: vi.fn(), syncSeason: vi.fn(), query: vi.fn(), poolEnd: vi.fn(), recoverUnknownPublications: vi.fn(), repairSourceRegressions: vi.fn() }));
+const mocks = vi.hoisted(() => ({ claimJob: vi.fn(), enqueue: vi.fn(), enqueueAnalysisIfIdle: vi.fn(), heartbeat: vi.fn(), finishJob: vi.fn(), refreshGameAudit: vi.fn(), createDraft: vi.fn(), analyzeGame: vi.fn(), syncSeason: vi.fn(), query: vi.fn(), poolEnd: vi.fn(), recoverUnknownPublications: vi.fn(), repairSourceRegressions: vi.fn(), completePendingGameData:vi.fn(), completePendingRefereeData:vi.fn(), schedulePendingGameData:vi.fn(), publishOutbox:vi.fn() }));
 vi.mock('node:fs/promises', () => ({ statfs: vi.fn(async () => ({ bavail: 100000000, bsize: 4096 })) }));
 vi.mock('@under-review/core/config', () => ({ config: { dataDir: '/synthetic', season: 2026, staging: true, workerPollMs: 1 }, log: vi.fn() }));
 vi.mock('@under-review/core/db', () => ({ query: mocks.query, pool: { end: mocks.poolEnd } }));
@@ -9,7 +9,10 @@ vi.mock('@under-review/core/jobs', () => ({ claimJob: mocks.claimJob, enqueue: m
 vi.mock('@under-review/core/pipeline', () => ({ analyzeGame: mocks.analyzeGame, syncSeason: mocks.syncSeason }));
 vi.mock('@under-review/core/audit-refresh', () => ({ refreshGameAudit: mocks.refreshGameAudit }));
 vi.mock('@under-review/core/repository', () => ({ repairSourceRegressions: mocks.repairSourceRegressions }));
-vi.mock('@under-review/core/publishing', () => ({ createDraft: mocks.createDraft, publishOutbox: vi.fn(), recoverUnknownPublications: mocks.recoverUnknownPublications }));
+vi.mock('@under-review/core/publishing', () => ({ createDraft: mocks.createDraft, publishOutbox: mocks.publishOutbox, recoverUnknownPublications: mocks.recoverUnknownPublications }));
+vi.mock('@under-review/core/data-completion',()=>({completePendingGameData:mocks.completePendingGameData}));
+vi.mock('@under-review/core/referee-completion',()=>({completePendingRefereeData:mocks.completePendingRefereeData}));
+vi.mock('@under-review/core/postgame-scheduler',()=>({schedulePendingGameData:mocks.schedulePendingGameData}));
 
 const job: Job = { id: 'synthetic-job', kind: 'refresh-audit', gameId: 'synthetic-game', payload: { prepareDraft: true }, attempts: 1, maxAttempts: 5, workerId: 'synthetic-worker' };
 let previousTerm: ReturnType<typeof process.listeners>;
@@ -23,7 +26,8 @@ describe('single-worker audit refresh dispatch', () => {
     previousInt = process.listeners('SIGINT');
     mocks.query.mockResolvedValue({ rowCount: 0, rows: [] });
     mocks.repairSourceRegressions.mockResolvedValue([]);
-    mocks.claimJob.mockResolvedValue(job);
+    mocks.claimJob.mockImplementation(async(_worker,lane)=>lane==='fast'?null:job);
+    mocks.schedulePendingGameData.mockResolvedValue(0);
     mocks.refreshGameAudit.mockImplementation(async () => { process.emit('SIGTERM'); });
   });
   afterEach(() => {
@@ -41,7 +45,7 @@ describe('single-worker audit refresh dispatch', () => {
     expect(mocks.refreshGameAudit).toHaveBeenCalledExactlyOnceWith('synthetic-game');
     expect(mocks.createDraft).toHaveBeenCalledExactlyOnceWith('synthetic-game');
     expect(mocks.finishJob).toHaveBeenCalledExactlyOnceWith(job);
-    expect(mocks.claimJob).toHaveBeenCalledTimes(1);
+    expect(mocks.claimJob.mock.calls.filter(([,lane])=>lane==='analysis')).toHaveLength(1);
     expect(mocks.analyzeGame).not.toHaveBeenCalled();
     expect(mocks.poolEnd).toHaveBeenCalledTimes(1);
   });
@@ -55,7 +59,7 @@ describe('single-worker audit refresh dispatch', () => {
   });
 
   it('does not create a draft unless that refresh explicitly requests one', async () => {
-    mocks.claimJob.mockResolvedValue({ ...job, payload: {} });
+    mocks.claimJob.mockImplementation(async(_worker,lane)=>lane==='fast'?null:{ ...job,payload:{} });
     await import('../apps/worker/src/index.js');
     expect(mocks.refreshGameAudit).toHaveBeenCalledExactlyOnceWith('synthetic-game');
     expect(mocks.createDraft).not.toHaveBeenCalled();
@@ -90,5 +94,46 @@ describe('single-worker audit refresh dispatch', () => {
     await import('../apps/worker/src/index.js');
     expect(mocks.repairSourceRegressions).toHaveBeenCalledExactlyOnceWith(2026);
     expect(mocks.enqueueAnalysisIfIdle).toHaveBeenCalledExactlyOnceWith('changed', { preferRaw: false }, 'source-repair:changed:raw-id');
+  });
+
+  it('checks pending data and publishes while an unrelated full analysis is still running',async()=>{
+    const actions:string[]=[];
+    let finishAnalysis!:()=>void;
+    const blocked=new Promise<void>(resolve=>{finishAnalysis=resolve;});
+    let fastClaims=0;
+    mocks.claimJob.mockImplementation(async(_worker,lane)=>lane==='analysis'
+      ?{...job,id:'heavy',kind:'analyze',gameId:'older-game',payload:{}}
+      :++fastClaims===1?{...job,id:'data',kind:'complete-data',gameId:'new-game',payload:{}}
+      :{...job,id:'post',kind:'publish',gameId:'new-game',payload:{outboxId:'approved-post'}});
+    mocks.analyzeGame.mockImplementation(async()=>{actions.push('analysis-start');await blocked;actions.push('analysis-finish');});
+    mocks.completePendingGameData.mockImplementation(async()=>{actions.push('data-ready');return {gameId:'new-game',status:'updated'};});
+    mocks.publishOutbox.mockImplementation(async()=>{actions.push('published');process.emit('SIGTERM');finishAnalysis();});
+    await import('../apps/worker/src/index.js');
+    expect(actions).toEqual(['analysis-start','data-ready','published','analysis-finish']);
+    expect(mocks.schedulePendingGameData).toHaveBeenCalledWith(2026);
+    expect(mocks.publishOutbox).toHaveBeenCalledExactlyOnceWith('approved-post');
+    expect(mocks.finishJob.mock.calls.map(([value])=>value.id).sort()).toEqual(['data','heavy','post']);
+    expect(mocks.poolEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes changed non-referee game data to normal analysis without running R in the fast lane',async()=>{
+    mocks.claimJob.mockImplementation(async(_worker,lane)=>lane==='analysis'?null:{...job,kind:'complete-referee',payload:{}});
+    mocks.completePendingRefereeData.mockImplementation(async()=>{process.emit('SIGTERM');return {gameId:'synthetic-game',status:'needs_analysis',revisionId:'old-report'};});
+    await import('../apps/worker/src/index.js');
+    expect(mocks.completePendingRefereeData).toHaveBeenCalledExactlyOnceWith('synthetic-game');
+    expect(mocks.enqueueAnalysisIfIdle).toHaveBeenCalledExactlyOnceWith('synthetic-game',{preferRaw:false},'referee-reconcile:synthetic-game:old-report:synthetic-job');
+    expect(mocks.analyzeGame).not.toHaveBeenCalled();
+    expect(mocks.publishOutbox).not.toHaveBeenCalled();
+  });
+
+  it('finishes a still-waiting data check without running R or preparing a premature post',async()=>{
+    mocks.claimJob.mockImplementation(async(_worker,lane)=>lane==='analysis'?null:{...job,kind:'complete-data',payload:{}});
+    mocks.completePendingGameData.mockImplementation(async()=>{process.emit('SIGTERM');return {gameId:'synthetic-game',status:'waiting'};});
+    await import('../apps/worker/src/index.js');
+    expect(mocks.completePendingGameData).toHaveBeenCalledExactlyOnceWith('synthetic-game');
+    expect(mocks.analyzeGame).not.toHaveBeenCalled();
+    expect(mocks.publishOutbox).not.toHaveBeenCalled();
+    expect(mocks.createDraft).not.toHaveBeenCalled();
+    expect(mocks.finishJob.mock.calls[0]).toHaveLength(1);
   });
 });
