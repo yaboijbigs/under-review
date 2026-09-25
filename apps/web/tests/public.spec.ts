@@ -16,6 +16,15 @@ test("archive is usable without fabricated results", async ({page},testInfo) => 
 test("methodology preserves uncertainty and report links", async ({page}) => {
   await page.goto("/methodology");
   for(const name of ['Five levels, one overall rating','Expected versus actual','What referee history tells us','Notable plays and limitations','Rarity is not intent','Missing data stays missing'])await expect(page.getByRole('heading',{name,exact:true})).toBeVisible();
+  if(process.env.SMOKE_OFFICIATING==='true'){
+    await expect(page.getByRole('heading',{name:'What drives the candidate rating?',exact:true})).toBeVisible();
+    await expect(page.getByText(/This candidate has not been deployed/)).toBeVisible();
+    await expect(page.locator('#verdicts')).toContainText('game-suspicion-v4');
+    await expect(page.locator('#verdicts')).toContainText('no automatic escalation for two or three flags');
+    await expect(page.locator('#coverage')).toContainText('96 of 544');
+    await expect(page.locator('#referees')).toContainText('Crew adjustments remain disabled');
+    await expect(page.locator('#spread-method')).toContainText('context only');
+  }
   await page.goto("/sources");
   await expect(page.getByRole("heading",{name:"FTN Data via nflverse"})).toBeVisible();
   await expect(page.getByRole("link",{name:"Creative Commons Attribution-ShareAlike 4.0"})).toHaveAttribute("href","https://creativecommons.org/licenses/by-sa/4.0/");

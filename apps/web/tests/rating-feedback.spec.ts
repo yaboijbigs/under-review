@@ -26,7 +26,8 @@ test('a thumb saves one public response and optional details enrich that respons
  test.setTimeout(60_000);const posts=await mockFeedback(page);await page.goto(gameUrl());const widget=page.locator('.rating-feedback');
  await expect(widget).toBeVisible({timeout:20000});await expect(widget.getByRole('slider')).toHaveCount(0);await expect(widget.getByRole('button',{name:'Agree',exact:true})).toHaveAccessibleDescription('Your vote is public.');
  await widget.getByRole('button',{name:'Disagree',exact:true}).click();await expect(widget.getByRole('status')).toContainText('public response is saved');expect(posts).toHaveLength(1);expect(posts[0]).toMatchObject({action:'thumb',agreement:'disagree',rating:null,comment:'',public:true});
- if(process.env.SMOKE_EXPECTATIONS==='true')expect(posts[0]).toMatchObject({rulesVersion:'game-suspicion-v3',modelRating:Number(await page.locator('.game-verdict').getAttribute('data-rating'))});
+ if(process.env.SMOKE_OFFICIATING==='true')expect(posts[0]).toMatchObject({rulesVersion:'game-suspicion-v4',modelRating:Number(await page.locator('.game-verdict').getAttribute('data-rating'))});
+ else if(process.env.SMOKE_EXPECTATIONS==='true')expect(posts[0]).toMatchObject({rulesVersion:'game-suspicion-v3',modelRating:Number(await page.locator('.game-verdict').getAttribute('data-rating'))});
  await expect(widget.getByRole('textbox')).toHaveAccessibleName('Why? (optional, public)');
  await expect(page.locator('#fan-feedback .feedback-empty')).toContainText('No comments yet');await expect(page.locator('#fan-feedback article')).toHaveCount(0);await expect(page.locator('.public-feedback-summary > div').first().locator('strong')).toHaveText('1');
  const slider=widget.getByRole('slider');await expect(slider).toHaveAttribute('aria-valuetext','No rating selected. Move the slider to add one.');await expect(page.locator('.public-feedback-summary')).toContainText('No slider ratings yet');

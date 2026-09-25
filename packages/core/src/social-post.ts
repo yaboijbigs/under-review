@@ -4,12 +4,12 @@ import { getGameVerdict } from './consumer-summary.js';
 import type { EvidenceDraft } from './summaries.js';
 import { teamSocialHandle, teamShortName } from './team-social.js';
 
-export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v4';
+export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v5';
 export const SOCIAL_API_TEMPLATE_VERSION = `${SOCIAL_TEMPLATE_VERSION}-names`;
 export type SocialRecipientStyle = 'handles' | 'names';
 /** Recognize stored historical formats without relying on the moving current version. */
 export function recognizedPublicationFooter(text:string,templateVersion:string|null,reportUrl:string):boolean{
- if(templateVersion==='game-final-screening-v4-names'){
+ if(['game-final-screening-v4-names','game-final-screening-v5-names'].includes(templateVersion??'')){
   // twitter-text excludes reserved/unknown TLDs; explicit URL schemes must also fail closed.
   return !/https?:\/\//i.test(text)&&twitterText.extractUrls(text).length===0&&text.endsWith('\n\n#NFL #UnderReview');
  }
@@ -29,6 +29,16 @@ export function renderSocialPost(game: Game, analysis: AnalysisResult, _reportUr
   const teamLabel = recipientStyle === 'names' ? teamShortName : teamSocialHandle;
   const prefix = `Week ${game.week}: ${teamLabel(game.awayTeam) ?? game.awayTeam} ${game.awayScore} — ${teamLabel(game.homeTeam) ?? game.homeTeam} ${game.homeScore}\n\n${kind === 'initial' ? '' : kind === 'correction' ? 'Correction: ' : 'Update: '}${heading}`;
   const suffix = '\n\n#NFL #UnderReview';
+  if(verdict.rulesVersion==='game-suspicion-v4'){
+    const finding=verdict.reasons[0];
+    const bodies=verdict.rating===null?['The report is ready, but supported penalty evidence is too limited to rate this game.']
+      :verdict.rating===1?['Supported penalty effects stayed within the usual historical range.']
+      :finding?[`${verdict.rating>=4?'⚠️':'📊'} ${finding}`]:[];
+    const attempts=bodies.map(body=>`${prefix}\n\n${body}${suffix}`),text=attempts.find(t=>twitterText.parseTweet(t).valid)??attempts.at(-1)??prefix;
+    const parsed=twitterText.parseTweet(text);
+    return {text,evidenceIds:verdict.rating!==null?[`verdict:${game.id}:${verdict.rulesVersion}:joint-impact`]:[],weightedLength:parsed.weightedLength,
+      valid:bodies.length>0&&parsed.valid&&game.homeScore!==null&&game.awayScore!==null};
+  }
   let findings: string[] = [];
   let evidenceIds: string[] = [];
   const comparison = verdict.comparison;

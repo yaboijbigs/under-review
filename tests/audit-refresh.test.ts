@@ -81,7 +81,7 @@ describe('audit-only immutable report refresh',()=>{
   expect(savedGame).toEqual(game);expect(savedPlays).toEqual(plays);expect(sourceKind).toBe('clean');
   expect(options).toEqual({expectedBaseRevisionId:'base-revision'});
   for(const key of ['metrics','events','timeline','coverage'] as const)expect(analysis[key]).toEqual(baseAnalysis[key]);
-  expect(analysis.models[0]).toEqual(baseAnalysis.models[0]);expect(analysis.models).toHaveLength(5);
+  expect(analysis.models[0]).toEqual(baseAnalysis.models[0]);expect(analysis.models).toHaveLength(6);
   expect(analysis.models.find((model:{id:string})=>model.id==='game-expectations')).toMatchObject({version:'under-review-expectations-v1'});
   expect(analysis.gameAudit.version).toBe(GAME_AUDIT_VERSION);
   expect(analysis.gameAudit.market).toMatchObject({expectedHomeMargin:3.5,actualHomeMargin:0,absoluteError:3.5,atsResult:'away_covered',source:{checksum:schedule.checksum}});

@@ -4,7 +4,7 @@ const n=(value:number|null)=>value===null?'—':new Intl.NumberFormat('en-US',{m
 const margin=(value:number|null,home:string,away:string)=>value===null?'Unavailable':Math.abs(value)<.05?'Even':`${value>0?home:away} by ${n(Math.abs(value))}`;
 const penalties=(count:number|null,yards:number|null)=>`${n(count)} / ${n(yards)} yd`;
 
-export function ExpectedPerformance({expectations:e}:{expectations:GameExpectations|undefined}){
+export function ExpectedPerformance({expectations:e,outcomeOnly=false}:{expectations:GameExpectations|undefined;outcomeOnly?:boolean}){
  if(!e)return null;
  const teams=[e.awayTeam,e.homeTeam].map(team=>e.teams.find(t=>t.team===team)).filter(t=>t!==undefined);
  const outcome=e.outcome,ref=e.referee;
@@ -15,7 +15,7 @@ export function ExpectedPerformance({expectations:e}:{expectations:GameExpectati
    <p>This compares the teams’ final yardage and turnover margin with past games. It is an after-game comparison, not a pregame prediction.</p>
    {outcome.status==='supported'&&<p className="market-rarity">{outcome.atLeastAsUnusual} of {outcome.calibrationGames} comparison games had a difference at least this large.</p>}
   </section>
-  <section className="market-comparison" aria-labelledby="penalty-expectations-title">
+  {!outcomeOnly&&<><section className="market-comparison" aria-labelledby="penalty-expectations-title">
    <div className="market-heading"><h3 id="penalty-expectations-title">Were the penalties unusual?</h3><span>Accepted penalties / yards</span></div>
    <div className="table-scroll"><table className="profile-table"><caption className="sr-only">Actual penalties compared with league, team, opponent and referee expectations</caption><thead><tr><th scope="col">Comparison</th>{teams.map(t=><th scope="col" key={t.team}>{t.team}</th>)}</tr></thead><tbody>
     <tr><th scope="row">Actual</th>{teams.map(t=><td key={t.team}><strong>{penalties(t.actual.penalties,t.actual.penaltyYards)}</strong></td>)}</tr>
@@ -39,6 +39,6 @@ export function ExpectedPerformance({expectations:e}:{expectations:GameExpectati
     <details className="market-method"><summary>Referee comparison details</summary><p>Home teams: {penalties(ref.home.meanPenalties,ref.home.meanPenaltyYards)} per game. Away teams: {penalties(ref.away.meanPenalties,ref.away.meanPenaltyYards)} per game.</p><p>These are crew totals in games led by {ref.name}; they do not identify who threw each flag. Team win records are context and do not increase the rating. Small samples receive less weight.</p>{ref.status==='schedule_only'&&<p>The schedule supplies this assignment. A matching full-crew record was not available in the frozen officials release.</p>}</details>
    </>:<p>{ref.status==='conflict'?'The assignment sources disagree, so referee comparisons are excluded.':ref.name?`There is not enough earlier history for ${ref.name}.`:'No reliable head-referee assignment is available yet.'} Team and league comparisons remain available.</p>}
   </section>
-  <details className="audit-method"><summary>Comparison coverage & method</summary><p>Baseline seasons: {e.cutoff.trainingSeasons.join(', ')||'Unavailable'}. Calibration seasons: {e.cutoff.calibrationSeasons.join(', ')||'Unavailable'}.</p><p>Each calibration game is evaluated using only seasons before that game. No result from {e.cutoff.targetSeason} enters this report’s historical baseline.</p>{e.notes.length>0&&<ul>{e.notes.map((note,i)=><li key={i}>{note}</li>)}</ul>}<p>Model: {e.version}</p><code className="checksum">Reference SHA-256: {e.reference.checksum}</code></details>
+  <details className="audit-method"><summary>Comparison coverage & method</summary><p>Baseline seasons: {e.cutoff.trainingSeasons.join(', ')||'Unavailable'}. Calibration seasons: {e.cutoff.calibrationSeasons.join(', ')||'Unavailable'}.</p><p>Each calibration game is evaluated using only seasons before that game. No result from {e.cutoff.targetSeason} enters this report’s historical baseline.</p>{e.notes.length>0&&<ul>{e.notes.map((note,i)=><li key={i}>{note}</li>)}</ul>}<p>Model: {e.version}</p><code className="checksum">Reference SHA-256: {e.reference.checksum}</code></details></>}
  </div>;
 }

@@ -80,7 +80,8 @@ test("an older immutable revision does not imply a clean game audit", async ({pa
 test('current comparisons show expected and actual performance with bounded referee context',async({page},testInfo)=>{
   const gameId=process.env.SMOKE_AUDIT_GAME_ID;
   test.skip(!gameId||process.env.SMOKE_EXPECTATIONS!=='true','Set SMOKE_EXPECTATIONS for a report with the current expectations audit.');
-  await page.goto(`/games/${encodeURIComponent(gameId!)}`);
+  const revision=process.env.SMOKE_EXPECTATIONS_REPORT_REVISION;
+  await page.goto(`/games/${encodeURIComponent(gameId!)}${revision?`?revision=${encodeURIComponent(revision)}`:''}`);
   await reportReady(page);
   const breakdown=page.locator('.rating-breakdown');
   await expect(breakdown).not.toHaveAttribute('open');
@@ -127,6 +128,65 @@ test('current comparisons show expected and actual performance with bounded refe
   await expect(method.locator('.checksum')).toHaveText(/Reference SHA-256: [a-f0-9]{64}/);
   await method.locator('summary').click();
   await comparisons.screenshot({path:testInfo.outputPath('expected-actual-and-referee.png')});
+  if(revision){
+    const savedMethod=page.locator('#game-audit > details.audit-method');
+    await savedMethod.locator('summary').click();
+    await expect(savedMethod).toContainText('under-review-game-audit-v5');
+    await expect(page.locator('[aria-labelledby="officiating-title"]')).toHaveCount(0);
+    await expect(page.locator('.rating-feedback')).toHaveCount(0);
+  }
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+});
+
+test('candidate comparisons show one calibrated rating, conditional counts and full crew context',async({page},testInfo)=>{
+  const gameId=process.env.SMOKE_AUDIT_GAME_ID;
+  test.skip(!gameId||process.env.SMOKE_OFFICIATING!=='true','Set SMOKE_OFFICIATING for the real candidate fixture.');
+  await page.goto(`/games/${encodeURIComponent(gameId!)}`);
+  await reportReady(page);
+  await expect(page.locator('.game-verdict')).toHaveAttribute('data-rating','2');
+  await expect(page.locator('#verdict-title')).toHaveText('Debatable');
+  const breakdown=page.locator('.rating-breakdown');
+  await breakdown.locator('summary').first().click();
+  await expect(breakdown.locator('.rating-factor')).toHaveCount(3);
+  for(const id of ['joint-impact','game-impact','drive-impact'])await expect(breakdown.locator(`[data-factor="${id}"]`)).toBeVisible();
+  await expect(breakdown.locator('[data-factor="joint-impact"] .rating-factor-rarity')).toContainText('Calibrated rarity');
+  for(const id of ['game-impact','drive-impact']){
+    await expect(breakdown.locator(`[data-factor="${id}"] .rating-factor-heading`)).toContainText('Comparison');
+    await expect(breakdown.locator(`[data-factor="${id}"] .rating-factor-rarity`)).toHaveCount(0);
+  }
+  await breakdown.locator('.rating-thresholds > summary').click();
+  for(const value of ['20%','10%','3%','0.5%'])await expect(breakdown.locator('.rating-thresholds')).toContainText(value);
+  await expect(breakdown).toContainText('Signals are not added');
+  await breakdown.screenshot({path:testInfo.outputPath('candidate-rating-calculation.png')});
+  await breakdown.locator('summary').first().click();
+  const impact=page.locator('[aria-labelledby="officiating-title"]');
+  await expect(impact.getByRole('heading',{name:'Penalty impact',exact:true})).toBeVisible();
+  const calls=impact.locator('details').filter({has:page.locator('summary').filter({hasText:'Calls behind the comparison'})});
+  await calls.locator('summary').click();
+  await expect(calls).toContainText('accepted regulation penalties could be valued');
+  expect(await calls.locator('tbody tr').count()).toBeGreaterThan(0);
+  await calls.locator('tbody a').first().click();
+  await expect(page.locator('.source-play-archive')).toHaveAttribute('open','');
+  await expect(page.locator('.source-play[open] .source-play-body')).toBeVisible();
+  const rates=impact.locator('details').filter({has:page.locator('summary').filter({hasText:'Penalties versus expected'})});
+  await rates.locator('summary').click();
+  await expect(rates.getByRole('caption')).toHaveText('Modeled called penalties: actual / expected');
+  await expect(rates.locator('tbody tr')).toHaveCount(7);
+  await expect(rates).toContainText('play opportunities, game situation, team and opponent history');
+  for(const cell of await rates.locator('tbody td').all())await expect(cell).toHaveText(/^(?:\d+ \/ \d+\.\d|—)$/);
+  const crew=impact.locator('[aria-labelledby="crew-title"]');
+  await expect(crew).toContainText('Full assignment');
+  await expect(crew.locator(':scope > .table-scroll tbody tr')).toHaveCount(7);
+  for(const role of ['Referee','Umpire','Down Judge','Line Judge','Field Judge','Side Judge','Back Judge'])await expect(crew.locator(':scope > .table-scroll')).toContainText(role);
+  await crew.getByText('Crew history',{exact:true}).click();
+  await expect(crew.locator('details')).toContainText('they do not change the rating');
+  await expect(crew.locator('details')).toContainText('not flags attributed to that person');
+  await impact.screenshot({path:testInfo.outputPath('candidate-penalties-and-crew.png')});
+  await expect(page.locator('[aria-labelledby="penalty-expectations-title"]')).toHaveCount(0);
+  await expect(page.locator('[aria-labelledby="performance-title"]')).toContainText('Expected from the box score');
+  const market=page.locator('[aria-labelledby="market-title"]');
+  await market.locator('summary').click();
+  await expect(market).toContainText('Spread surprise is context and does not change the game rating');
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
 

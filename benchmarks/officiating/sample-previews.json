@@ -1,0 +1,28 @@
+{
+  "status": "experimental-previews-only-release-blocked",
+  "sourceChecksums": {
+    "pbp": "96452de58a2a2baefe9cc090fa3177fb84083d3183c83914b9e9d93f2bf7d281",
+    "teamStats": "ab0c455c4dc1db4bc8de52fe5cabc562f63b376d207265c78d7fbae9ffb4940b",
+    "reference": "830b10405fac7e7bbfadb1009d65b2a49cd16b429ca5b5d39ce203f5a5ff1270"
+  },
+  "previews": [
+    {
+      "gameId": "2026_01_NE_SEA",
+      "rating": 3,
+      "text": "Week 1: Patriots 10 — Seahawks 13\n\n🟠 HMM — 3/5\n\n📊 Estimated net penalty benefit: 4.4 expected points for NE on the strongest drive.\n\n#NFL #UnderReview",
+      "weightedLength": 152
+    },
+    {
+      "gameId": "2026_01_SF_LA",
+      "rating": 1,
+      "text": "Week 1: 49ers 27 — Rams 7\n\n🟢 FAIR — 1/5\n\nSupported penalty effects stayed within the usual historical range.\n\n#NFL #UnderReview",
+      "weightedLength": 128
+    },
+    {
+      "gameId": "2026_01_ATL_PIT",
+      "rating": 3,
+      "text": "Week 1: Falcons 13 — Steelers 20\n\n🟠 HMM — 3/5\n\n📊 Estimated net penalty benefit: 4.4 expected points for PIT on the strongest drive.\n\n#NFL #UnderReview",
+      "weightedLength": 152
+    }
+  ]
+}

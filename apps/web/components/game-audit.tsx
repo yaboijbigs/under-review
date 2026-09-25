@@ -5,6 +5,7 @@ import { auditLabel, human, referencePeriod, teamName } from "@/lib/presentation
 import { MarketComparison } from "@/components/market-comparison";
 import { ExpectedPerformance } from "@/components/game-expectations";
 import { RatingBreakdown } from "@/components/rating-breakdown";
+import {OfficiatingComparison} from '@/components/officiating-comparison';
 
 export function GameVerdict({audit}: {audit: GameAudit | undefined}) {
   const verdict = getGameVerdict(audit);
@@ -53,9 +54,10 @@ export function GameAnomalyAudit({audit, game, fallbackSummary}: {audit: GameAud
   return <section id="game-audit" className={`game-audit ${audit ? `audit-${audit.status}` : "audit-not-computed"}`} aria-labelledby="game-audit-title">
     <div className="audit-heading"><h2 id="game-audit-title">Why this result stands out—or doesn’t</h2></div>
     {audit ? <>
+      {audit.version==='under-review-game-audit-v6'&&<OfficiatingComparison audit={audit.officiating}/>}
       <ProfileTable profiles={audit.profiles} game={game}/>
-      <MarketComparison market={audit.market} currentRules={audit.version==='under-review-game-audit-v5'}/>
-      <ExpectedPerformance expectations={audit.expectations}/>
+      <MarketComparison market={audit.market} currentRules={audit.version==='under-review-game-audit-v5'} contextOnly={audit.version==='under-review-game-audit-v6'}/>
+      <ExpectedPerformance expectations={audit.expectations} outcomeOnly={audit.version==='under-review-game-audit-v6'}/>
       {audit.context.length > 0 && <div className="audit-context"><div className="audit-subheading"><span className="eyebrow">THE BREAKS BEHIND THE SCORE</span><h3>How the result took shape</h3></div><div className="audit-context-grid">{audit.context.map((item,index)=><article key={index}><span className="eyebrow">{item.team ? `${teamName(item.team)} · ` : ""}{human(item.kind)}</span><p>{item.text}</p>{item.playIds.length > 0 && <div className="event-links">{item.playIds.map(id=><a key={id} href={`#play-${encodeURIComponent(id)}`}>See play {id} ↗</a>)}</div>}</article>)}</div></div>}
       {(prominentFlags.length > 0 || additionalFlags.length > 0) && <details className="additional-profile-comparisons"><summary>Explore the historical comparisons ({prominentFlags.length+additionalFlags.length})</summary><p className="small muted">These patterns overlap. They are separate comparisons, not independent evidence of multiple problems.</p><div className="audit-flags">{[...prominentFlags,...additionalFlags].map(flag=><HistoricalFlag key={flag.id} flag={flag}/>)}</div></details>}
       <details className="audit-method"><summary>Historical coverage & audit method</summary><p>{count(audit.reference.teamGames)} prior team-games · {referencePeriod(audit.reference.startSeason,audit.reference.endSeason)}</p><p>Audit: {audit.version}<br/>Reference: {audit.reference.version}</p>{audit.reference.checksum && <code className="checksum">Reference SHA-256: {audit.reference.checksum}</code>}{audit.notes.length > 0 && <ul>{audit.notes.map((note,index)=><li key={index}>{note}</li>)}</ul>}</details>

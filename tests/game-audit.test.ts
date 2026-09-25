@@ -185,7 +185,7 @@ describe('defensive penalties extending third and fourth downs',()=>{
 
   it('flags all three documented early fourth-quarter extensions and groups the drive',()=>{
     const audit=inspect(drive);
-    expect(audit.version).toBe('under-review-game-audit-v4');expect(GAME_AUDIT_VERSION).toBe('under-review-game-audit-v5');
+    expect(audit.version).toBe('under-review-game-audit-v4');expect(GAME_AUDIT_VERSION).toBe('under-review-game-audit-v6');
     expect(audit.reviewCandidates.map(row=>row.playId)).toEqual(['3411','3489','3592']);
     expect(audit.reviewCandidates.every(row=>row.priority==='high')).toBe(true);
     expect(audit.reviewCandidates.every(row=>row.reasons.length===2)).toBe(true);

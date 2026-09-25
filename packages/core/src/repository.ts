@@ -16,7 +16,7 @@ export function stableJson(value:unknown):string{
 export const contentHash=(value:unknown)=>createHash('sha256').update(stableJson(value)).digest('hex');
 export function gameAuditCorrection(previous:AnalysisResult['gameAudit'],current:AnalysisResult['gameAudit']):boolean{
  if(!previous)return false;
- if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null)||previous.market?.status==='available'||previous.expectations?.status==='supported';
+ if(!current)return previous.flags.length>0||previous.profiles.some(p=>p.totalYards!==null)||previous.market?.status==='available'||previous.expectations?.status==='supported'||previous.officiating?.status==='supported';
  const fields=['totalYards','opponentYards','penalties','penaltyYards','turnoverMargin','nonOffensiveTouchdowns'] as const;
  const profileChanged=previous.profiles.some(p=>fields.some(key=>p[key]!==null&&p[key]!==current.profiles.find(n=>n.team===p.team)?.[key]));
  const marketFields=['expectedHomeMargin','actualHomeMargin','homeMarginError','absoluteError','favoredTeam','pickem','atsWinner','atsResult','favoriteCovered','underdogWon'] as const;
@@ -26,7 +26,9 @@ export function gameAuditCorrection(previous:AnalysisResult['gameAudit'],current
   ||(oldMarket.reference.tailRate!==null&&(['startSeason','endSeason','games','atLeastAsSurprising','tailRate','percentile'] as const).some(key=>oldMarket.reference[key]!==newMarket.reference[key])));
  const expectationCorrection=previous.expectations?.status==='supported'&&previous.version===current.version
   &&stableJson(previous.expectations)!==stableJson(current.expectations);
- return profileChanged||marketChanged||expectationCorrection||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
+ const officiatingCorrection=previous.officiating?.status==='supported'&&previous.version===current.version
+  &&previous.officiating.reference.checksum===current.officiating?.reference.checksum&&stableJson(previous.officiating)!==stableJson(current.officiating);
+ return profileChanged||marketChanged||expectationCorrection||officiatingCorrection||(previous.flags.length>0&&stableJson(previous.flags)!==stableJson(current.flags));
 }
 function sourceEvent(event:Record<string,unknown>|undefined){if(!event)return null;const {reviewStatus,notes,...evidence}=event;return evidence;}
 export async function saveGames(games:Game[],publicationEligible=false){
