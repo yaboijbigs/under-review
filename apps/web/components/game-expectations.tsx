@@ -29,6 +29,7 @@ export function ExpectedPerformance({expectations:e}:{expectations:GameExpectati
   </section>
   <section className="market-comparison referee-comparison" aria-labelledby="referee-title">
    <div className="market-heading"><h3 id="referee-title">The referee: {ref.status==='conflict'?'Assignment disputed':ref.name??'Not available'}</h3><span>Head official</span></div>
+   {ref.assignment&&<p className="small muted">{ref.assignmentResolution==='nflverse'?'nflverse assignment. Earlier reports: ':'Assignment: '}{ref.assignment.sources.map((source,index)=><span key={source.provider}>{index>0?' · ':''}<a href={source.url} target="_blank" rel="noreferrer">{source.provider==='football-zebras'?'Football Zebras':'Sharp Football'}</a>{ref.status==='conflict'||ref.assignmentResolution==='nflverse'?` (${source.name})`:''}</span>)}{!ref.assignmentResolution&&(ref.status==='verified'||ref.status==='schedule_only')?' · Also recorded by nflverse.':''}</p>}
    {ref.games>0&&ref.status!=='conflict'&&ref.status!=='missing'?<>
     <p>In {ref.games} earlier games with this head referee, crews called an average of <strong>{n(ref.meanTotalPenalties)} accepted penalties for {n(ref.meanTotalPenaltyYards)} yards</strong> across both teams.</p>
     <div className="table-scroll"><table className="profile-table"><caption className="sr-only">Team history with this head referee</caption><thead><tr><th scope="col">Team history with this referee</th>{teams.map(t=><th scope="col" key={t.team}>{t.team}</th>)}</tr></thead><tbody>

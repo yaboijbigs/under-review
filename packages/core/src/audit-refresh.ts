@@ -100,7 +100,7 @@ export async function refreshGameAudit(gameId:string):Promise<{gameId:string;id:
  // remains the normal analysis job, including updates to already complete audits.
  if(current?.version===GAME_AUDIT_VERSION&&current.reference.checksum===historical.checksum&&current.reference.version===historical.reference.version
   &&completeProfiles(game,current)&&auditModels.length===1&&auditModels[0].version===GAME_AUDIT_VERSION&&auditModels[0].checksum===historical.checksum&&aggregateSources.length===1){
-  const upgraded=applyExpectationsAudit(game,applySpreadAudit(game,withOvertime,revision.sourceSnapshots,spread),expectations);
+  const upgraded=applyExpectationsAudit(game,applySpreadAudit(game,withOvertime,revision.sourceSnapshots,spread),expectations,current?.expectations?.referee.assignment);
   if(stableJson(upgraded)===stableJson(revision.analysis))return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:revision.analysis.warnings};
   // An OT-only upgrade of an already current, complete audit needs no source fetch.
   const saved=await saveAnalysis(game,plays,revision.sourceSnapshots,upgraded,sourceKind,{expectedBaseRevisionId:revision.id});
@@ -116,7 +116,7 @@ export async function refreshGameAudit(gameId:string):Promise<{gameId:string;id:
  if(auditAt>=0)analysis.models[auditAt]=auditModel;else analysis.models.push(auditModel);
  analysis.warnings=[...new Set([...analysis.warnings.filter(warning=>!/^(?:team_stats_|team_profile_|game_profile_reference_unavailable:)/.test(warning)),...source.warnings])];
  analysis=applySpreadAudit(game,analysis,revision.sourceSnapshots,spread);
- analysis=applyExpectationsAudit(game,analysis,expectations);
+ analysis=applyExpectationsAudit(game,analysis,expectations,current?.expectations?.referee.assignment);
  const snapshots=revision.sourceSnapshots;
  if(stableJson(analysis)===stableJson(revision.analysis)&&stableJson(evidence(snapshots))===stableJson(evidence(revision.sourceSnapshots))){
   return {gameId,id:revision.id,number:revision.number,created:false,sourceKind,warnings:analysis.warnings};

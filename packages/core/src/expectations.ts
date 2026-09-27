@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {z} from 'zod';
 import type {Game,GameProfile} from './contracts.js';
 import {gameExpectationsSchema,type GameExpectations,type ExpectationTail} from './expectations-contracts.js';
+import {refereeAssignmentSchema,type RefereeAssignment} from './referee-assignment-contracts.js';
 
 export const EXPECTATIONS_VERSION='under-review-expectations-v1';
 export const EXPECTATIONS_REFERENCE_VERSION='under-review-expectations-reference-v1';
@@ -16,6 +17,7 @@ export type ExpectationsReference=z.infer<typeof expectationsReferenceSchema>;
 export interface LoadedExpectationsReference {reference:ExpectationsReference;checksum:string}
 type Row=z.infer<typeof expectationReferenceRowSchema>;
 type Assignment=z.infer<typeof assignmentSchema>;
+type ResolvedAssignment=Omit<Assignment,'status'>&{status:Assignment['status']|'reported';assignment?:RefereeAssignment;assignmentResolution?:'nflverse';invalidAssignment?:boolean};
 type Pair={penalties:number;penaltyYards:number};
 type Sum={games:number;penalties:number;penaltyYards:number};
 type TeamRef=Sum&{wins:number;losses:number;ties:number};
@@ -51,12 +53,24 @@ export function canonicalReferee(name:unknown,reference:ExpectationsReference):s
 const refereeId=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
 const indexes=new WeakMap<ExpectationsReference,Map<string,Assignment>>();
 function assignments(reference:ExpectationsReference){let map=indexes.get(reference);if(!map){map=new Map(reference.assignments.map(row=>[row.gameId,row]));indexes.set(reference,map);}return map;}
-export function expectationReferee(game:Pick<Game,'id'|'season'|'providerData'>,reference:ExpectationsReference):Assignment{
+export function expectationReferee(game:Pick<Game,'id'|'season'|'providerData'>&Partial<Pick<Game,'week'>>,reference:ExpectationsReference,assignment?:RefereeAssignment):ResolvedAssignment{
  const previous=assignments(reference).get(game.id),raw=canonicalReferee(game.providerData.referee,reference);
  const official=canonicalReferee(previous?.officialName,reference);
- const conflict=previous?.status==='conflict'||!!(raw&&official&&raw!==official);
- const name=raw??previous?.name??null;
- return {gameId:game.id,season:game.season,name,canonicalId:conflict||!name?null:refereeId(name),status:conflict?'conflict':official?'verified':name?'schedule_only':'missing',scheduleName:raw??previous?.scheduleName??null,officialName:previous?.officialName??null,officialId:previous?.officialId??null,officialEra:previous?.officialEra??null};
+ const parsed=assignment===undefined?null:refereeAssignmentSchema.safeParse(assignment);
+ const invalidAssignment=parsed!==null&&(!parsed.success||parsed.data.gameId!==game.id||parsed.data.season!==game.season||parsed.data.week!==game.week);
+ const reported=parsed?.success&&!invalidAssignment?parsed.data:undefined;
+ const reportedName=canonicalReferee(reported?.name,reference);
+ const knownName=raw??canonicalReferee(previous?.name,reference)??official;
+ const sourceNames=reported?.sources.map(source=>canonicalReferee(source.name,reference))??[];
+ const internalConflict=previous?.status==='conflict'||!!(raw&&official&&raw!==official);
+ const malformedClaim=!!reported&&(sourceNames.some(name=>!name)||(reported.status==='reported'?sourceNames.some(name=>name!==reportedName):new Set(sourceNames).size<2));
+ const publisherConflict=reported?.status==='conflict'||!!(reported&&knownName&&reportedName!==knownName);
+ // A later nflverse assignment supersedes stale pregame reports, including a
+ // rotating publisher page that can no longer correct its earlier-week claim.
+ const resolvedByNflverse=!!(raw&&reported&&publisherConflict&&!internalConflict&&!invalidAssignment&&!malformedClaim);
+ const conflict=internalConflict||invalidAssignment||malformedClaim||(publisherConflict&&!resolvedByNflverse);
+ const name=knownName??(conflict?null:reportedName);
+ return {gameId:game.id,season:game.season,name,canonicalId:conflict||!name?null:refereeId(name),status:conflict?'conflict':official?'verified':knownName?'schedule_only':name?'reported':'missing',scheduleName:raw??previous?.scheduleName??null,officialName:previous?.officialName??null,officialId:previous?.officialId??null,officialEra:previous?.officialEra??null,...(reported?{assignment:{...reported,name:reportedName}}:{}),...(resolvedByNflverse?{assignmentResolution:'nflverse' as const}:{}),...(invalidAssignment?{invalidAssignment:true}:{})};
 }
 function teamExpected(model:Model,team:string,opponent:string):Pair|null{
  if(!model.league.games)return null;
@@ -130,8 +144,8 @@ function targetRow(game:Game,profiles:GameProfile[]):Row|null{
  return expectationReferenceRowSchema.parse({gameId:game.id,season:game.season,homeTeam:game.homeTeam,awayTeam:game.awayTeam,homeScore:game.homeScore,awayScore:game.awayScore,homeYards:h.totalYards,awayYards:a.totalYards,homeTurnoverMargin:h.turnoverMargin,homePenalties:h.penalties,awayPenalties:a.penalties,homePenaltyYards:h.penaltyYards,awayPenaltyYards:a.penaltyYards});
 }
 /** Pure deterministic inference. Outcome expectation conditions on the final box score. */
-export function buildExpectations(game:Game,profiles:GameProfile[],loaded:LoadedExpectationsReference):GameExpectations{
- const {reference}=loaded,model=modelFor(game.season,reference),calibration=calibrationFor(game.season,reference),attribution=expectationReferee(game,reference);
+export function buildExpectations(game:Game,profiles:GameProfile[],loaded:LoadedExpectationsReference,assignment?:RefereeAssignment):GameExpectations{
+ const {reference}=loaded,model=modelFor(game.season,reference),calibration=calibrationFor(game.season,reference),attribution=expectationReferee(game,reference,assignment);
  const row=targetRow(game,profiles),regular=game.gameType==='REG',id=attribution.canonicalId,ref=id?model.refs.get(id):undefined,effect=refEffect(model,id),useRef=!!effect;
  const predicted=row?prediction(model,row,id,useRef):null;
  const penalty=regular&&row?penaltyStatistic(row,model,reference,useRef,id):null;
@@ -143,7 +157,7 @@ export function buildExpectations(game:Game,profiles:GameProfile[],loaded:Loaded
  const teams=[false,true].map(home=>{const team=home?game.homeTeam:game.awayTeam,opponent=home?game.awayTeam:game.homeTeam,history=ref?.teams.get(expectationTeam(team))??blankTeamRef(),p=predicted?(home?predicted.home:predicted.away):null,n=row?(home?row.homePenalties:row.awayPenalties):null,yards=row?(home?row.homePenaltyYards:row.awayPenaltyYards):null;return {team,opponent,actual:{penalties:n,penaltyYards:yards},league:mean(model.league),teamHistory:mean(model.teams.get(expectationTeam(team))??blank()),opponentDrawn:mean(model.drawn.get(expectationTeam(opponent))??blank()),expected:regular?p:null,residual:regular&&p&&n!==null&&yards!==null?{penalties:n-p.penalties,penaltyYards:yards-p.penaltyYards}:null,refereeHistory:{...mean(history),wins:history.wins,losses:history.losses,ties:history.ties}};});
  return gameExpectationsSchema.parse({version:EXPECTATIONS_VERSION,gameId:game.id,homeTeam:game.homeTeam,awayTeam:game.awayTeam,status:penaltyTail.status==='supported'&&outcomeTail.status==='supported'?'supported':penaltyTail.status==='supported'||outcomeTail.status==='supported'?'limited':'unavailable',
   cutoff:{targetSeason:game.season,trainingSeasons:model.trainingSeasons,calibrationSeasons:years(game.season,3)},teams,
-  referee:{name:attribution.name,canonicalId:id,status:attribution.status,reasonCode:attribution.status==='conflict'?'conflicting_referee_assignment':attribution.status==='missing'?'referee_missing':!effect?'insufficient_referee_history':null,games:ref?.games??0,meanTotalPenalties:mean(ref?.total??blank()).meanPenalties,meanTotalPenaltyYards:mean(ref?.total??blank()).meanPenaltyYards,home:mean(ref?.home??blank()),away:mean(ref?.away??blank()),effect},
+  referee:{name:attribution.name,canonicalId:id,status:attribution.status,...(attribution.assignment?{assignment:attribution.assignment}:{}),...(attribution.assignmentResolution?{assignmentResolution:attribution.assignmentResolution}:{}),reasonCode:attribution.invalidAssignment?'invalid_referee_assignment':attribution.status==='conflict'?'conflicting_referee_assignment':attribution.status==='missing'?'referee_missing':!effect?'insufficient_referee_history':null,games:ref?.games??0,meanTotalPenalties:mean(ref?.total??blank()).meanPenalties,meanTotalPenaltyYards:mean(ref?.total??blank()).meanPenaltyYards,home:mean(ref?.home??blank()),away:mean(ref?.away??blank()),effect},
   penalty:{...penaltyTail,method:penalty?(useRef?'team_opponent_referee':'team_opponent'):'unavailable',components:penalty?.components??[]},
   outcome:{...outcomeTail,method:'retrospective_box_score',actualHomeMargin:actualMargin,expectedHomeMargin:expectedMargin,residual,coefficients:model.coefficients,trainingGames:model.outcomeGames},
   reference:{version:reference.version,checksum:loaded.checksum,sourceUrls:reference.sourceUrls,sourceChecksums:reference.sourceChecksums},

@@ -14,7 +14,8 @@ import { loadExpectationsReference } from '../packages/core/src/expectations.js'
 import { applyExpectationsAudit } from '../packages/core/src/expectations-integration.js';
 import { getGameVerdict } from '../packages/core/src/consumer-summary.js';
 
-const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn(),publish:vi.fn(),runAnalytics:vi.fn(),runRRequest:vi.fn()}));
+const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn(),publish:vi.fn(),runAnalytics:vi.fn(),runRRequest:vi.fn(),referee:vi.fn()}));
+vi.mock('../packages/core/src/referee-assignments.js',()=>({getCachedRefereeAssignment:mocks.referee,isAssignmentSnapshot:(source:SourceSnapshot)=>['football-zebras','sharp-football'].includes(source.provider)}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query}));
 vi.mock('../packages/core/src/repository.js',()=>({getReport:mocks.getReport,saveAnalysis:mocks.saveAnalysis,
  stableJson:(value:unknown)=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item),
@@ -62,6 +63,7 @@ async function completedAnalysis():Promise<AnalysisResult>{
 }
 beforeEach(async()=>{
  vi.clearAllMocks();directory=await mkdtemp(path.join(os.tmpdir(),'under-review-completion-'));config.dataDir=directory;
+ mocks.referee.mockResolvedValue({snapshots:[]});
  const schedule=await persist('nflverse-schedules',sourceUrls.schedules,csv([game.providerData]));
  await setPbp('clean');await setAggregate(aggregateRows);
  const oldAggregate=await persist('nflverse-team-stats',aggregate.url,csv(aggregateRows.map(row=>({...row,game_id:'2026_02_ATL_GB'}))));

@@ -2,12 +2,13 @@ import type { AnalysisResult,Game } from './contracts.js';
 import { buildExpectations,EXPECTATIONS_VERSION,type LoadedExpectationsReference } from './expectations.js';
 import { GAME_AUDIT_VERSION } from './game-audit.js';
 import { getGameVerdict } from './consumer-summary.js';
+import type { RefereeAssignment } from './referee-assignment-contracts.js';
 
 export const EXPECTATIONS_MODEL_ID='game-expectations';
-export function applyExpectationsAudit(game:Game,analysis:AnalysisResult,loaded:LoadedExpectationsReference):AnalysisResult{
+export function applyExpectationsAudit(game:Game,analysis:AnalysisResult,loaded:LoadedExpectationsReference,assignment?:RefereeAssignment):AnalysisResult{
  if(!analysis.gameAudit)return analysis;
  const result=structuredClone(analysis);
- result.gameAudit!.expectations=buildExpectations(game,result.gameAudit!.profiles,loaded);
+ result.gameAudit!.expectations=buildExpectations(game,result.gameAudit!.profiles,loaded,assignment);
  result.gameAudit!.version=GAME_AUDIT_VERSION;
  result.gameAudit!.headline=getGameVerdict(result.gameAudit).summary;
  result.models=result.models.filter(model=>model.id!==EXPECTATIONS_MODEL_ID).map(model=>model.id==='game-profile-audit'?{...model,version:GAME_AUDIT_VERSION}:model);

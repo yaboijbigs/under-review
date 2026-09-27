@@ -8,7 +8,7 @@ export interface SourceRequest {
   provider: string;
   url: string;
   license: string;
-  extension?: 'csv' | 'rds' | 'json';
+  extension?: 'csv' | 'rds' | 'json' | 'html';
   metadata?: Record<string, unknown>;
 }
 
@@ -28,7 +28,7 @@ type CacheRecord = { snapshot: SourceSnapshot; checkedAt: string; etag?: string;
 const sha256 = (value: string | Uint8Array): string => createHash('sha256').update(value).digest('hex');
 const RELEASE_ROOTS = ['/nflverse/nflverse-data/releases/download/', '/nflverse/nflverse-pbp/releases/download/'];
 
-/** Initial requests are restricted to known public datasets; redirect hosts are GitHub's release CDN. */
+/** Initial requests are restricted to known datasets and assignment articles. */
 export function assertSourceUrl(value: string, redirected = false): URL {
   const url = new URL(value);
   if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443')) {
@@ -36,7 +36,13 @@ export function assertSourceUrl(value: string, redirected = false): URL {
   }
   const release = url.hostname === 'github.com' && RELEASE_ROOTS.some((prefix) => url.pathname.startsWith(prefix));
   const cdn = redirected && ['release-assets.githubusercontent.com', 'objects.githubusercontent.com'].includes(url.hostname);
-  if (!release && !cdn) throw new SourceError('source_url_rejected', 'Source host or path is outside the dataset allowlist.');
+  const zebras = url.hostname === 'www.footballzebras.com' && url.pathname === '/wp-json/wp/v2/posts'
+    && /^week-(?:[1-9]|1[0-8])-referee-assignments-(?:19\d{2}|20\d{2}|2100)$/.test(url.searchParams.get('slug') ?? '')
+    && url.searchParams.get('_fields') === 'id,date_gmt,modified_gmt,link,title,content'
+    && [...url.searchParams.keys()].length === 2 && !url.hash;
+  const sharp = url.hostname === 'www.sharpfootballanalysis.com'
+    && url.pathname === '/betting/nfl-referee-assignments-penalty-trends-betting-impact/' && !url.search && !url.hash;
+  if (!release && !cdn && !zebras && !sharp) throw new SourceError('source_url_rejected', 'Source host or path is outside the dataset allowlist.');
   return url;
 }
 
@@ -90,7 +96,7 @@ export class LocalSnapshotStore implements SnapshotStore {
     }
     if (cached && !options.force && Date.now() - Date.parse(cached.checkedAt) < (options.maxAgeMs ?? 300_000)) return cached.snapshot;
 
-    const headers: Record<string, string> = { 'User-Agent': 'UnderReview/1.0 (nflverse dataset reader)', Accept: '*/*' };
+    const headers: Record<string, string> = { 'User-Agent': 'UnderReview/1.0 (public NFL data reader)', Accept: '*/*' };
     if (cached?.etag) headers['If-None-Match'] = cached.etag;
     if (cached?.lastModified) headers['If-Modified-Since'] = cached.lastModified;
     const signal = AbortSignal.timeout(this.timeoutMs);

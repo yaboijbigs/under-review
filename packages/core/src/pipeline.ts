@@ -3,7 +3,7 @@ import path from 'node:path';
 import { query } from './db.js';
 import { LocalSnapshotStore,syncSchedule,ingestGame } from './ingest.js';
 import { runAnalytics } from './analytics-bridge.js';
-import { getGame,saveGames,saveSnapshots,saveAnalysis } from './repository.js';
+import { getReport,saveGames,saveSnapshots,saveAnalysis } from './repository.js';
 import { enqueue,enqueueAnalysisIfIdle } from './jobs.js';
 import { maybeAutomaticDraft } from './publishing.js';
 import { ingestGameProfiles,loadGameProfileReference } from './game-profile-source.js';
@@ -12,6 +12,7 @@ import { applyOvertimeTimeline,loadOvertimeReference } from './overtime-integrat
 import { applySpreadAudit,loadSpreadReference } from './spread.js';
 import { loadExpectationsReference } from './expectations.js';
 import { applyExpectationsAudit } from './expectations-integration.js';
+import { getCachedRefereeAssignment } from './referee-assignments.js';
 
 const store=()=>new LocalSnapshotStore(path.join(config.dataDir,'snapshots'));
 export async function syncSeason(season:number,scheduleJobs=true){
@@ -55,7 +56,10 @@ export async function analyzeGame(gameId:string,{backfill=false,preferRaw=true}:
  analysis.gameAudit=buildGameAudit({game,plays:ingested.plays,profiles:profileSource.profiles,reference:historical?.reference,referenceChecksum:historical?.checksum,events:analysis.events});
  analysis.models.push({id:'game-profile-audit',version:analysis.gameAudit.version,...(historical?{checksum:historical.checksum}:{}),trainingWindow:historical?`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`:null,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'});
  analysis=applySpreadAudit(game,analysis,snapshots,await loadSpreadReference());
- analysis=applyExpectationsAudit(game,analysis,await loadExpectationsReference());
+ const previous=existing?await getReport(gameId):null;
+ const referee=await getCachedRefereeAssignment(game,previous?{assignment:previous.revision.analysis.gameAudit?.expectations?.referee.assignment,snapshots:previous.revision.sourceSnapshots}:undefined);
+ snapshots.push(...referee.snapshots);
+ analysis=applyExpectationsAudit(game,analysis,await loadExpectationsReference(),referee.assignment);
  analysis.warnings=[...new Set([...analysis.warnings,...ingested.warnings,...profileSource.warnings])];
  const revision=await saveAnalysis(game,ingested.plays,snapshots,analysis,ingested.sourceKind);
  if(!backfill){

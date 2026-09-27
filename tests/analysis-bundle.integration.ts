@@ -59,7 +59,8 @@ try {
   assert.ok(storedPlays.every(row => row.snapshot_id === pbpId));
   const root = await realpath(directory);
   for (const source of report.revision.sourceSnapshots) {
-    assert.equal(await realpath(source.path), path.join(root, 'snapshots', 'snapshots', `${source.checksum}.csv`));
+    const extension = source.provider === 'football-zebras' ? 'json' : source.provider === 'sharp-football' ? 'html' : 'csv';
+    assert.equal(await realpath(source.path), path.join(root, 'snapshots', 'snapshots', `${source.checksum}.${extension}`));
     const bytes = await readFile(source.path);
     assert.equal(createHash('sha256').update(bytes).digest('hex'), source.checksum);
     const original = bundle.snapshots.find(item => item.snapshot.id === source.id)!;
