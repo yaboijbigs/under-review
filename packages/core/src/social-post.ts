@@ -4,11 +4,18 @@ import { getGameVerdict } from './consumer-summary.js';
 import type { EvidenceDraft } from './summaries.js';
 import { teamSocialHandle, teamShortName } from './team-social.js';
 
-export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v4';
+export const SOCIAL_TEMPLATE_VERSION = 'game-final-screening-v5';
 export const SOCIAL_API_TEMPLATE_VERSION = `${SOCIAL_TEMPLATE_VERSION}-names`;
 export type SocialRecipientStyle = 'handles' | 'names';
 /** Recognize stored historical formats without relying on the moving current version. */
 export function recognizedPublicationFooter(text:string,templateVersion:string|null,reportUrl:string):boolean{
+ if(templateVersion==='game-final-screening-v5-names'){
+  const ratingLine=text.split('\n').map(line=>line.replace(/^(?:Correction|Update): /,'')).find(line=>Object.values(headings).includes(line as typeof headings[keyof typeof headings])||line==='⚪ UNRATED');
+  const linked=ratingLine===headings[3]||ratingLine===headings[4]||ratingLine===headings[5];
+  const footer=linked?`\n\nView the analysis here: ${reportUrl}\n\n#NFL #UnderReview`:'\n\n#NFL #UnderReview';
+  const beforeFooter=text.slice(0,-footer.length);
+  return ratingLine!==undefined&&text.endsWith(footer)&&!/https?:\/\//i.test(beforeFooter)&&twitterText.extractUrls(beforeFooter).length===0;
+ }
  if(templateVersion==='game-final-screening-v4-names'){
   // twitter-text excludes reserved/unknown TLDs; explicit URL schemes must also fail closed.
   return !/https?:\/\//i.test(text)&&twitterText.extractUrls(text).length===0&&text.endsWith('\n\n#NFL #UnderReview');
@@ -23,12 +30,14 @@ const conditions: Record<string, string> = {
   'Negative turnover margin': 'losing the turnover battle',
 };
 /** Original, deterministic prose derived from the same validated editorial rating as the report. */
-export function renderSocialPost(game: Game, analysis: AnalysisResult, _reportUrl: string, kind: 'initial' | 'correction' | 'update' = 'initial', recipientStyle: SocialRecipientStyle = 'handles'): EvidenceDraft {
+export function renderSocialPost(game: Game, analysis: AnalysisResult, reportUrl: string, kind: 'initial' | 'correction' | 'update' = 'initial', recipientStyle: SocialRecipientStyle = 'handles'): EvidenceDraft {
   const verdict = getGameVerdict(analysis.gameAudit);
   const heading = verdict.rating ? headings[verdict.rating] : '⚪ UNRATED';
   const teamLabel = recipientStyle === 'names' ? teamShortName : teamSocialHandle;
   const prefix = `Week ${game.week}: ${teamLabel(game.awayTeam) ?? game.awayTeam} ${game.awayScore} — ${teamLabel(game.homeTeam) ?? game.homeTeam} ${game.homeScore}\n\n${kind === 'initial' ? '' : kind === 'correction' ? 'Correction: ' : 'Update: '}${heading}`;
-  const suffix = '\n\n#NFL #UnderReview';
+  const suffix = verdict.rating !== null && verdict.rating >= 3
+    ? `\n\nView the analysis here: ${reportUrl}\n\n#NFL #UnderReview`
+    : '\n\n#NFL #UnderReview';
   let findings: string[] = [];
   let evidenceIds: string[] = [];
   const comparison = verdict.comparison;
@@ -80,11 +89,11 @@ export function renderSocialPost(game: Game, analysis: AnalysisResult, _reportUr
     bodies = findings.map(finding => `📊 ${finding}`);
   } else if (verdict.rating === 4) {
     const label = expectationsRating ? 'statistical flag' : 'fairness concern';
-    bodies = [...findings.map(finding => `Our system detected a strong ${label}:\n⚠️ ${finding}`), ...findings.map(finding => `Strong ${label}:\n⚠️ ${finding}`), ...(expectationsRating ? findings.map(finding => `⚠️ ${finding}`) : [])];
+    bodies = [...findings.map(finding => `Our system detected a strong ${label}:\n⚠️ ${finding}`), ...findings.map(finding => `Strong ${label}:\n⚠️ ${finding}`), ...findings.map(finding => `⚠️ ${finding}`)];
   } else if (verdict.rating === 5) {
     bodies = expectationsRating
       ? [...findings.map(finding => `Strong statistical signal + penalty sequence favored the winner:\n⚠️ ${finding}`), ...findings.map(finding => `⚠️ ${finding}`)]
-      : [...findings.map(finding => `A highly unusual statistical result AND a major penalty sequence favored the winner:\n⚠️ ${finding}`), ...findings.map(finding => `Rare winning profile + penalty sequence favored the winner:\n⚠️ ${finding}`), ...findings.map(finding => `Winner's rare stat profile + penalty sequence:\n⚠️ ${finding}`)];
+      : [...findings.map(finding => `A highly unusual statistical result AND a major penalty sequence favored the winner:\n⚠️ ${finding}`), ...findings.map(finding => `Rare winning profile + penalty sequence favored the winner:\n⚠️ ${finding}`), ...findings.map(finding => `Winner's rare stat profile + penalty sequence:\n⚠️ ${finding}`), ...findings.map(finding => `⚠️ ${finding}`)];
   } else {
     bodies = ['The report is ready, but evidence is too limited to rate this result.'];
   }
