@@ -13,6 +13,7 @@ import { ingestGameProfiles,loadGameProfileReference } from './game-profile-sour
 import { applySpreadAudit,loadSpreadReference } from './spread.js';
 import { loadExpectationsReference } from './expectations.js';
 import { applyExpectationsAudit } from './expectations-integration.js';
+import { getCachedRefereeAssignment,isAssignmentSnapshot } from './referee-assignments.js';
 import { getGameVerdict } from './consumer-summary.js';
 import { maybeAutomaticDraft } from './publishing.js';
 
@@ -131,9 +132,10 @@ export async function completePendingGameData(gameId:string):Promise<DataComplet
   trainingWindow:`${historical.reference.startSeason}–${historical.reference.endSeason}; target comparisons use prior seasons only`,notes:'Descriptive fixed-pattern historical comparisons and play review triggers; no intent or misconduct inference.'});
  // All R, charting and schedule source inputs stay pinned to the saved revision.
  // Replace just the aggregate source, never attach both old and new season CSVs.
- const snapshots=[...revision.sourceSnapshots.filter(snapshot=>snapshot.provider!=='nflverse-team-stats'),...source.snapshots];
+ const referee=await getCachedRefereeAssignment(game,{assignment:revision.analysis.gameAudit?.expectations?.referee.assignment,snapshots:revision.sourceSnapshots});
+ const snapshots=[...revision.sourceSnapshots.filter(snapshot=>snapshot.provider!=='nflverse-team-stats'&&!isAssignmentSnapshot(snapshot)),...source.snapshots,...referee.snapshots];
  analysis=applySpreadAudit(game,analysis,snapshots,await loadSpreadReference());
- analysis=applyExpectationsAudit(game,analysis,await loadExpectationsReference());
+ analysis=applyExpectationsAudit(game,analysis,await loadExpectationsReference(),referee.assignment);
  analysis.warnings=[...new Set([...analysis.warnings.filter(warning=>!aggregateWarning(warning)&&!warning.startsWith('game_profile_reference_unavailable:')),...source.warnings])];
  if(getGameVerdict(analysis.gameAudit).rating===null)return {...base,status:'waiting',reasonCode:'completed_aggregates_rating_unavailable',warnings:analysis.warnings};
  let revisionSaved:Awaited<ReturnType<typeof saveAnalysis>>;

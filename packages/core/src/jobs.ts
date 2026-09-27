@@ -4,7 +4,7 @@ import { safeError } from './config.js';
 import type pg from 'pg';
 
 export interface Job {id:string;kind:string;gameId:string|null;payload:Record<string,unknown>;attempts:number;maxAttempts:number;workerId:string}
-export const FAST_JOB_KINDS=['sync-season','reconcile-week','complete-data','complete-referee','publish'] as const;
+export const FAST_JOB_KINDS=['sync-season','reconcile-week','complete-data','complete-referee','refresh-referees','publish'] as const;
 export type WorkerLane='all'|'fast'|'analysis';
 export async function enqueue(kind:string,gameId:string|null,payload:Record<string,unknown>={},key?:string,runAfter=new Date()):Promise<string>{
  const id=randomUUID();const result=await query(`INSERT INTO jobs(id,kind,game_id,job_key,payload,run_after) VALUES($1,$2,$3,$4,$5,$6)

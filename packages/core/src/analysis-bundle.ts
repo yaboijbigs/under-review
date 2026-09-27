@@ -13,8 +13,10 @@ import { loadGameProfileReference,normalizeGameProfiles,validateGameProfileFinal
 import { applyOvertimeTimeline,loadOvertimeReference,OVERTIME_MODEL_ID } from './overtime-integration.js';
 import { OVERTIME_MODEL_VERSION } from './overtime.js';
 import { buildMarketAudit,loadSpreadReference,SPREAD_MODEL_ID,SPREAD_VERSION,applySpreadAudit } from './spread.js';
-import { loadExpectationsReference,EXPECTATIONS_VERSION } from './expectations.js';
+import { canonicalReferee,loadExpectationsReference,EXPECTATIONS_VERSION,type LoadedExpectationsReference } from './expectations.js';
 import { applyExpectationsAudit,EXPECTATIONS_MODEL_ID } from './expectations-integration.js';
+import type { RefereeAssignment } from './referee-assignment-contracts.js';
+import { ASSIGNMENT_SOURCE_LICENSE,assignmentSourceUrls,footballZebrasArticleUrl,parseFootballZebrasAssignments,parseSharpFootballAssignments } from './referee-assignment-sources.js';
 
 // Deliberately bounded for the current-season catch-up, not whole-database transport.
 export const MAX_ANALYSIS_BUNDLE_BYTES=64*1024*1024;
@@ -23,8 +25,8 @@ const sha256=(bytes:string|Uint8Array)=>createHash('sha256').update(bytes).diges
 const hashSchema=z.string().regex(/^[a-f0-9]{64}$/);
 const modelSchema=z.object({version:z.string().min(1),checksum:hashSchema.optional()}).strict();
 const producerSchema=z.object({format:z.literal('under-review-analysis-bundle-v1'),closeCallTolerance:z.number().finite(),files:z.record(z.string(),hashSchema),models:z.record(z.string(),modelSchema)}).strict();
-const snapshotSchema=z.object({id:hashSchema,provider:z.enum(['nflverse-schedules','nflverse-pbp','ftn-via-nflverse','nflverse-team-stats']),url:z.string().url(),retrievedAt:z.string().datetime({offset:true}),checksum:hashSchema,providerVersion:z.string().optional(),license:z.string(),metadata:z.record(z.string(),z.unknown()).optional()}).strict();
-const payloadSchema=z.object({schemaVersion:z.literal(1),producer:producerSchema,game:gameSchema.strict(),sourceKind:z.literal('clean'),analysis:analysisSchema.strict(),plays:z.array(z.record(z.string(),z.unknown())).min(1).max(1000),snapshots:z.array(z.object({snapshot:snapshotSchema,bytesBase64:z.string().min(1).max(Math.ceil(MAX_SNAPSHOT_BYTES/3)*4)}).strict()).min(2).max(4)}).strict();
+const snapshotSchema=z.object({id:hashSchema,provider:z.enum(['nflverse-schedules','nflverse-pbp','ftn-via-nflverse','nflverse-team-stats','football-zebras','sharp-football']),url:z.string().url(),retrievedAt:z.string().datetime({offset:true}),checksum:hashSchema,providerVersion:z.string().optional(),license:z.string(),metadata:z.record(z.string(),z.unknown()).optional()}).strict();
+const payloadSchema=z.object({schemaVersion:z.literal(1),producer:producerSchema,game:gameSchema.strict(),sourceKind:z.literal('clean'),analysis:analysisSchema.strict(),plays:z.array(z.record(z.string(),z.unknown())).min(1).max(1000),snapshots:z.array(z.object({snapshot:snapshotSchema,bytesBase64:z.string().min(1).max(Math.ceil(MAX_SNAPSHOT_BYTES/3)*4)}).strict()).min(2).max(6)}).strict();
 const bundleSchema=payloadSchema.extend({checksum:hashSchema}).strict();
 export type AnalysisBundle=z.infer<typeof bundleSchema>;
 export type AnalysisBundleProducer=z.infer<typeof producerSchema>;
@@ -35,7 +37,7 @@ function fail(code:string,message:string):never{throw new AnalysisBundleError(co
 const CODE_FILES=['analytics/renv.lock','analytics/run.R','analytics/R/common.R','analytics/R/states.R','analytics/R/fourth.R','analytics/R/baselines.R','analytics/R/engine.R','analytics/R/rarity.R',
  'analytics/vendor/nfl4th/helpers.R','analytics/vendor/nfl4th/decision_functions.R','analytics/vendor/nfl4th/apply_win_prob.R','analytics/vendor/nfl4th/wrapper.R',
  'packages/core/src/normalize.ts','packages/core/src/game-audit.ts','packages/core/src/game-profile-source.ts','packages/core/src/overtime.ts','packages/core/src/overtime-integration.ts','packages/core/src/spread.ts',
- 'packages/core/src/expectations.ts','packages/core/src/expectations-contracts.ts','packages/core/src/expectations-integration.ts','packages/core/src/consumer-summary.ts','packages/core/reference/expectations-reference.json'];
+ 'packages/core/src/expectations.ts','packages/core/src/expectations-contracts.ts','packages/core/src/expectations-integration.ts','packages/core/src/consumer-summary.ts','packages/core/src/referee-assignment-contracts.ts','packages/core/src/referee-assignment-sources.ts','packages/core/src/analysis-bundle.ts','packages/core/reference/expectations-reference.json'];
 const MODEL_FILES=['manifest.json','evaluation.json','coaching-evaluation.json','category-reference.json','game-profiles.json','overtime-reference.json','spread-reference.json','fd_model.rds','wp_model.rds','fg_model.rds','two_pt_model.rds','punt_df.rds','fastr_ep_model.rds','fastr_wp_model.rds','fastr_wp_model_spread.rds','fumble.rds','fg.rds','xp.rds','penalty.rds','kickoff_starts.rds'];
 const modelDirectory=()=>process.env.MODEL_DIR??path.join(projectRoot,'analytics/models');
 
@@ -74,9 +76,36 @@ function checkModels(analysis:AnalysisResult,producer:AnalysisBundleProducer):vo
 }
 
 function sourceIdentity(game:Game,snapshot:z.infer<typeof snapshotSchema>):void{
- const expected:Record<string,string>={'nflverse-schedules':sourceUrls.schedules,'nflverse-pbp':sourceUrls.clean(game.season),'ftn-via-nflverse':sourceUrls.ftn(game.season),'nflverse-team-stats':`https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_${game.season}.csv`};
- if(snapshot.url!==expected[snapshot.provider]||snapshot.id!==sha256(`${snapshot.url}\n${snapshot.checksum}`))fail('bundle_source_identity','Source identity or URL does not match this game and immutable checksum.');
- if(snapshot.license!==(snapshot.provider==='ftn-via-nflverse'?SOURCE_LICENSES.ftn:SOURCE_LICENSES.nflverse))fail('bundle_source_license','Source license attribution does not match its provider.');
+ const expected:Record<string,string>={'nflverse-schedules':sourceUrls.schedules,'nflverse-pbp':sourceUrls.clean(game.season),'ftn-via-nflverse':sourceUrls.ftn(game.season),'nflverse-team-stats':`https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_${game.season}.csv`,'sharp-football':assignmentSourceUrls.sharpFootball};
+ const url=snapshot.provider==='football-zebras'?assignmentSourceUrls.footballZebras(game.season,game.week):expected[snapshot.provider];
+ if(snapshot.url!==url||snapshot.id!==sha256(`${snapshot.url}\n${snapshot.checksum}`))fail('bundle_source_identity','Source identity or URL does not match this game and immutable checksum.');
+ const license=snapshot.provider==='football-zebras'||snapshot.provider==='sharp-football'?ASSIGNMENT_SOURCE_LICENSE:snapshot.provider==='ftn-via-nflverse'?SOURCE_LICENSES.ftn:SOURCE_LICENSES.nflverse;
+ if(snapshot.license!==license)fail('bundle_source_license','Source license attribution does not match its provider.');
+}
+
+const snapshotExtension=(provider:string):'csv'|'json'|'html'=>provider==='football-zebras'?'json':provider==='sharp-football'?'html':'csv';
+
+/** Assignment claims are reconstructed from retained publisher bytes, never trusted metadata. */
+function bundledRefereeAssignment(bundle:AnalysisBundle,bytes:Map<string,Buffer>,loaded:LoadedExpectationsReference):RefereeAssignment|undefined{
+ const sources:RefereeAssignment['sources']=[];
+ for(const provider of ['football-zebras','sharp-football'] as const){
+  const item=bundle.snapshots.find(item=>item.snapshot.provider===provider);if(!item)continue;
+  const snapshot=item.snapshot;
+  try{
+   const text=bytes.get(snapshot.id)!.toString('utf8'),payload=provider==='football-zebras'?JSON.parse(text):null;
+   const url=provider==='football-zebras'?footballZebrasArticleUrl(payload,bundle.game.season,bundle.game.week):assignmentSourceUrls.sharpFootball;
+   const rows=provider==='football-zebras'?parseFootballZebrasAssignments(payload,bundle.game.season,bundle.game.week,[bundle.game]):parseSharpFootballAssignments(text,bundle.game.season,bundle.game.week,[bundle.game]);
+   const matching=rows.filter(row=>row.gameId===bundle.game.id);
+   // Sharp's single URL may contain several weeks in identical immutable bytes;
+   // its first recorded request week is not the scope of every supported row.
+   if(matching.length!==1||snapshot.metadata?.articleUrl!==url||snapshot.metadata?.season!==bundle.game.season||(provider==='football-zebras'&&snapshot.metadata?.week!==bundle.game.week)||snapshot.metadata?.scope!=='head-referee-assignment')fail('bundle_referee_assignment_mismatch','Assignment snapshot does not establish this game and its declared article provenance.');
+   sources.push({provider,name:matching[0].name,url,snapshotId:snapshot.id,checksum:snapshot.checksum});
+  }catch(error){if(error instanceof AnalysisBundleError)throw error;fail('bundle_referee_assignment_mismatch','Assignment snapshot could not reproduce a valid head-referee assignment for this game.');}
+ }
+ if(!sources.length)return undefined;
+ const names=new Set(sources.map(source=>canonicalReferee(source.name,loaded.reference)?.toLowerCase()??null));
+ if(names.has(null))fail('bundle_referee_assignment_mismatch','Assignment snapshot has an empty referee identity.');
+ return {gameId:bundle.game.id,season:bundle.game.season,week:bundle.game.week,name:names.size===1?sources[0].name:null,status:names.size===1?'reported':'conflict',sources};
 }
 
 async function validateBundle(input:unknown):Promise<{bundle:AnalysisBundle;bytes:Map<string,Buffer>}>{
@@ -123,7 +152,9 @@ async function validateBundle(input:unknown):Promise<{bundle:AnalysisBundle;byte
  let audit=buildGameAudit({game:bundle.game,plays:bundle.plays,profiles,reference:historical.reference,referenceChecksum:historical.checksum,events:bundle.analysis.events});
  const spread=await loadSpreadReference();
  audit.market=buildMarketAudit(bundle.game,{...schedule.snapshot,path:''},spread);
- const expected=applyExpectationsAudit(bundle.game,{...bundle.analysis,gameAudit:audit},await loadExpectationsReference());
+ const expectations=await loadExpectationsReference();
+ const assignment=bundledRefereeAssignment(bundle,bytes,expectations);
+ const expected=applyExpectationsAudit(bundle.game,{...bundle.analysis,gameAudit:audit},expectations,assignment);
  audit=expected.gameAudit!;
  if(stableJson(expected.models.find(model=>model.id===EXPECTATIONS_MODEL_ID))!==stableJson(bundle.analysis.models.find(model=>model.id===EXPECTATIONS_MODEL_ID)))fail('bundle_expectation_mismatch','Expectation model metadata does not match the frozen reference.');
  if(stableJson(audit)!==stableJson(bundle.analysis.gameAudit))fail('bundle_audit_mismatch','Game audit does not match the bundled sources and fixed historical reference.');
@@ -153,7 +184,7 @@ export async function exportAnalysisBundle(gameId:string):Promise<AnalysisBundle
   // A shared database can retain the original host's path after the identical
   // source is downloaded inside a container. Only the configured content store
   // is authoritative for file access; never follow that historical absolute path.
-  const canonical=path.join(store.root,'snapshots',`${snapshot.checksum}.csv`);
+  const canonical=path.join(store.root,'snapshots',`${snapshot.checksum}.${snapshotExtension(snapshot.provider)}`);
   const resolved=await realpath(canonical);
   if(!within(storeRoot,resolved)||(await lstat(canonical)).isSymbolicLink())fail('bundle_path_rejected','Export snapshot escapes the configured source store.');
   const {path:ignoredPath,...metadata}=snapshot;const data=await store.read({...snapshot,path:canonical});
@@ -167,7 +198,7 @@ export async function exportAnalysisBundle(gameId:string):Promise<AnalysisBundle
 }
 
 function within(root:string,file:string):boolean{const relative=path.relative(root,file);return relative!==''&&!relative.startsWith(`..${path.sep}`)&&relative!=='..'&&!path.isAbsolute(relative);}
-async function snapshotDestination(checksum:string):Promise<string>{
+async function snapshotDestination(checksum:string,provider:string):Promise<string>{
  await mkdir(config.dataDir,{recursive:true});const root=await realpath(config.dataDir);
  let directory=root;
  for(const segment of ['snapshots','snapshots']){
@@ -177,7 +208,7 @@ async function snapshotDestination(checksum:string):Promise<string>{
   directory=await realpath(next);
   if(!within(root,directory))fail('bundle_path_rejected','Snapshot directory escapes the configured data directory.');
  }
- const destination=path.join(directory,`${checksum}.csv`);
+ const destination=path.join(directory,`${checksum}.${snapshotExtension(provider)}`);
  try{if((await lstat(destination)).isSymbolicLink())fail('bundle_path_rejected','Snapshot destination is a symbolic link.');}
  catch(error){if((error as NodeJS.ErrnoException).code!=='ENOENT')throw error;}
  return destination;
@@ -195,7 +226,7 @@ export async function importAnalysisBundle(input:unknown):Promise<{gameId:string
  const known=(await query('SELECT snapshot_json FROM source_snapshots WHERE id=ANY($1::text[])',[bundle.snapshots.map(item=>item.snapshot.id)])).rows.map(row=>row.snapshot_json as SourceSnapshot);
  const snapshots:SourceSnapshot[]=[];
  for(const {snapshot} of bundle.snapshots){
-  const destination=await snapshotDestination(snapshot.checksum);
+  const destination=await snapshotDestination(snapshot.checksum,snapshot.provider);
   const existing=known.find(source=>source.id===snapshot.id);
   if(existing&&(existing.provider!==snapshot.provider||existing.url!==snapshot.url||existing.checksum!==snapshot.checksum||path.resolve(existing.path)!==destination)){
    fail('bundle_snapshot_conflict','An existing source identity or stored path conflicts with the imported snapshot.');

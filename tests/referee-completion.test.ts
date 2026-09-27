@@ -14,7 +14,8 @@ import { loadExpectationsReference } from '../packages/core/src/expectations.js'
 import { applyExpectationsAudit } from '../packages/core/src/expectations-integration.js';
 import { getGameVerdict } from '../packages/core/src/consumer-summary.js';
 
-const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn(),publish:vi.fn(),runAnalytics:vi.fn(),runRRequest:vi.fn()}));
+const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn(),publish:vi.fn(),runAnalytics:vi.fn(),runRRequest:vi.fn(),referee:vi.fn()}));
+vi.mock('../packages/core/src/referee-assignments.js',()=>({getCachedRefereeAssignment:mocks.referee,isAssignmentSnapshot:(source:SourceSnapshot)=>['football-zebras','sharp-football'].includes(source.provider)}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query}));
 vi.mock('../packages/core/src/repository.js',()=>({getReport:mocks.getReport,saveAnalysis:mocks.saveAnalysis,
  stableJson:(value:unknown)=>JSON.stringify(value,(_key,item)=>item&&typeof item==='object'&&!Array.isArray(item)?Object.fromEntries(Object.keys(item).sort().map(key=>[key,item[key]])):item),
@@ -42,6 +43,7 @@ async function persistSchedule(row:ProviderRow){
 const dbRows=()=>plays.map((data,provider_order)=>({data:structuredClone(data),snapshot_id:pbp.id,play_id:String(data.play_id),provider_order}));
 beforeEach(async()=>{
  vi.resetAllMocks();directory=await mkdtemp(path.join(os.tmpdir(),'under-review-referee-'));config.dataDir=directory;
+ mocks.referee.mockResolvedValue({snapshots:[]});
  const schedule=await persistSchedule(game.providerData);fresh=await persistSchedule({...game.providerData,referee:'Carl Cheffers'});
  pbp=snapshot('nflverse-pbp',sourceUrls.clean(game.season));
  const sources=[schedule,pbp,snapshot('ftn-via-nflverse',sourceUrls.ftn(game.season)),snapshot('nflverse-team-stats',`https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_${game.season}.csv`)];
@@ -57,6 +59,54 @@ beforeEach(async()=>{
 afterEach(async()=>{config.dataDir=originalDataDir;vi.restoreAllMocks();vi.unstubAllGlobals();await rm(directory,{recursive:true,force:true});});
 
 describe('missing referee completion',()=>{
+ const external=(name='Carl Cheffers')=>{
+  const source={...snapshot('football-zebras','https://www.footballzebras.com/wp-json/wp/v2/posts'),id:'a'.repeat(64)};
+  return {assignment:{gameId:game.id,season:game.season,week:game.week,name,status:'reported' as const,sources:[{provider:'football-zebras' as const,name,url:'https://www.footballzebras.com/2026/09/week-3-referee-assignments-2026/',snapshotId:source.id,checksum:source.checksum}]},snapshots:[source]};
+ };
+ it('uses cached pregame attribution without waiting for nflverse or altering its game record',async()=>{
+  const cached=external();mocks.referee.mockResolvedValue(cached);
+  fetchSource.mockRejectedValue(new SourceError('source_http_503','Unavailable',true));
+  expect(await completePendingRefereeData(game.id)).toMatchObject({status:'updated'});
+  const [savedGame,,sources,analysis]=mocks.saveAnalysis.mock.calls[0];
+  expect(savedGame).toEqual(game);expect(fetchSource).not.toHaveBeenCalled();
+  expect(sources).toEqual([...report.revision.sourceSnapshots,...cached.snapshots]);
+  expect(analysis.gameAudit.expectations.referee).toMatchObject({name:'Carl Cheffers',status:'reported',assignment:cached.assignment});
+  expect(analysis.metrics).toEqual(rAnalysis.metrics);expect(mocks.publish).toHaveBeenCalledExactlyOnceWith(game.id);
+ });
+ it('reconciles an external assignment when nflverse later supplies the same name',async()=>{
+  const cached=external();mocks.referee.mockResolvedValue(cached);
+  report.revision.sourceSnapshots.push(...cached.snapshots);
+  report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference(),cached.assignment);
+  expect(isPendingRefereeData(report.revision.analysis)).toBe(true);
+  expect(await completePendingRefereeData(game.id)).toMatchObject({status:'updated'});
+  expect(mocks.saveAnalysis.mock.calls[0][3].gameAudit.expectations.referee).toMatchObject({status:'schedule_only',name:'Carl Cheffers'});
+ });
+ it('does not create revisions on unchanged external evidence and still-missing nflverse metadata',async()=>{
+  const cached=external();mocks.referee.mockResolvedValue(cached);fresh=await persistSchedule(game.providerData);
+  report.revision.sourceSnapshots.push(...cached.snapshots);
+  report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference(),cached.assignment);
+  expect(await completePendingRefereeData(game.id)).toMatchObject({status:'already_complete',reasonCode:'referee_evidence_unchanged'});
+  expect(mocks.saveAnalysis).not.toHaveBeenCalled();expect(mocks.query).not.toHaveBeenCalled();
+ });
+ it('still checks nflverse when publisher spelling is canonicalized in the saved report',async()=>{
+  const cached=external('Ron Torbert');mocks.referee.mockResolvedValue(cached);fresh=await persistSchedule({...game.providerData,referee:'Ronald Torbert'});
+  report.revision.sourceSnapshots.push(...cached.snapshots);
+  report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference(),cached.assignment);
+  expect(report.revision.analysis.gameAudit!.expectations!.referee.assignment!.name).toBe('Ronald Torbert');
+  expect(await completePendingRefereeData(game.id)).toMatchObject({status:'updated'});
+  expect(fetchSource).toHaveBeenCalledOnce();expect(mocks.saveAnalysis.mock.calls[0][3].gameAudit.expectations.referee.status).toBe('schedule_only');
+ });
+ it('withdraws a disputed referee adjustment while preserving the game rating and publication guard',async()=>{
+  const cached=external();report.revision.sourceSnapshots.push(...cached.snapshots);
+  report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference(),cached.assignment);
+  const other={...cached.assignment.sources[0],provider:'sharp-football' as const,name:'Scott Novak',url:'https://www.sharpfootballanalysis.com/betting/nfl-referee-assignments-penalty-trends-betting-impact/'};
+  mocks.referee.mockResolvedValue({assignment:{...cached.assignment,name:null,status:'conflict',sources:[...cached.assignment.sources,other]},snapshots:cached.snapshots});
+  expect(await completePendingRefereeData(game.id)).toMatchObject({status:'updated'});
+  const analysis=mocks.saveAnalysis.mock.calls[0][3];
+  expect(analysis.gameAudit.expectations.referee).toMatchObject({status:'conflict',effect:null});
+  expect(analysis.gameAudit.expectations.penalty.method).toBe('team_opponent');
+  expect(getGameVerdict(analysis.gameAudit).rating).not.toBeNull();expect(fetchSource).not.toHaveBeenCalled();
+ });
  it('includes already-rated games with missing identity but excludes absent modules and known sparse-history officials',()=>{
   expect(getGameVerdict(report.revision.analysis.gameAudit).rating).not.toBeNull();expect(isPendingRefereeData(report.revision.analysis)).toBe(true);
   const official=report.revision.analysis.gameAudit!.expectations!.referee;

@@ -164,8 +164,16 @@ function validExpectations(e:GameExpectations,home:GameProfile,away:GameProfile)
  if(e.teams.length!==2||!h||!a||h===a||!integer(e.outcome.trainingGames)||e.outcome.trainingGames<500||!e.outcome.coefficients)return false;
  const referee=e.referee,withRef=e.penalty.method==='team_opponent_referee';
  if(!['team_opponent','team_opponent_referee'].includes(e.penalty.method)||!baseline(referee.home)||!baseline(referee.away))return false;
+ const assignment=referee.assignment;
+ if(assignment&&(assignment.gameId!==e.gameId||assignment.season!==home.season))return false;
+ const publisherDisagreement=!!assignment&&(assignment.status==='conflict'||assignment.name!==referee.name);
+ const resolvedByNflverse=referee.assignmentResolution==='nflverse';
+ if(resolvedByNflverse&&(!publisherDisagreement||!['verified','schedule_only'].includes(referee.status)||!referee.name?.trim()
+  ||referee.canonicalId!==referee.name.toLowerCase().replace(/[^a-z0-9]+/g,'-')))return false;
+ if(referee.status==='reported'&&(!assignment||assignment.status!=='reported'||assignment.name!==referee.name
+  ||referee.canonicalId!==referee.name?.toLowerCase().replace(/[^a-z0-9]+/g,'-')))return false;
  if(withRef){
-  if(!['verified','schedule_only'].includes(referee.status)||!referee.name?.trim()||!referee.canonicalId?.trim()||!referee.effect||referee.games<10
+  if(!['verified','schedule_only','reported'].includes(referee.status)||(publisherDisagreement&&!resolvedByNflverse)||!referee.name?.trim()||!referee.canonicalId?.trim()||!referee.effect||referee.games<10
    ||referee.home.games!==referee.games||referee.away.games!==referee.games||referee.reasonCode!==null
    ||!finite(referee.meanTotalPenalties)||!finite(referee.meanTotalPenaltyYards)
    ||!close(referee.meanTotalPenalties,referee.home.meanPenalties!+referee.away.meanPenalties!)

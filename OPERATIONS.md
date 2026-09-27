@@ -164,6 +164,14 @@ Visitor feedback submitted by the current public form is published on its game p
 
 No test, credential check, or deployment readiness check should submit a real X post. Live API delivery and OAuth authorization must be distinguished from mocked publishing tests and dry-run drafts in the release report.
 
+### Assignment collection and reconciliation
+
+Every 15 minutes the worker queues `refresh-referees` for regular-season weeks with games in the next seven days, the previous eight days, or unresolved/report-only referee metadata. Football Zebras and Sharp are fetched together in a bounded lightweight job; ready X deliveries have higher queue priority. Analysis reads only the durable local assignment cache and never contacts these publishers. Cache rows are in `referee_assignment_feeds`; migration 010 is additive. The existing data volume holds content-addressed publisher snapshots.
+
+Source refreshes log `referee.assignments` with season/week, assignment count and provider warning codes. A Sharp `assignment_table_scope_mismatch` for an older week is expected after its page rotates. The last valid historical table stays cached. No source failure erases successful prior evidence. Later nflverse metadata is checked through `complete-referee`, independently of full R analysis. Publisher-only names, corrected assignments and explicit conflicts remain eligible for reconciliation; reported evidence imported without a local feed cache is preserved.
+
+Changed referee attribution saves a guarded report revision while retaining the exact schedule, play-by-play and model inputs. A later nflverse referee is attached with its own exact schedule snapshot; any other changed schedule facts require ordinary analysis. Automatic publication uses the same existing game/account uniqueness guard. Enrichment neither deletes publication records nor resends a published or uncertain post.
+
 ## Verified checks and release record
 
 Source validation tests have passed against the attributable 2023/2026 fixtures. A live TypeScript source-adapter check on 2026-09-21 fetched `2026_01_NE_SEA`: 166 PBP rows, 161 joined FTN rows, reconciled 10–13 score, and no join conflicts or unmatched charting records. This check did not claim R analysis or X delivery.

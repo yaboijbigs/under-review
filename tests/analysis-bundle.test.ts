@@ -13,6 +13,8 @@ import { applyOvertimeTimeline,loadOvertimeReference,type LoadedOvertimeReferenc
 import { applySpreadAudit,loadSpreadReference,type LoadedSpreadReference } from '../packages/core/src/spread.js';
 import { loadExpectationsReference } from '../packages/core/src/expectations.js';
 import { applyExpectationsAudit } from '../packages/core/src/expectations-integration.js';
+import type { RefereeAssignment } from '../packages/core/src/referee-assignment-contracts.js';
+import { ASSIGNMENT_SOURCE_LICENSE,assignmentSourceUrls } from '../packages/core/src/referee-assignment-sources.js';
 
 const mocks=vi.hoisted(()=>({query:vi.fn(),getReport:vi.fn(),saveAnalysis:vi.fn()}));
 vi.mock('../packages/core/src/db.js',()=>({query:mocks.query,transaction:vi.fn()}));
@@ -23,9 +25,9 @@ import { analysisBundleProducer,exportAnalysisBundle,importAnalysisBundle,type A
 const hash=(bytes:string|Buffer)=>createHash('sha256').update(bytes).digest('hex');
 function resign(bundle:AnalysisBundle){const {checksum,...payload}=bundle;bundle.checksum=hash(stableJson(payload));return bundle;}
 const csv=(rows:Record<string,unknown>[])=>{const fields=[...new Set(rows.flatMap(Object.keys))];return [fields.join(','),...rows.map(row=>fields.map(field=>`"${String(row[field]??'').replaceAll('"','""')}"`).join(','))].join('\n');};
-const sourceSchedule={game_id:'2099_01_TST_DMO',season:2099,week:1,game_type:'REG',home_team:'DMO',away_team:'TST',home_score:0,away_score:0,result:0,gameday:'2099-09-01',gametime:'13:00',spread_line:3.5};
+const sourceSchedule={game_id:'2099_01_ATL_GB',season:2099,week:1,game_type:'REG',home_team:'GB',away_team:'ATL',home_score:0,away_score:0,result:0,gameday:'2099-09-01',gametime:'13:00',spread_line:3.5};
 const game=normalizeSchedule(parseCsv(csv([sourceSchedule]))[0]);
-const rawPlays=Array.from({length:5},(_,index)=>({game_id:game.id,home_team:game.homeTeam,away_team:game.awayTeam,season:game.season,play_id:index,qtr:Math.max(1,index),total_home_score:0,total_away_score:0,desc:index===0?'GAME':index===4?'END GAME':'Synthetic play',play_type:index===1||index===2?'run':'no_play',yards_gained:0,posteam:index===1?'TST':index===2?'DMO':null,defteam:index===1?'DMO':index===2?'TST':null}));
+const rawPlays=Array.from({length:5},(_,index)=>({game_id:game.id,home_team:game.homeTeam,away_team:game.awayTeam,season:game.season,play_id:index,qtr:Math.max(1,index),total_home_score:0,total_away_score:0,desc:index===0?'GAME':index===4?'END GAME':'Synthetic play',play_type:index===1||index===2?'run':'no_play',yards_gained:0,posteam:index===1?'ATL':index===2?'GB':null,defteam:index===1?'GB':index===2?'ATL':null}));
 const plays=normalizePlays(parseCsv(csv(rawPlays)),game.id);
 const rawProfiles=[game.awayTeam,game.homeTeam].map(team=>({game_id:game.id,season:game.season,week:1,team,opponent_team:team===game.homeTeam?game.awayTeam:game.homeTeam,passing_yards:0,rushing_yards:0,sack_yards_lost:0,passing_interceptions:0,fumbles_lost_total:0,penalties:0,penalty_yards:0,passing_tds:0,rushing_tds:0,def_tds:0,special_teams_tds:0,fumble_recovery_tds:0,fg_made:0,pat_made:0,passing_2pt_conversions:0,rushing_2pt_conversions:0,def_2pt_made:0,def_safeties:0}));
 let producer:AnalysisBundleProducer,historical:Awaited<ReturnType<typeof loadGameProfileReference>>,overtime:LoadedOvertimeReference,spread:LoadedSpreadReference;
@@ -33,9 +35,10 @@ let directory:string,report:GameReport;
 const originalDataDir=config.dataDir;
 
 async function saveSource(provider:string,url:string,text:string):Promise<SourceSnapshot>{
- const checksum=hash(text);const destination=path.join(config.dataDir,'snapshots','snapshots',`${checksum}.csv`);
+ const extension=provider==='football-zebras'?'json':provider==='sharp-football'?'html':'csv';
+ const checksum=hash(text);const destination=path.join(config.dataDir,'snapshots','snapshots',`${checksum}.${extension}`);
  await mkdir(path.dirname(destination),{recursive:true});await writeFile(destination,text);
- return {id:hash(`${url}\n${checksum}`),provider,url,checksum,path:destination,retrievedAt:'2099-09-02T00:00:00.000Z',license:provider==='ftn-via-nflverse'?SOURCE_LICENSES.ftn:SOURCE_LICENSES.nflverse,metadata:{attribution:'Synthetic test fixture'}};
+ return {id:hash(`${url}\n${checksum}`),provider,url,checksum,path:destination,retrievedAt:'2099-09-02T00:00:00.000Z',license:provider==='football-zebras'||provider==='sharp-football'?ASSIGNMENT_SOURCE_LICENSE:provider==='ftn-via-nflverse'?SOURCE_LICENSES.ftn:SOURCE_LICENSES.nflverse,metadata:{attribution:'Synthetic test fixture'}};
 }
 beforeAll(async()=>{producer=await analysisBundleProducer();historical=await loadGameProfileReference(path.join(process.env.MODEL_DIR??path.join(projectRoot,'analytics/models'),'game-profiles.json'));overtime=await loadOvertimeReference();spread=await loadSpreadReference();});
 beforeEach(async()=>{
@@ -62,7 +65,66 @@ afterEach(async()=>{
 });
 async function bundleForImport(){const bundle=await exportAnalysisBundle(game.id);config.dataDir=path.join(directory,'import');mocks.getReport.mockResolvedValue(null);return bundle;}
 
+const refereeArticle='https://www.footballzebras.com/2099/09/week-1-referee-assignments-2099/';
+const footballZebrasFixture=(name:string)=>JSON.stringify([{link:refereeArticle,title:{rendered:'Week 1 referee assignments'},content:{rendered:`<div class="b_post-game">Falcons at Packers</div><div class="b_post-referee">${name}</div>`}}]);
+const sharpFixture=(name:string)=>`<script type="application/ld+json">{"@type":"NewsArticle","datePublished":"2099-09-01T09:00:00Z","dateModified":"2099-09-01T10:00:00Z"}</script><p>Throughout this 2099 NFL season</p><table><tr><th>Week 1</th><th>Referee</th></tr><tr><td>Falcons at Packers</td><td>${name}</td></tr></table>`;
+async function addRefereeSources(first='Shawn Smith',second:string|undefined='Shawn Smith'){
+ const entries=[{provider:'football-zebras' as const,name:first,url:assignmentSourceUrls.footballZebras(game.season,game.week),articleUrl:refereeArticle,text:footballZebrasFixture(first)},
+  ...(second===undefined?[]:[{provider:'sharp-football' as const,name:second,url:assignmentSourceUrls.sharpFootball,articleUrl:assignmentSourceUrls.sharpFootball,text:sharpFixture(second)}])];
+ const sources:RefereeAssignment['sources']=[];
+ for(const entry of entries){
+  const snapshot=await saveSource(entry.provider,entry.url,entry.text);
+  snapshot.metadata={...snapshot.metadata,articleUrl:entry.articleUrl,season:game.season,week:game.week,scope:'head-referee-assignment'};
+  report.revision.sourceSnapshots.push(snapshot);
+  sources.push({provider:entry.provider,name:entry.name,url:entry.articleUrl,snapshotId:snapshot.id,checksum:snapshot.checksum});
+ }
+ const assignment:RefereeAssignment={gameId:game.id,season:game.season,week:game.week,name:second===undefined||first===second?first:null,status:second===undefined||first===second?'reported':'conflict',sources};
+ report.revision.analysis=applyExpectationsAudit(game,report.revision.analysis,await loadExpectationsReference(),assignment);
+ return assignment;
+}
+
 describe('bounded clean analysis evidence bundles',()=>{
+ it('round-trips two publisher assignments with their original JSON/HTML bytes and provenance',async()=>{
+  const assignment=await addRefereeSources();const bundle=await bundleForImport();
+  expect(bundle.snapshots).toHaveLength(6);
+  expect(bundle.producer.files['packages/core/src/referee-assignment-sources.ts']).toMatch(/^[a-f0-9]{64}$/);
+  expect(bundle.producer.files['packages/core/src/referee-assignment-contracts.ts']).toMatch(/^[a-f0-9]{64}$/);
+  await importAnalysisBundle(bundle);
+  const saved=mocks.saveAnalysis.mock.calls[0];
+  expect(saved[3].gameAudit.expectations.referee).toMatchObject({status:'reported',name:'Shawn Smith',assignment});
+  for(const source of saved[2] as SourceSnapshot[]){
+   const extension=source.provider==='football-zebras'?'json':source.provider==='sharp-football'?'html':'csv';
+   expect(source.path.endsWith(`.${extension}`)).toBe(true);
+   expect(hash(await readFile(source.path))).toBe(source.checksum);
+  }
+  expect(saved[5]).toEqual({expectedBaseRevisionId:null,preventPublication:true});
+ });
+ it('preserves a publisher disagreement as a conflict with no referee effect',async()=>{
+  await addRefereeSources('Shawn Smith','Carl Cheffers');const bundle=await bundleForImport();await importAnalysisBundle(bundle);
+  expect(mocks.saveAnalysis.mock.calls[0][3].gameAudit.expectations.referee).toMatchObject({status:'conflict',effect:null,assignment:{status:'conflict',name:null}});
+ });
+ it('replays Sharp target-week rows when the same snapshot was first cached for another week',async()=>{
+  await addRefereeSources();report.revision.sourceSnapshots.find(source=>source.provider==='sharp-football')!.metadata!.week=2;
+  const bundle=await bundleForImport();await importAnalysisBundle(bundle);
+  expect(mocks.saveAnalysis.mock.calls[0][3].gameAudit.expectations.referee.assignment.week).toBe(1);
+ });
+ it('rejects a referee claim when its retained publisher snapshot is omitted',async()=>{
+  await addRefereeSources();const bundle=await bundleForImport();bundle.snapshots=bundle.snapshots.filter(item=>item.snapshot.provider!=='football-zebras');resign(bundle);
+  await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:'bundle_audit_mismatch'});expect(mocks.saveAnalysis).not.toHaveBeenCalled();
+ });
+ it('reparses assignment names from publisher bytes after all transport checksums are recomputed',async()=>{
+  await addRefereeSources();const bundle=await bundleForImport();const item=bundle.snapshots.find(item=>item.snapshot.provider==='football-zebras')!;
+  const changed=footballZebrasFixture('Carl Cheffers');item.bytesBase64=Buffer.from(changed).toString('base64');item.snapshot.checksum=hash(changed);item.snapshot.id=hash(`${item.snapshot.url}\n${item.snapshot.checksum}`);resign(bundle);
+  await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:'bundle_audit_mismatch'});expect(mocks.saveAnalysis).not.toHaveBeenCalled();
+ });
+ it.each(['article','week','publisher'])('rejects forged %s assignment source attribution',async(kind)=>{
+  await addRefereeSources();const bundle=await bundleForImport();const item=bundle.snapshots.find(item=>item.snapshot.provider==='football-zebras')!;
+  if(kind==='article')item.snapshot.metadata!.articleUrl=refereeArticle.replace('2099/09','2099/10');
+  if(kind==='week')item.snapshot.metadata!.week=2;
+  if(kind==='publisher'){item.snapshot.url='https://example.invalid/referee';item.snapshot.id=hash(`${item.snapshot.url}\n${item.snapshot.checksum}`);}
+  resign(bundle);await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:kind==='publisher'?'bundle_source_identity':'bundle_referee_assignment_mismatch'});
+  expect(mocks.saveAnalysis).not.toHaveBeenCalled();
+ });
  it('rejects a resigned bundle with fabricated market surprise or historical counts',async()=>{
   const bundle=await bundleForImport();bundle.analysis.gameAudit!.market!.reference.tailRate=0;resign(bundle);
   await expect(importAnalysisBundle(bundle)).rejects.toMatchObject({code:'bundle_audit_mismatch'});

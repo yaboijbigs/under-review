@@ -73,6 +73,16 @@ The R runtime pins nflfastR **6.0.0**, nflreadr **1.5.0**, fastrmodels **2.1.0**
 
 Fumble, kicking, and called-penalty baselines are locally trained artifacts with recorded chronological windows and evaluation diagnostics. Dataset descriptions establish available columns, not predictive validity. Out-of-domain states, absent promoted artifacts, and unvalidated overall percentiles remain unavailable; no binary FTN tag is a calibrated probability.
 
+## Pregame referee assignments
+
+The worker caches **head-referee** assignments before kickoff from [Football Zebras](https://www.footballzebras.com/) using its public WordPress posts endpoint and season/week slug. [Sharp Football's weekly assignment table](https://www.sharpfootballanalysis.com/betting/nfl-referee-assignments-penalty-trends-betting-impact/) provides a backup and cross-check. These publisher facts are attributed separately from nflverse schedule records; they do not identify every actual crew member or establish which official called a penalty. Article prose is not republished, and publisher copyright is not represented as nflverse's CC-BY license.
+
+Source matches require the same season, regular-season week and away/home teams in the trusted schedule. Article date headings never determine a game match. Each download is limited to 8 seconds and 2 MiB, with a 15-minute conditional-request cache. Immutable JSON/HTML snapshots and source links support later replay. Parser failures, wrong-week tables and outages preserve the last valid cache; unchanged assignment facts retain their original supporting snapshot.
+
+Football Zebras is preferred when available; Sharp can supply a missing assignment. Disagreeing publisher names withhold the referee adjustment while the independently calibrated team/opponent model still supplies a rating. A later nflverse schedule name takes precedence over publisher claims, with the resolution recorded explicitly; an internal nflverse schedule/officials conflict remains unresolved. Missing assignments never gate a numeric rating or automatic initial X publication. Known referees still require sufficient historical support before an adjustment can be used. The rating formulas and frozen historical references are unchanged.
+
+Live verification on September 27, 2026 found Football Zebras matched all 32 nflverse assignments in Weeks 1–2 and both publisher sources agreed on all 16 Week 3 matchups. This validates the inspected pages and matching logic, not a guaranteed publisher update time or future page layout.
+
 ## X publishing integration
 
 Primary documentation verified on the same access date:

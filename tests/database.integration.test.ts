@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import pg from 'pg';
 import { afterAll, beforeAll, describe, expect, it,vi } from 'vitest';
 import { config } from '../packages/core/src/config.js';
@@ -72,6 +73,30 @@ describe.skipIf(!enabled)('PostgreSQL durable revisions and jobs (isolated tempo
     expect(two.id).toBe(one.id);
     expect((await db.query('SELECT count(*)::integer AS n FROM publication_outbox')).rows[0].n).toBe(1);
     expect((await db.query('SELECT mode,status FROM publication_outbox')).rows[0]).toEqual({ mode: 'dry_run', status: 'draft' });
+  });
+
+  it('persists pregame assignment facts, retains unchanged provenance, and preserves the cache during outages',async()=>{
+    const assignments=await import('../packages/core/src/referee-assignments.js');
+    const sources=await import('../packages/core/src/referee-assignment-sources.js');
+    const target:Game={...game,id:'2099_03_ATL_GB',week:3,awayTeam:'ATL',homeTeam:'GB',homeScore:null,awayScore:null};
+    await repository.saveGames([target]);
+    const url=sources.assignmentSourceUrls.footballZebras(2099,3),checksum='d'.repeat(64);
+    const original:SourceSnapshot={...snapshot,url,provider:'football-zebras',checksum,id:createHash('sha256').update(`${url}\n${checksum}`).digest('hex'),metadata:{articleUrl:'https://www.footballzebras.com/2099/09/week-3-referee-assignments-2099/'}};
+    const fetch=vi.spyOn(sources,'fetchRefereeAssignments');
+    const response=(source:SourceSnapshot,name:string)=>({assignments:[{gameId:target.id,name,provider:'football-zebras' as const,snapshot:source}],snapshots:[source],warnings:[]});
+    try{
+      fetch.mockResolvedValue(response(original,'Shawn Smith'));
+      await assignments.refreshRefereeAssignments(2099,3);
+      expect((await assignments.getCachedRefereeAssignment(target)).assignment).toMatchObject({name:'Shawn Smith',status:'reported',sources:[{snapshotId:original.id}]});
+      const changed={...original,checksum:'e'.repeat(64),id:createHash('sha256').update(`${url}\n${'e'.repeat(64)}`).digest('hex')};
+      fetch.mockResolvedValue(response(changed,'Shawn Smith'));await assignments.refreshRefereeAssignments(2099,3);
+      expect((await assignments.getCachedRefereeAssignment(target)).snapshots[0].id).toBe(original.id);
+      fetch.mockResolvedValue(response(changed,'Carl Cheffers'));await assignments.refreshRefereeAssignments(2099,3);
+      expect((await assignments.getCachedRefereeAssignment(target)).assignment).toMatchObject({name:'Carl Cheffers',sources:[{snapshotId:changed.id}]});
+      fetch.mockResolvedValue({assignments:[],snapshots:[],warnings:['provider unavailable']});await assignments.refreshRefereeAssignments(2099,3);
+      expect((await assignments.getCachedRefereeAssignment(target)).assignment?.name).toBe('Carl Cheffers');
+      expect((await db.query('SELECT game_json FROM games WHERE id=$1',[target.id])).rows[0].game_json).toEqual(target);
+    }finally{fetch.mockRestore();}
   });
 
   it('preserves the old score and findings when a correction creates a new revision', async () => {

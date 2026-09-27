@@ -11,6 +11,7 @@ import { createDraft,publishOutbox,recoverUnknownPublications } from '@under-rev
 import { completePendingGameData } from '@under-review/core/data-completion';
 import { completePendingRefereeData } from '@under-review/core/referee-completion';
 import { schedulePendingGameData } from '@under-review/core/postgame-scheduler';
+import { refreshRefereeAssignments,scheduleRefereeAssignmentRefresh } from '@under-review/core/referee-assignments';
 
 const workerId=`${hostname()}:${randomUUID()}`;let stopping=false;let lastSchedule=0;
 const lanes=['fast','analysis'] as const;
@@ -35,6 +36,7 @@ while(!stopping){
    await enqueue('sync-season',null,{season:config.season},`schedule:${config.season}:${Math.floor(Date.now()/interval)}`);
    if(current.getUTCDay()===4&&current.getUTCHours()>=12)await enqueue('reconcile-week',null,{season:config.season},`thursday:${current.toISOString().slice(0,10)}`);
    await schedulePendingGameData(config.season);
+   await scheduleRefereeAssignmentRefresh(config.season);
    await recoverUnknownPublications();lastSchedule=Date.now();
   }
   const disk=await statfs(config.dataDir);const minimum=Number(process.env.MIN_FREE_DISK_BYTES??1073741824);
@@ -60,6 +62,7 @@ while(!stopping){
      break;
     }
     case 'publish':await publishOutbox(String(activeJob.payload.outboxId));break;
+    case 'refresh-referees':log('referee.assignments',await refreshRefereeAssignments(Number(activeJob.payload.season??config.season),Number(activeJob.payload.week)));break;
     case 'complete-data':{
      if(!activeJob.gameId)throw new Error('Game required');
      const result=await completePendingGameData(activeJob.gameId);
