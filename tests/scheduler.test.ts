@@ -16,9 +16,11 @@ function game(id: string, hoursAgo: number, patch: Partial<Game> = {}): Game {
 
 describe('season scheduling window', () => {
   afterEach(() => { vi.restoreAllMocks(); });
+  let now = fixed.getTime();
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(Date, 'now').mockReturnValue(fixed.getTime());
+    now = fixed.getTime();
+    vi.spyOn(Date, 'now').mockImplementation(() => now);
     mocks.query.mockResolvedValue({ rows: [] });
     mocks.syncSchedule.mockResolvedValue({ games: [], snapshots: [] });
   });
@@ -39,5 +41,27 @@ describe('season scheduling window', () => {
     expect(await syncSeason(2026, false)).toEqual({ games: 1, snapshots: [] });
     expect(mocks.enqueueAnalysisIfIdle).not.toHaveBeenCalled();
     expect(mocks.query).not.toHaveBeenCalled();
+  });
+
+  it('picks up late Thursday final data on Friday without giving unrelated rated games 15-minute reconcile keys', async () => {
+    const fridayMorning = Date.parse('2026-09-25T15:00:00.000Z'); // 8:00 AM Arizona; kickoff was Thursday at 5:15 PM.
+    const thursdayKickoff = '2026-09-25T00:15:00.000Z';
+    const games = [game('late-final', 14.75, { kickoffAt: thursdayKickoff }), game('already-rated', 14.5, { kickoffAt: thursdayKickoff })];
+    now = fridayMorning;
+    mocks.syncSchedule.mockResolvedValue({ games, snapshots: [] });
+    mocks.query.mockImplementation(async (_sql, [id]) => ({ rows: id === 'already-rated' ? [{ created_at: new Date() }] : [] }));
+
+    await syncSeason(2026);
+    expect(mocks.enqueueAnalysisIfIdle).toHaveBeenCalledTimes(2);
+    const lateInitialKey = mocks.enqueueAnalysisIfIdle.mock.calls[0][2];
+    const ratedReconcileKey = mocks.enqueueAnalysisIfIdle.mock.calls[1][2];
+    expect(mocks.enqueueAnalysisIfIdle).toHaveBeenNthCalledWith(1, 'late-final', { backfill: false, preferRaw: true }, expect.stringMatching(/^scheduled-analysis:late-final:initial:/));
+    expect(mocks.enqueueAnalysisIfIdle).toHaveBeenNthCalledWith(2, 'already-rated', { backfill: false, preferRaw: false }, expect.stringMatching(/^scheduled-analysis:already-rated:reconcile:/));
+
+    now += 15 * 60 * 1000;
+    await syncSeason(2026);
+    expect(mocks.enqueueAnalysisIfIdle).toHaveBeenCalledTimes(4);
+    expect(mocks.enqueueAnalysisIfIdle.mock.calls[2][2]).not.toBe(lateInitialKey);
+    expect(mocks.enqueueAnalysisIfIdle.mock.calls[3][2]).toBe(ratedReconcileKey);
   });
 });

@@ -5,7 +5,36 @@ vi.mock('../packages/core/src/db.js',()=>({query:mocks.query}));
 vi.mock('../packages/core/src/jobs.js',()=>({enqueueDataCompletionIfIdle:mocks.enqueue,enqueueRefereeCompletionIfIdle:mocks.enqueueReferee}));
 vi.mock('../packages/core/src/data-completion.js',()=>({isPendingGameData:mocks.pending}));
 vi.mock('../packages/core/src/referee-completion.js',()=>({isPendingRefereeData:mocks.pendingReferee}));
-import { schedulePendingGameData } from '../packages/core/src/postgame-scheduler.js';
+import { hasRecentUnreportedGames,schedulePendingGameData,seasonSyncIntervalMs } from '../packages/core/src/postgame-scheduler.js';
+
+describe('recent first-report refresh cadence',()=>{
+ beforeEach(()=>{
+  vi.clearAllMocks();
+  mocks.query.mockResolvedValue({rows:[{id:'thursday-game'}]});
+ });
+ it('keeps Thursday-night games on a 15-minute source refresh through Friday after the eight-hour window',async()=>{
+  const thursdayNight=Date.parse('2026-09-25T06:55:00Z'); // Thursday 11:55 PM in Arizona.
+  const fridayMorning=Date.parse('2026-09-25T15:00:00Z'); // Friday 8:00 AM in Arizona, 14h45 after kickoff.
+  expect(await hasRecentUnreportedGames(2026,thursdayNight)).toBe(true);
+  expect(seasonSyncIntervalMs(false,true)).toBe(15*60*1000);
+  expect(await hasRecentUnreportedGames(2026,fridayMorning)).toBe(true);
+  expect(seasonSyncIntervalMs(false,true)).toBe(15*60*1000);
+  expect(mocks.query.mock.calls[1][1]).toEqual([2026,new Date(fridayMorning)]);
+  const sql=String(mocks.query.mock.calls[1][0]);
+  expect(sql).toContain("interval '8 days'");
+  expect(sql).toContain('NOT EXISTS(SELECT 1 FROM analysis_revisions');
+  expect(sql).not.toContain("game_json->>'homeScore'");
+ });
+ it('keeps near kickoffs at five minutes and quiet fully reported periods at six hours',()=>{
+  expect(seasonSyncIntervalMs(true,true)).toBe(5*60*1000);
+  expect(seasonSyncIntervalMs(false,false)).toBe(6*60*60*1000);
+ });
+ it('does not request the faster cadence when every recent game already has a report',async()=>{
+  mocks.query.mockResolvedValue({rows:[]});
+  expect(await hasRecentUnreportedGames(2026,Date.parse('2026-09-25T15:00:00Z'))).toBe(false);
+  expect(seasonSyncIntervalMs(false,false)).toBe(6*60*60*1000);
+ });
+});
 
 describe('pending postgame data scheduling',()=>{
  beforeEach(()=>{

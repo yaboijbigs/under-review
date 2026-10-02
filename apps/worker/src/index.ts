@@ -10,7 +10,7 @@ import { repairSourceRegressions } from '@under-review/core/repository';
 import { createDraft,publishOutbox,recoverUnknownPublications } from '@under-review/core/publishing';
 import { completePendingGameData } from '@under-review/core/data-completion';
 import { completePendingRefereeData } from '@under-review/core/referee-completion';
-import { schedulePendingGameData } from '@under-review/core/postgame-scheduler';
+import { hasRecentUnreportedGames,schedulePendingGameData,seasonSyncIntervalMs } from '@under-review/core/postgame-scheduler';
 import { refreshRefereeAssignments,scheduleRefereeAssignmentRefresh } from '@under-review/core/referee-assignments';
 
 const workerId=`${hostname()}:${randomUUID()}`;let stopping=false;let lastSchedule=0;
@@ -31,8 +31,9 @@ const laneId=`${workerId}:${lane}`;
 while(!stopping){
  try{
   if(lane==='fast'&&Date.now()-lastSchedule>60000){
-   const current=new Date();const nearGames=(await query("SELECT 1 FROM games WHERE kickoff_at BETWEEN now()-interval '8 hours' AND now()+interval '2 hours' LIMIT 1")).rowCount;
-   const interval=nearGames?5*60000:6*3600000;
+   const current=new Date();const nearGames=((await query("SELECT 1 FROM games WHERE season=$1 AND kickoff_at BETWEEN now()-interval '8 hours' AND now()+interval '2 hours' LIMIT 1",[config.season])).rowCount??0)>0;
+   const recentUnreportedGames=!nearGames&&await hasRecentUnreportedGames(config.season);
+   const interval=seasonSyncIntervalMs(nearGames,recentUnreportedGames);
    await enqueue('sync-season',null,{season:config.season},`schedule:${config.season}:${Math.floor(Date.now()/interval)}`);
    if(current.getUTCDay()===4&&current.getUTCHours()>=12)await enqueue('reconcile-week',null,{season:config.season},`thursday:${current.toISOString().slice(0,10)}`);
    await schedulePendingGameData(config.season);

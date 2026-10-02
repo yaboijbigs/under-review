@@ -4,6 +4,22 @@ import { isPendingRefereeData } from './referee-completion.js';
 import { enqueueDataCompletionIfIdle,enqueueRefereeCompletionIfIdle } from './jobs.js';
 
 export const DATA_COMPLETION_INTERVAL_MS=15*60*1000;
+export const NEAR_GAME_SYNC_INTERVAL_MS=5*60*1000;
+export const QUIET_SEASON_SYNC_INTERVAL_MS=6*60*60*1000;
+
+/** Keep source refreshes moving after kickoff until the first report exists. */
+export async function hasRecentUnreportedGames(season:number,now=Date.now()):Promise<boolean>{
+ const rows=(await query(`SELECT 1 FROM games g
+  WHERE g.season=$1 AND g.kickoff_at >= $2::timestamptz-interval '8 days' AND g.kickoff_at<=$2::timestamptz
+   AND NOT EXISTS(SELECT 1 FROM analysis_revisions r WHERE r.game_id=g.id)
+  LIMIT 1`,[season,new Date(now)])).rows;
+ return rows.length>0;
+}
+
+/** Near kickoffs stay fastest; recent games awaiting their first report get 15-minute source refreshes. */
+export function seasonSyncIntervalMs(nearGames:boolean,recentUnreportedGames:boolean):number{
+ return nearGames?NEAR_GAME_SYNC_INTERVAL_MS:recentUnreportedGames?DATA_COMPLETION_INTERVAL_MS:QUIET_SEASON_SYNC_INTERVAL_MS;
+}
 
 /** Runs independently of full R analysis; referee assignments can arrive weeks later. */
 export async function schedulePendingGameData(season:number,now=Date.now()):Promise<number>{
