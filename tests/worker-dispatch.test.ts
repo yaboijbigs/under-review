@@ -12,7 +12,10 @@ vi.mock('@under-review/core/repository', () => ({ repairSourceRegressions: mocks
 vi.mock('@under-review/core/publishing', () => ({ createDraft: mocks.createDraft, publishOutbox: mocks.publishOutbox, recoverUnknownPublications: mocks.recoverUnknownPublications }));
 vi.mock('@under-review/core/data-completion',()=>({completePendingGameData:mocks.completePendingGameData}));
 vi.mock('@under-review/core/referee-completion',()=>({completePendingRefereeData:mocks.completePendingRefereeData}));
-vi.mock('@under-review/core/postgame-scheduler',()=>({schedulePendingGameData:mocks.schedulePendingGameData}));
+vi.mock('@under-review/core/postgame-scheduler',async(importOriginal)=>({
+  ...await importOriginal<typeof import('../packages/core/src/postgame-scheduler.js')>(),
+  schedulePendingGameData:mocks.schedulePendingGameData,
+}));
 
 const job: Job = { id: 'synthetic-job', kind: 'refresh-audit', gameId: 'synthetic-game', payload: { prepareDraft: true }, attempts: 1, maxAttempts: 5, workerId: 'synthetic-worker' };
 let previousTerm: ReturnType<typeof process.listeners>;
@@ -48,6 +51,17 @@ describe('single-worker audit refresh dispatch', () => {
     expect(mocks.claimJob.mock.calls.filter(([,lane])=>lane==='analysis')).toHaveLength(1);
     expect(mocks.analyzeGame).not.toHaveBeenCalled();
     expect(mocks.poolEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('queues a fifteen-minute season refresh for an overnight game without its first report',async()=>{
+    const now=Date.parse('2026-10-02T15:00:00Z');
+    const clock=vi.spyOn(Date,'now').mockReturnValue(now);
+    mocks.query.mockImplementation(async(sql:string)=>sql.includes('NOT EXISTS(SELECT 1 FROM analysis_revisions')
+      ?{rowCount:1,rows:[{id:'2026_04_PIT_CLE'}]}:{rowCount:0,rows:[]});
+    try{
+      await import('../apps/worker/src/index.js');
+      expect(mocks.enqueue).toHaveBeenCalledWith('sync-season',null,{season:2026},`schedule:2026:${Math.floor(now/(15*60000))}`);
+    }finally{clock.mockRestore();}
   });
 
   it('records a refresh failure through finishJob without drafting or reporting success', async () => {
