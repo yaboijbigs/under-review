@@ -58,7 +58,14 @@ for (const route of ["/api/health", `/api/games/${encodeURIComponent(gameId)}/fe
   assert.match(response.headers.get("cache-control"), /no-store/, `${route}: API freshness`);
 }
 const admin = await read("/admin");
-assert.ok([303, 307].includes(admin.response.status), "Unauthenticated admin requests redirect");
-assert.match(admin.response.headers.get("location"), /\/admin\/login$/, "Admin requires authentication");
+if (admin.response.status === 200) {
+  // A loading boundary can send the shell before Next emits its login redirect.
+  assert.match(admin.html, /<meta\b[^>]*id="__next-page-redirect"[^>]*http-equiv="refresh"[^>]*content="[01];url=\/admin\/login"[^>]*>/, "Streamed admin response redirects to login");
+} else {
+  assert.ok([303, 307].includes(admin.response.status), "Unauthenticated admin requests redirect");
+  assert.match(admin.response.headers.get("location"), /\/admin\/login$/, "Admin requires authentication");
+}
+assert.doesNotMatch(admin.html, /AUTHENTICATED \/ OPERATOR DESK|name="csrf"/, "Unauthenticated response exposes no operator content or session token");
+assert.match(admin.response.headers.get("cache-control"), /no-store/, "Admin is private at the HTTP layer");
 assert.notEqual(admin.response.headers.get("x-nextjs-cache"), "HIT", "Admin is not in the shared page cache");
 console.log("ISR smoke passed: public cache hits, revision selection, filters, compression, fresh APIs, and admin authentication.");
