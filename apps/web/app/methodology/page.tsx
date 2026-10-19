@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SUSPICION_SCALE,SUSPICION_RULES_VERSION } from '@under-review/core/consumer-summary';

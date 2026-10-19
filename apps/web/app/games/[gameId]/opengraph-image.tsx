@@ -5,9 +5,10 @@ import { config } from "@under-review/core/config";
 export const alt = "Under Review NFL game suspicion rating, final score, and supporting evidence.";
 export const size = {width:1200,height:630};
 export const contentType = "image/png";
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
+export function generateStaticParams() { return []; }
 export default async function ReportImage({params}: {params: Promise<{gameId:string}>}) {
-  const {gameId}=await params; let report=null; try {report=await getReport(gameId);} catch {}
+  const {gameId}=await params; const report=await getReport(gameId);
   const verdict=getGameVerdict(report?.revision.analysis.gameAudit,!!report);
   const color=verdict.tone==='high'?'#ffc29a':verdict.tone==='elevated'?'#ffe48a':'#e2ff54';
   return new ImageResponse(<div style={{display:"flex",flexDirection:"column",width:"100%",height:"100%",padding:"45px 65px",background:"#20231f",color:"#f4f3ed",fontFamily:"sans-serif",borderTop:`14px solid ${color}`}}>

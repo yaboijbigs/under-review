@@ -2,15 +2,17 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
+import { cp, mkdtemp, rm, stat } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 
 // Run after `npm run build --workspace @under-review/web`.
 // Both modes use the same production build; no database or external service is needed.
+// Each container gets its own writable ISR cache, so mirror that isolation here.
 const projectRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const webRoot = path.join(projectRoot, "apps/web");
-const nextCli = path.join(projectRoot, "node_modules/next/dist/bin/next");
 
 async function unusedPort() {
   const reservation = createServer();
@@ -22,6 +24,17 @@ async function unusedPort() {
 }
 
 async function verifyMode(staging) {
+  const runtimeRoot = await mkdtemp(path.join(tmpdir(), "under-review-runtime-config-"));
+  try {
+    await cp(path.join(webRoot, ".next/standalone"), runtimeRoot, { recursive: true });
+    await cp(path.join(webRoot, ".next/static"), path.join(runtimeRoot, "apps/web/.next/static"), { recursive: true });
+    await verifyRuntime(staging, runtimeRoot);
+  } finally {
+    await rm(runtimeRoot, { recursive: true, force: true });
+  }
+}
+
+async function verifyRuntime(staging, runtimeRoot) {
   const port = await unusedPort();
   const baseUrl = `http://127.0.0.1:${port}`;
   const brand = staging ? "Runtime Stage Audit" : "Runtime Public Audit";
@@ -29,14 +42,16 @@ async function verifyMode(staging) {
   const accent = staging ? "#eebb55" : "#bbdd44";
   const background = staging ? "#fff8ee" : "#f5f5ee";
   const ink = staging ? "#223344" : "#223322";
-  const child = spawn(process.execPath, [nextCli, "start", "--hostname", "127.0.0.1", "--port", String(port)], {
-    cwd: webRoot,
+  const child = spawn(process.execPath, [path.join(runtimeRoot, "apps/web/server.js")], {
+    cwd: runtimeRoot,
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
     env: {
       ...process.env,
       PROJECT_ROOT: projectRoot,
       NODE_ENV: "production",
+      HOSTNAME: "127.0.0.1",
+      PORT: String(port),
       PRIVATE_STAGING: String(staging),
       DEMO_MODE: "false",
       SITE_URL: baseUrl,
@@ -81,6 +96,15 @@ async function verifyMode(staging) {
       const robotsMeta = html.match(/<meta name="robots" content="([^"]*)"/)?.[1];
       assert.equal(robotsMeta, staging ? "noindex, nofollow" : "index, follow", `${route}: runtime indexing metadata`);
       assert.equal(html.includes("STAGING PREVIEW"), staging, `${route}: staging banner`);
+      const cached = await fetch(`${baseUrl}${route}`, { headers: {"Accept-Encoding": "gzip, br"} });
+      assert.equal(cached.headers.get("x-nextjs-cache"), "HIT", `${route}: process-local ISR hit`);
+      assert.equal(cached.headers.get("content-encoding"), null, `${route}: origin compression disabled`);
+      assert.equal(await cached.text(), html, `${route}: cached runtime HTML`);
+      await assert.rejects(
+        stat(path.join(runtimeRoot, "apps/web/.next/server/app/public", `${route.slice(1)}.html`)),
+        {code: "ENOENT"},
+        `${route}: ISR does not write its generated HTML to the read-only application filesystem`,
+      );
     }
     const robots = await (await fetch(`${baseUrl}/robots.txt`)).text();
     if (staging) {
@@ -92,7 +116,7 @@ async function verifyMode(staging) {
       assert.doesNotMatch(robots, /^Disallow: \/$/m);
       assert.ok(robots.includes(`Sitemap: ${baseUrl}/sitemap.xml`), "Runtime site URL in public robots");
     }
-    console.log(`Runtime configuration passed: ${staging ? "staging" : "public"} metadata, theme, social handle, and robots.`);
+    console.log(`Runtime configuration passed: ${staging ? "staging" : "public"} metadata, theme, social handle, robots, and memory-only ISR.`);
   } finally {
     if (child.exitCode === null && !spawnError) child.kill();
     await closed;

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getReport, getGame } from "@under-review/core/repository";
 import { log, safeError } from "@under-review/core/config";
 import type { GameReport, EvidenceEvent } from "@under-review/core/contracts";
-import { EmptyState, Evidence, Freshness, MetricValue, MetricRarity, Status, Unavailable, WpTimeline } from "@/components/ui";
+import { EmptyState, Evidence, Freshness, MetricValue, MetricRarity, Status, WpTimeline } from "@/components/ui";
 import { categories, dataMaturity, dateTime, human, safeLink, teamName } from "@/lib/presentation";
 import { RevealEvent } from "@/components/reveal-event";
 import { SourcePlays } from "@/components/source-plays";
@@ -17,13 +17,13 @@ export async function generateMetadata({params}: {params: Promise<{gameId: strin
   const {gameId} = await params; const [,week,away,home] = gameId.split("_");
   return {title: away && home ? `${teamName(away)} at ${teamName(home)} — Week ${Number(week)}` : "Game report", description:"An automatic game suspicion rating, historical comparisons, and linked plays explaining which patterns deserve scrutiny."};
 }
-export default async function ReportPage({params, searchParams}: {params: Promise<{gameId: string}>; searchParams: Promise<{revision?: string}>}) {
-  const {gameId} = await params; const query = await searchParams; const requested = Number(query.revision); const revisionNumber = Number.isInteger(requested) && requested > 0 ? requested : undefined;
+export default async function ReportPage({params, revisionNumber}: {params: Promise<{gameId: string}>; revisionNumber?: number}) {
+  const {gameId} = await params;
   let report: GameReport | null;
-  try { report = await getReport(gameId, revisionNumber); } catch(error) { log('web.report.failed',{gameId,error:safeError(error)}); return <><Link prefetch={false} className="back-link" href="/">← All game reports</Link><Unavailable/></>; }
+  try { report = await getReport(gameId, revisionNumber); } catch(error) { log('web.report.failed',{gameId,error:safeError(error)}); throw error; }
   if (!report) {
     if (revisionNumber) notFound();
-    let awaiting; try {awaiting = await getGame(gameId);} catch {return <Unavailable/>;}
+    const awaiting = await getGame(gameId);
     if (!awaiting) notFound();
     return <><div className="report-topline"><Link prefetch={false} className="back-link" href="/">← All game reports</Link><span>{awaiting.season} / WEEK {awaiting.week}</span></div><div className="page-intro"><p className="eyebrow">AUTOMATIC POSTGAME REPORT</p><h1>{teamName(awaiting.awayTeam)} at {teamName(awaiting.homeTeam)}</h1><Status value="awaiting_data" label="Waiting for final game data"/></div><EmptyState title="This game will be analyzed automatically">The report starts once the game ends and complete final-game data is available. Provider delays can take time; you do not need to request a review or press a button.<br/><a href="/status">Check report updates →</a></EmptyState></>;
   }

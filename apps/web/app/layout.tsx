@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { config } from "@under-review/core/config";
 import "./globals.css";
-export const dynamic = "force-dynamic";
 export const metadata: Metadata = { metadataBase: new URL(config.siteUrl), title: {default: `${config.brandName} — Was that win unusual?`, template: `%s | ${config.brandName}`}, description: "Automatic NFL game reports. Spot unusual wins, understand the breaks, and inspect the key plays with clear historical comparisons.", robots: {index: !config.staging && process.env.DEMO_MODE !== "true", follow: !config.staging && process.env.DEMO_MODE !== "true"} };
 function Brand() {
   if (config.brandName === "Under Review") return <>UNDER<span>REVIEW<span className="brand-square" aria-hidden="true"/></span></>;

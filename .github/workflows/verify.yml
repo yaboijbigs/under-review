@@ -49,6 +49,8 @@ jobs:
         run: node scripts/build-expectations-reference.mjs --verify
       - name: Build production web application
         run: npm run build
+      - name: Verify runtime branding and indexing in isolated standalone runtimes
+        run: node apps/web/tests/runtime-config.mjs
       - name: Seed the disposable browser-test database
         run: node --import tsx scripts/seed-feedback-smoke.ts
       - name: Install browser and system dependencies
@@ -68,6 +70,12 @@ jobs:
           }
           throw new Error('The production preview did not become ready.');
           NODE
+      - name: Verify production ISR, revision URLs, and cache boundaries
+        env:
+          PLAYWRIGHT_BASE_URL: http://127.0.0.1:4380
+          SMOKE_AUDIT_GAME_ID: 2025_12_MIN_GB
+          SMOKE_OLD_REPORT_REVISION: '1'
+        run: node apps/web/tests/isr-smoke.mjs
       - name: Verify archive and report navigation on desktop and mobile
         env:
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:4380

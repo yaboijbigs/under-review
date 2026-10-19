@@ -19,6 +19,40 @@ Web health endpoints are `/api/health` and `/api/ready`; `/status` reports sourc
 
 Public report reads use one database checkout and one consistent SQL snapshot for the selected report, source metadata, revision history and drafts. Automatic prefetching is disabled for report links on both the archive and operator desk. A rendered “Data connection unavailable” notice is a failed request, not an empty or ordinary-game finding. Inspect `web.report.failed`; the pg-pool message `timeout exceeded when trying to connect` means waiting for a pool checkout, whereas an initial connection timeout has a different message. Browser checks must wait for streamed page content while still rejecting actual error views; do not pass them by silently retrying failed reports.
 
+### Public rendering cache and hot-query indexes (October 2026)
+
+Latest game reports, integer revision URLs, the unfiltered homepage, methodology,
+sources, corrections and game Open Graph images use 60-second ISR. The first
+request renders; later requests use the cached output, with background refresh
+after expiry. Failed refreshes throw so a good cached report is retained. Archive
+query filters remain request-specific and share a 60-second database result cache.
+Feedback, health, status and authenticated administration remain dynamic. Legacy
+`?revision=N` links rewrite internally to revision-specific cache entries.
+
+Runtime-only dynamic path generation avoids capturing build-machine branding or
+accessing the database while building images. The single read-only web container
+uses a bounded 32 MiB in-process cache with disk writes disabled; restarts and LRU
+evictions cause cold renders. Deploy a fresh container when changing branding or
+staging settings. Node gzip is disabled because Cloudflare already compresses
+public responses; direct origin responses are uncompressed.
+
+After a verified `pg_dump`, apply `scripts/sql/20261019-hot-query-indexes.sql`
+using `psql -X -v ON_ERROR_STOP=1 -f` in autocommit mode. This is deliberately
+outside the transactional migration runner: both indexes use `CREATE INDEX
+CONCURRENTLY`. Run the adjacent `.verify.sql` before and after to inspect plans
+and verify identical source membership. Do not restore a backup merely to undo
+these additive indexes: drop each named index concurrently using the commands in
+the script, and restore the previous web image to undo the report query rewrite.
+
+The public Compose template keeps web and database at 0.5 CPU each, matching the
+October 19 live limits. Application-only rollout uses `docker compose up -d
+--no-deps web` after backing up and editing only the web image reference. Preserve
+the other live Compose settings; the worker has separate operational changes.
+Record each live change and undo in `/root/gordon-cpu-changes.log`. Verify origin
+ISR hits, all revision/filter tests, edge compression, and 20 timed requests each
+to `/`, `/games/2026_06_DAL_GB`, `/api/health`; compare CPU counter deltas because
+container recreation resets cumulative cgroup counters.
+
 The updated web connection pool permits at most five clients, retains one established connection, and retires surplus idle clients after five minutes. New connection/checkout attempts have a bounded 15-second deadline. Under concurrent SSR on the capped VPS, the former five-second deadline also terminated initial handshakes (`Connection terminated due to connection timeout`); this differs from query execution failure. Keeping established clients available reduces handshake churn. This policy adds no query retry or additional VPS CPU/memory allocation. The separately pinned worker remains on its previously verified image; publishing source changes alone does not update that runtime.
 
 The worker processes one job at a time and uses persistent PostgreSQL leases. It renews its lease every 15 seconds; an expired lease can be reclaimed. Failed jobs are visible in administration with retry state. Investigate a repeatedly failing source/model before reanalysis; do not erase failed-job evidence. Source fetches retain immutable checksummed bytes in the artifact volume.
@@ -54,7 +88,7 @@ The current manifest's project-scoped upgrade sequence is below. The one-time ca
 5. Once web and worker are healthy, `scripts/public-check.ts` waits up to 30 minutes for the seed report's schema-validated game audit, supported metric, validated GB **Sus** rating, and successful web routes. Existing reports stay readable while audit upgrades run. Website readiness does not require a social draft or a human ruling assessment; the separate social-posting guard is still checked. `scripts/public-coverage.ts` waits up to one hour for all 32 Week 1–2 schedule records, all 32 scored games, and the current audit version on every scored game's report. It polls once per minute; this proves audit presence, not that every optional field/model is supported. Inspect missing-data states separately.
 6. The tunnel starts **only after** the web is healthy and `check` exits successfully. The independent `coverage` result is **not** a tunnel dependency, so public availability does not establish completed catch-up. Verify coverage completion, public HTTPS, the exact hostname, protected administration, readiness, and the unchanged unrelated-project baseline before reporting the upgrade complete. The GB check is a known-case release fixture, not independent statistical validation.
 
-The public manifest retains worker **0.25 CPU / 1536 MiB**, web **0.10 CPU / 512 MiB**, and database **0.15 CPU / 512 MiB** caps. It also limits backup/check to **0.10 CPU / 192 MiB** each, bootstrap to **0.25 CPU / 512 MiB**, and the tunnel to **0.05 CPU / 128 MiB**. One worker, one R/BLAS thread, bounded logs/PIDs, a 15-minute analytics deadline, and a 5 GiB free-disk reserve remain configured. `SITE_URL=https://underreview.jbigs.com` and `PRIVATE_STAGING=false` enable the canonical public origin/indexing; `VPS_STAGING=true` retains bulk-work restrictions. Only the tunnel-facing web service enables `TRUST_CLOUDFLARE_CLIENT_IP=true`, which requires no public bypass to that container. Live posting defaults to disabled. The operator separately connected @wasitrigged and enabled future-game posting on 2026-09-23; preserve its current database settings during updates. Public website access alone does not authorize social posting.
+The public manifest retains worker **0.25 CPU / 1536 MiB**, web **0.5 CPU / 512 MiB**, and database **0.5 CPU / 512 MiB** caps. It also limits backup/check to **0.10 CPU / 192 MiB** each, bootstrap to **0.25 CPU / 512 MiB**, and the tunnel to **0.05 CPU / 128 MiB**. One worker, one R/BLAS thread, bounded logs/PIDs, a 15-minute analytics deadline, and a 5 GiB free-disk reserve remain configured. `SITE_URL=https://underreview.jbigs.com` and `PRIVATE_STAGING=false` enable the canonical public origin/indexing; `VPS_STAGING=true` retains bulk-work restrictions. Only the tunnel-facing web service enables `TRUST_CLOUDFLARE_CLIENT_IP=true`, which requires no public bypass to that container. Live posting defaults to disabled. The operator separately connected @wasitrigged and enabled future-game posting on 2026-09-23; preserve its current database settings during updates. Public website access alone does not authorize social posting.
 
 The `coverage` check remains capped at **0.05 CPU / 128 MiB**, with bounded logs and no host ports. The completed one-time `import` service is removed from routine deployments; its immutable image and public source bundles remain documented in the earlier release record.
 

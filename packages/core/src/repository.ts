@@ -184,12 +184,14 @@ function mapDraft(r:Record<string,any>):Draft{return {id:r.id,gameId:r.game_id,r
 export async function getReport(gameId:string,revision?:number):Promise<GameReport|null>{
  // One checkout and one database snapshot per report. Fan-out queries used to
  // consume three pool slots after two earlier round trips during concurrent SSR.
+ // Materialize the small snapshot ID array once so PostgreSQL can probe the
+ // source_snapshots primary key instead of running a correlated IN subplan.
  const row=(await query(`WITH selected AS (
   SELECT r.* FROM analysis_revisions r JOIN games g ON g.id=r.game_id
   WHERE r.game_id=$1 ${revision?'AND r.number=$2':''} ORDER BY r.number DESC LIMIT 1
  ) SELECT r.*,
   COALESCE((SELECT jsonb_agg(s.snapshot_json) FROM source_snapshots s
-   WHERE s.id IN (SELECT jsonb_array_elements_text(r.snapshot_ids))),'[]'::jsonb) AS report_sources,
+   WHERE s.id = ANY(ARRAY(SELECT jsonb_array_elements_text(r.snapshot_ids)))),'[]'::jsonb) AS report_sources,
   COALESCE((SELECT jsonb_agg(jsonb_build_object('id',h.id,'number',h.number,'created_at',h.created_at,
    'statistical_status',h.statistical_status,'change_summary',h.change_summary) ORDER BY h.number DESC)
    FROM analysis_revisions h WHERE h.game_id=r.game_id),'[]'::jsonb) AS report_history,
