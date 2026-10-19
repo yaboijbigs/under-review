@@ -45,7 +45,7 @@ services:
     command: [postgres, -c, shared_buffers=64MB, -c, max_connections=30]
     volumes: ["database:/var/lib/postgresql/data"]
     networks: [private]
-    cpus: 0.15
+    cpus: 0.5
     mem_limit: 512m
     healthcheck:
       test: [CMD-SHELL, "pg_isready -U under_review -d under_review"]
@@ -112,7 +112,7 @@ services:
     read_only: true
     tmpfs: ["/tmp:size=64m,mode=1777", "/app/apps/web/.next/cache:size=32m,mode=1777"]
     networks: [private]
-    cpus: 0.10
+    cpus: 0.5
     mem_limit: 512m
     depends_on: {bootstrap: {condition: service_completed_successfully}}
     restart: unless-stopped

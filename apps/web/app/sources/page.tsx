@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { PageIntro } from "@/components/ui";
 export const metadata: Metadata = {title: "Data sources & attribution"};
